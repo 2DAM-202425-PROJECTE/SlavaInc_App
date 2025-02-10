@@ -7,19 +7,54 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Execució del projecte
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Per executar el projecte, primer s'ha de clonar el repositori amb la comanda:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+git clone
+```
+Després, s'ha d'executar la comanda:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+composer install
+```
+
+Un cop s'ha instal·lat el composer, s'ha de copiar el fitxer .env.example i renombrar-lo a .env amb la comanda:
+
+```bash
+cp .env.example .env
+```
+
+Un cop s'ha copiat el fitxer .env, s'ha d'executar la comanda:
+
+```bash
+php artisan key:generate
+```
+
+Un cop s'ha generat la clau, s'ha d'executar la comanda:
+
+```bash
+php artisan migrate --seed
+```
+
+Un cop s'ha instal·lat el composer, s'ha d'executar la comanda:
+
+```bash
+npm install
+```
+
+Un cop s'ha instal·lat el npm, s'ha d'executar la comanda:
+
+```bash
+npm run dev
+```
+
+Un cop s'ha compilat el projecte, s'ha d'executar la comanda:
+
+```bash
+php artisan serve
+```
 
 ## Learning Laravel
 
