@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->float('price');
+            $table->enum('status', ['pending', 'approved', 'rejected']);
+            $table->date('date');
             $table->timestamps();
         });
     }
