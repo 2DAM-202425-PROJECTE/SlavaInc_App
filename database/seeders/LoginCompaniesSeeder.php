@@ -24,7 +24,7 @@ class LoginCompaniesSeeder extends Seeder
 
         LoginCompany::create([
             'user_id' => $user1->id,
-            'name'    => $user1->name, // Afegim el nom aquí
+            'name'    => $user1->name,
             'address' => 'Carrer de l\'Empresa, 10',
             'city'    => 'Barcelona',
             'state'   => 'Catalunya',
@@ -42,7 +42,7 @@ class LoginCompaniesSeeder extends Seeder
 
         LoginCompany::create([
             'user_id' => $user2->id,
-            'name'    => $user2->name, // Afegim el nom també per a la segona empresa
+            'name'    => $user2->name,
             'address' => 'Avinguda de l\'Empresa, 20',
             'city'    => 'València',
             'state'   => 'Comunitat Valenciana',
