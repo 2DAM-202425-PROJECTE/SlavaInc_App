@@ -21,8 +21,8 @@ class CompanyController extends Controller
             'companyData' => [
                 'user_info' => $user->only('id', 'name', 'email'),
                 'company_details' => [
-                    'info' => $user->company, // ✨ Dades de l'empresa
-                    'workers' => $user->company->workers // ✨ Llista de treballadors
+                    'info' => $user->company,
+                    'workers' => $user->company->workers
                 ]
             ]
         ]);
