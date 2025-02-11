@@ -18,14 +18,13 @@ class WorkersSeeder extends Seeder
         // Obtenir totes les empreses existents
         $companies = LoginCompany::all();
 
-        // Per cada empresa, crear 2 treballadors d'exemple
         foreach ($companies as $company) {
             // Treballador 1
             Worker::create([
                 'company_id' => $company->id,
                 'name' => 'Treballador 1 de ' . $company->name,
                 'schedule' => '08:00-16:00',
-                'address' => $company->address, // Utilitzem la mateixa adreça que l'empresa
+                'address' => $company->address,
                 'city' => $company->city,
                 'state' => $company->state,
                 'zip_code' => $company->zip_code,
