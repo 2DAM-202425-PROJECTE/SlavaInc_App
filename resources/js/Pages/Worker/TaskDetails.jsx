@@ -53,7 +53,7 @@ export default function WorkerDashboard() {
                             <h2 className="text-lg font-semibold">{task.title}</h2>
                             <p className="text-gray-600">{task.date}</p>
                             <p className="text-gray-700 text-sm">{task.description}</p>
-                            {/*<Link to={`/task/${task.id}`} className="text-blue-600 hover:underline text-sm">Més informació</Link>*/}
+                            <Link to={`/task/${task.id}`} className="text-blue-600 hover:underline text-sm">Més informació</Link>
                         </div>
                     </div>
                 ))}

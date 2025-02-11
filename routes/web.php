@@ -26,6 +26,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/Worker/dashboard', function () {
+    return Inertia::render('Worker/dashboard');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/company/dashboard', [CompanyController::class, 'index'])->name('company.dashboard');
