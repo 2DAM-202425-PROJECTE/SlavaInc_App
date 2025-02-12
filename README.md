@@ -55,6 +55,15 @@ Un cop s'ha compilat el projecte, s'ha d'executar la comanda:
 ```bash
 php artisan serve
 ```
+## Executar els Seeders
+```bash
+php artisan migrate:fresh --seed
+```
+
+## Ruta empresa
+```bash
+http://127.0.0.1:8000/company/dashboard
+```
 
 ## Learning Laravel
 

@@ -21,6 +21,8 @@
         "vite": "^6.0"
     },
     "dependencies": {
-        "lucide-react": "^0.474.0"
+        "lucide-react": "^0.474.0",
+        "react-calendar": "^5.1.0",
+        "react-router-dom": "^7.1.5"
     }
 }

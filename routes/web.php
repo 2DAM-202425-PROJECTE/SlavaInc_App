@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WorkerController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,9 +26,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-Route::get('/Empresa/index', function () {
-    return Inertia::render('Empresa/Index');
+Route::get('/Worker/dashboard', function () {
+    return Inertia::render('Worker/dashboard');
 });
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/company/dashboard', [CompanyController::class, 'index'])->name('company.dashboard');
+});
+
+Route::get('/workers/create', [WorkerController::class, 'create'])->name('workers.create');
 
 require __DIR__.'/auth.php';
