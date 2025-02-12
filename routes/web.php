@@ -6,16 +6,16 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return redirect()->route('login'); // 👈 Redirigeix a la ruta de login
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    // Redirigir a la pàgina de dashboard corresponent segons el tipus d'usuari
+    if (auth()->user()->role === 'client') {
+        return Inertia::render('Client/dashboard');
+    } elseif (auth()->user()->role === 'company') {
+        return Inertia::render('Company/dashboard');
+    }
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
