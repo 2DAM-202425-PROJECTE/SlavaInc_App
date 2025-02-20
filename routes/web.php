@@ -14,9 +14,9 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     // Redirigir a la pàgina de dashboard corresponent segons el tipus d'usuari
     if (auth()->user()->role === 'client') {
-        return Inertia::render('Client/dashboard');
+        return Inertia::render('Client/Dashboard');
     } elseif (auth()->user()->role === 'company') {
-        return Inertia::render('Company/dashboard');
+        return Inertia::render('Worker/dashboard');
     }
 })->middleware(['auth', 'verified'])->name('dashboard');
 
