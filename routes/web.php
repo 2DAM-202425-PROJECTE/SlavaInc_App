@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
+use App\Models\Service;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -12,9 +13,10 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    // Redirigir a la pàgina de dashboard corresponent segons el tipus d'usuari
     if (auth()->user()->role === 'client') {
-        return Inertia::render('Client/Dashboard');
+        return Inertia::render('Client/Dashboard', [
+            'services' => Service::all()
+        ]);
     } elseif (auth()->user()->role === 'company') {
         return Inertia::render('Worker/dashboard');
     }
