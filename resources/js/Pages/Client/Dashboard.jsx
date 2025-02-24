@@ -1,26 +1,38 @@
 import React, { useState } from "react";
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome, faCar, faWrench, faSwimmingPool, faInfoCircle, faSearch, faStar, faFrown, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { Link } from '@inertiajs/react';
 const Dashboard = ({ services }) => {
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedFilter, setSelectedFilter] = useState("tots");
+    const [selectedFilter, setSelectedFilter] = useState("generals");
 
-    // Opcions de filtre reorganitzades
+    // Tipus principals del seeder
+    const mainServiceTypes = ['casa', 'cotxe', 'garatge', 'piscina'];
+
+    // Opcions de filtre actualitzades
     const filterOptions = [
-        { label: "🏠 Casa", value: "casa" },
-        { label: "🚗 Cotxe", value: "cotxe" },
-        { label: "🔧 Garatge", value: "garatge" },
-        { label: "🏊 Piscina", value: "piscina" },
-        { label: "🎉 Tots", value: "tots" },
+        { label: "Generals", value: "generals" },
+        { label: <FontAwesomeIcon icon={faHome} />, value: "casa" },
+        { label: <FontAwesomeIcon icon={faCar} />, value: "cotxe" },
+        { label: <FontAwesomeIcon icon={faWrench} />, value: "garatge" },
+        { label: <FontAwesomeIcon icon={faSwimmingPool} />, value: "piscina" },
+        { label: <><FontAwesomeIcon icon={faPlus} /> Altres</>, value: "altres" },
     ];
 
-    // Funció de filtrat millorada amb cerca per tipus
+    // Funció de filtrat actualitzada
     const filteredServices = services.filter(service => {
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch = service.name.toLowerCase().includes(searchLower) ||
             service.description.toLowerCase().includes(searchLower);
 
-        const matchesFilter = selectedFilter === "tots" ||
-            service.type?.toLowerCase() === selectedFilter.toLowerCase();
+        let matchesFilter;
+        if (selectedFilter === "generals") {
+            matchesFilter = mainServiceTypes.includes(service.type?.toLowerCase());
+        } else if (selectedFilter === "altres") {
+            matchesFilter = !mainServiceTypes.includes(service.type?.toLowerCase());
+        } else {
+            matchesFilter = service.type?.toLowerCase() === selectedFilter.toLowerCase();
+        }
 
         return matchesSearch && matchesFilter;
     });
@@ -41,11 +53,14 @@ const Dashboard = ({ services }) => {
                     <div className="relative max-w-2xl mx-auto mb-8">
                         <input
                             type="text"
-                            placeholder="🔍 Cerca serveis (ex: 'neteja de piscina')..."
+                            placeholder="Cerca serveis (ex: 'neteja de piscina')..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 border-0 rounded-full bg-white/90 focus:ring-2 focus:ring-white focus:bg-white transition-all"
                         />
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+                            <FontAwesomeIcon icon={faSearch} />
+                        </div>
                     </div>
 
                     {/* Filtres amb estils millorats */}
@@ -88,7 +103,8 @@ const Dashboard = ({ services }) => {
                             >
                                 {isRecommended && (
                                     <div className="absolute top-4 right-4 bg-[#1f7275] text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                                        <span>★</span> Recomanat
+                                        <FontAwesomeIcon icon={faStar} />
+                                        <span>Recomanat</span>
                                     </div>
                                 )}
 
@@ -112,11 +128,13 @@ const Dashboard = ({ services }) => {
                                         {service.description}
                                     </p>
 
-                                    <div className="border-t pt-4">
-                                        <button className="w-full bg-[#1f7275] hover:bg-[#01a0a6] text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors">
-                                            <span>📩</span> Demana Pressupost
-                                        </button>
-                                    </div>
+                                    <Link
+                                        href={`/client/services/${service.id}`}
+                                        className="w-full bg-[#1f7275] hover:bg-[#01a0a6] text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <FontAwesomeIcon icon={faInfoCircle} />
+                                        <span>Més info!</span>
+                                    </Link>
                                 </div>
                             </div>
                         );

@@ -30,21 +30,6 @@ class ServicesSeeder extends Seeder
                 'name' => 'Neteja de piscina',
                 'description' => 'Manteniment i neteja estacional de piscines',
                 'type' => 'piscina'
-            ],
-            [
-                'name' => 'Neteja postobres',
-                'description' => 'Neteja profunda després de obres o reformes',
-                'type' => 'postobres'
-            ],
-            [
-                'name' => 'Neteja ecològica',
-                'description' => 'Serveis de neteja amb productes ecològics i sostenibles',
-                'type' => 'ecologica'
-            ],
-            [
-                'name' => 'Neteja de vidres',
-                'description' => 'Neteja especialitzada de finestres i superfícies de vidre',
-                'type' => 'vidre'
             ]
         ];
 
@@ -52,14 +37,25 @@ class ServicesSeeder extends Seeder
             Service::create($serviceData);
         }
 
-        // Assignar entre 3 i 5 serveis aleatoris a cada empresa
+        // Dins del mètode run() del ServicesSeeder
         $companies = LoginCompany::all();
-        $servicesIds = Service::pluck('id');
 
-        foreach ($companies as $company) {
-            $company->services()->attach(
-                $servicesIds->random(rand(3, 5))->unique()
-            );
-        }
+        // Neteja Express - Casa + Garatge
+        $companies[0]->services()->attach([1, 3]);
+
+        // AquaClean - Cotxe + Piscina
+        $companies[1]->services()->attach([2, 4]);
+
+        // Neteges Integral - Tots els serveis
+        $companies[2]->services()->attach([1, 2, 3, 4]);
+
+        // Llar Neta - Només casa
+        $companies[3]->services()->attach(1);
+
+        // GarageMasters - Garatge + Piscina
+        $companies[4]->services()->attach([3, 4]);
+
+        // AutoShine - Només cotxe
+        $companies[5]->services()->attach(2);
     }
 }

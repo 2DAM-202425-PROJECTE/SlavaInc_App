@@ -36,6 +36,7 @@ class LoginCompany extends Model
     }
     public function services(): BelongsToMany
     {
-        return $this->belongsToMany(Service::class, 'companies_services');
+        return $this->belongsToMany(Service::class, 'companies_services')
+            ->withTimestamps();
     }
 }
