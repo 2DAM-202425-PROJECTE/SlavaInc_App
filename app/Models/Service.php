@@ -15,14 +15,11 @@ class Service extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'type'
-    ];
+    protected $fillable = ['name', 'description', 'type'];
 
     public function companies(): BelongsToMany
     {
-        return $this->belongsToMany(LoginCompany::class, 'companies_services');
+        return $this->belongsToMany(LoginCompany::class, 'companies_services')
+            ->withTimestamps();
     }
 }
