@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-// Simulació de dates per a proves
+// Definir fakeDates dins del component
 const fakeDates = [
     {
         id: 1,
-        worker_id: 1,
+        user_id: 1,
         service_id: 1,
-        transaction_id: 1,
-        review_id: 1,
-        client_id: 1,
         date: '2025-02-26',
         service: {
             id: 1,
@@ -23,18 +20,57 @@ const fakeDates = [
             type: 'casa'
         }
     },
-    // Afegeix més dates per a proves aquí
+    {
+        id: 2,
+        user_id: 1,
+        service_id: 2,
+        date: '2025-02-26',
+        service: {
+            id: 2,
+            name: 'Neteja de Cotxe',
+            description: 'Neteja detallada de cotxe',
+            type: 'cotxe'
+        }
+    },
+    {
+        id: 3,
+        user_id: 1,
+        service_id: 3,
+        date: '2025-02-28',
+        service: {
+            id: 3,
+            name: 'Neteja de Garatge',
+            description: 'Neteja profunda de garatge',
+            type: 'garatge'
+        }
+    },
+    {
+        id: 4,
+        user_id: 4,
+        service_id: 4,
+        date: '2025-03-01',
+        service: {
+            id: 4,
+            name: 'Neteja de Piscina',
+            description: 'Neteja completa de piscina',
+            type: 'piscina'
+        }
+    },
 ];
 
 const localizer = momentLocalizer(moment);
 
 const Dashboard = () => {
+    const { auth } = usePage().props;
+    const userId = auth.user.id;
     const [dates, setDates] = useState([]);
 
     useEffect(() => {
         // Aquí pots carregar les dates reals des del servidor
-        setDates(fakeDates);
-    }, []);
+        const filteredDates = fakeDates.filter(date => date.user_id === userId);
+        console.log('Filtered Dates:', filteredDates);
+        setDates(filteredDates);
+    }, [userId]);
 
     const events = dates.map(date => ({
         title: date.service.name,
@@ -43,6 +79,8 @@ const Dashboard = () => {
         allDay: true,
         resource: date
     }));
+
+    console.log('Events:', events);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -82,8 +120,8 @@ const Dashboard = () => {
                                             {date.service.name}
                                         </h3>
                                         <span className="bg-[#1f7275] text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {date.service.type}
-                    </span>
+                                            {date.service.type}
+                                        </span>
                                     </div>
                                 </div>
 

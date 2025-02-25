@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('dates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('worker_id')->constrained('workers')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('worker_id')->nullable()->constrained('workers')->onDelete('cascade');
             $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
-            $table->foreignId('transaction_id')->constrained('transactions')->onDelete('cascade');
-            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade');
-            $table->foreignId('client_id')->constrained('login_clients')->onDelete('cascade');
+            $table->foreignId('transaction_id')->nullable()->constrained('transactions')->onDelete('cascade');
+            $table->foreignId('review_id')->nullable()->constrained('reviews')->onDelete('cascade');
+            $table->foreignId('client_id')->nullable()->constrained('login_clients')->onDelete('cascade');
             $table->date('date');
             $table->timestamps();
         });

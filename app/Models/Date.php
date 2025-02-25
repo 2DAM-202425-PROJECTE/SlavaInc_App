@@ -5,9 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Date extends Model {
+class Date extends Model
+{
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'image', 'date', 'priority'];
-}
+    protected $fillable = ['user_id', 'service_id', 'transaction_id', 'review_id', 'date'];
 
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
+}
