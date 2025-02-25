@@ -26,6 +26,8 @@
         "@fortawesome/react-fontawesome": "^0.2.2",
         "@inertiajs/inertia-react": "^0.8.1",
         "lucide-react": "^0.474.0",
+        "moment": "^2.30.1",
+        "react-big-calendar": "^1.18.0",
         "react-calendar": "^5.1.0",
         "react-router-dom": "^7.2.0"
     }
