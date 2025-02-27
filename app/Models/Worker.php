@@ -8,20 +8,25 @@ use Illuminate\Database\Eloquent\Model;
 class Worker extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'company_id',
+        'worker_id',
         'name',
-        'schedule',
+        'email',
+        'phone',
         'address',
-        'city',
-        'state',
-        'zip_code',
-        'phone'
+        'is_admin',
+        'is_company',
     ];
-
 
     public function company()
     {
-        return $this->belongsTo(LoginCompany::class, 'company_id');
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function worker()
+    {
+        return $this->belongsTo(Company::class, 'worker_id');
     }
 }

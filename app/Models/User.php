@@ -21,7 +21,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
     ];
 
     /**
@@ -45,16 +44,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-    // Relació one-to-one amb login_companies (si l'usuari és empresa)
-    public function company()
-    {
-        return $this->hasOne(LoginCompany::class);
-    }
-
-    public function isCompany()
-    {
-        return $this->role === 'company';
     }
 
 }

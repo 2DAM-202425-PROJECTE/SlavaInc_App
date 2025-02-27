@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\LoginCompany;
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +22,7 @@ class LoginCompaniesSeeder extends Seeder
             'role' => 'company',
         ]);
 
-        LoginCompany::create([
+        Company::create([
             'user_id' => $user1->id,
             'name'    => $user1->name,
             'address' => 'Carrer de l\'Empresa, 10',
@@ -40,7 +40,7 @@ class LoginCompaniesSeeder extends Seeder
             'role' => 'company',
         ]);
 
-        LoginCompany::create([
+        Company::create([
             'user_id' => $user2->id,
             'name'    => $user2->name,
             'address' => 'Avinguda de l\'Empresa, 20',
