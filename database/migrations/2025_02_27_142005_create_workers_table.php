@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('workers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('login_companies')->onDelete('cascade');
-            $table->string('name');
-            $table->string('schedule');
-            $table->string('address');
-            $table->string('city');
-            $table->string('state');
-            $table->string('zip_code');
-            $table->string('phone');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+            $table->foreignId('worker_id')->constrained('companies')->onDelete('cascade');
             $table->timestamps();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('phone');
+            $table->string('address');
+            $table->boolean('is_admin')->default(false); // Es pot activar o desactivar
+            $table->boolean('is_company')->default(false); // El rol `is_company` desactivat
+
         });
     }
 

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\LoginCompany;
+use App\Models\Company;
 use App\Models\Worker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,7 +16,7 @@ class WorkersSeeder extends Seeder
     public function run(): void
     {
         // Obtenir totes les empreses existents
-        $companies = LoginCompany::all();
+        $companies = Company::all();
 
         foreach ($companies as $company) {
             // Treballador 1
