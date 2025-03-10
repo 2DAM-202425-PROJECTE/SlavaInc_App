@@ -16,15 +16,18 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
             'role' => 'required|in:client,company',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        // Determina el guard segons el rol
+        $guard = $request->role === 'client' ? 'web' : 'company';
 
+        // Intentar autenticar amb el guard corresponent
+        if (Auth::guard($guard)->attempt($request->only('email', 'password'))) {
+            $request->session()->regenerate();
             return redirect()->intended('dashboard');
         }
 
@@ -35,10 +38,14 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
+        // Tancar la sessió segons el guard actual
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        } elseif (Auth::guard('company')->check()) {
+            Auth::guard('company')->logout();
+        }
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
