@@ -3,11 +3,26 @@
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkerController;
 use App\Models\Service;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+
+// Rutes per a Serveis
+Route::resource('administrator/services', ServiceController::class)
+    ->names('administrator.services');
+
+// Rutes per a Usuaris
+Route::resource('administrator/users', UserController::class)
+    ->names('administrator.users');
+
+// Rutes per a Workers
+Route::resource('administrator/workers', WorkerController::class)
+    ->names('administrator.workers');
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -32,6 +47,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/Worker/dashboard', function () {
     return Inertia::render('Worker/dashboard');
 });
+
+Route::get('/worker/services/{id}', [WorkerController::class, 'showService'])->name('worker.service.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/company/dashboard', [CompanyController::class, 'index'])->name('company.dashboard');
