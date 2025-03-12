@@ -26,6 +26,52 @@ const UsersEdit = ({ user }) => {
                     <p className="text-xl text-white/90 mb-8">
                         Modifica les dades de l'usuari
                     </p>
+
+                    {/* Botons de navegació */}
+                    <div className="flex justify-center gap-4">
+                        <Link
+                            href={route('administrator.users.index')}
+                            className={`
+                                bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-300
+                                border border-white/20 hover:border-white/40
+                                shadow-sm hover:shadow-md
+                                ${route().current('administrator.users.index') ?
+                                'bg-gradient-to-r from-[#3b82f6] to-[#1e40af] border-white/40 shadow-lg' :
+                                'hover:bg-gradient-to-r hover:from-[#3b82f6]/20 hover:to-[#1e40af]/20'
+                            }
+                            `}
+                        >
+                            Usuaris
+                        </Link>
+                        <Link
+                            href={route('administrator.services.index')}
+                            className={`
+                                bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-300
+                                border border-white/20 hover:border-white/40
+                                shadow-sm hover:shadow-md
+                                ${route().current('administrator.services.index') ?
+                                'bg-gradient-to-r from-[#3b82f6] to-[#1e40af] border-white/40 shadow-lg' :
+                                'hover:bg-gradient-to-r hover:from-[#3b82f6]/20 hover:to-[#1e40af]/20'
+                            }
+                            `}
+                        >
+                            Serveis
+                        </Link>
+                        <Link
+                            href={route('administrator.workers.index')}
+                            className={`
+                                bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-300
+                                border border-white/20 hover:border-white/40
+                                shadow-sm hover:shadow-md
+                                ${route().current('administrator.workers.index') ?
+                                'bg-gradient-to-r from-[#3b82f6] to-[#1e40af] border-white/40 shadow-lg' :
+                                'hover:bg-gradient-to-r hover:from-[#3b82f6]/20 hover:to-[#1e40af]/20'
+                            }
+                            `}
+                        >
+                            Workers
+                        </Link>
+                    </div>
                 </div>
             </section>
 
