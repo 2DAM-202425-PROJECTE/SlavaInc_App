@@ -11,8 +11,8 @@ class Worker extends Model
 
     protected $fillable = [
         'company_id',
-        'worker_id',
         'name',
+        'password',
         'email',
         'phone',
         'address',
@@ -20,13 +20,9 @@ class Worker extends Model
         'is_company',
     ];
 
+    // Relació amb la Company
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
-    }
-
-    public function worker()
-    {
-        return $this->belongsTo(Company::class, 'worker_id');
     }
 }

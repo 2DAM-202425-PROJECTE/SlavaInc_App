@@ -37,6 +37,15 @@ Route::middleware('auth:company,web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
+
 });
+
+
 
 require __DIR__.'/auth.php';

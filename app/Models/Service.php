@@ -23,6 +23,6 @@ class Service extends Model
 
     public function companies(): BelongsToMany
     {
-        return $this->belongsToMany(LoginCompany::class, 'companies_services');
+        return $this->belongsToMany(Company::class, 'companies_services');
     }
 }

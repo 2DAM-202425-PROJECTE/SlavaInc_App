@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\LoginCompany;
+use App\Models\Company;
 use App\Models\Service;
 use Illuminate\Database\Seeder;
 
@@ -53,7 +53,7 @@ class ServicesSeeder extends Seeder
         }
 
         // Assignar entre 3 i 5 serveis aleatoris a cada empresa
-        $companies = LoginCompany::all();
+        $companies = Company::all();
         $servicesIds = Service::pluck('id');
 
         foreach ($companies as $company) {

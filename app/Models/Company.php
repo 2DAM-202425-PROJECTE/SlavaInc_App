@@ -27,6 +27,7 @@ class Company extends Authenticatable
         'is_company'
     ];
 
+    // Relació amb els treballadors
     public function workers(): HasMany
     {
         return $this->hasMany(Worker::class, 'company_id');
