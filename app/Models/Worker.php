@@ -11,22 +11,26 @@ class Worker extends Model
 
     protected $fillable = [
         'company_id',
-        'worker_id',
         'name',
         'email',
         'phone',
         'address',
         'is_admin',
-        'is_company',
     ];
 
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'is_admin' => 'boolean',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
 
-    public function worker()
-    {
-        return $this->belongsTo(Company::class, 'worker_id');
-    }
 }

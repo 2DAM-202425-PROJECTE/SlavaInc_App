@@ -22,19 +22,34 @@ class AuthenticatedSessionController extends Controller
             'role' => 'required|in:client,company',
         ]);
 
-        // Determina el guard segons el rol
-        $guard = $request->role === 'client' ? 'web' : 'company';
+        if ($request->role === 'client') {
+            if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
+                $request->session()->regenerate();
+                return redirect()->intended('dashboard');
+            }
+        }
 
-        // Intentar autenticar amb el guard corresponent
-        if (Auth::guard($guard)->attempt($request->only('email', 'password'))) {
+        // Intentar autenticar com a empresa
+        if (Auth::guard('company')->attempt($request->only('email', 'password'))) {
             $request->session()->regenerate();
             return redirect()->intended('dashboard');
+        }
+
+        // Intentar autenticar com a treballador
+        if (Auth::guard('worker')->attempt($request->only('email', 'password'))) {
+            $request->session()->regenerate();
+
+            $user = Auth::guard('worker')->user();
+            return $user->is_admin
+                ? redirect()->intended(route('company.dashboard'))
+                : redirect()->intended(route('worker.dashboard'));
         }
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
     }
+
 
     public function destroy(Request $request)
     {

@@ -23,8 +23,17 @@ class Company extends Authenticatable
         'state',
         'zip_code',
         'phone',
-        'is_admin',
-        'is_company'
+    ];
+
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     public function workers(): HasMany
@@ -32,28 +41,5 @@ class Company extends Authenticatable
         return $this->hasMany(Worker::class, 'company_id');
     }
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_admin' => 'boolean', // Converteix el camp a booleà
-            'is_company' => 'boolean', // Converteix el camp a booleà
-        ];
-    }
-
-    /**
-     * Verifica si l'usuari és un admin.
-     *
-     * @return bool
-     */
-    public function isAdmin()
-    {
-        return $this->is_admin; // Retorna true si l'usuari és admin
-    }
 }
