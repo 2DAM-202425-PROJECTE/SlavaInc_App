@@ -13,11 +13,18 @@ class WorkerController extends Controller
 {
     public function index()
     {
+        // Obtenir el treballador autenticat
+        $user = Auth::guard('worker')->user();
 
-        return Inertia::render('Worker/Index', [
-            'workers' => Worker::all()
-        ]);
+        // Verificar que l'usuari existeix i que és un treballador autoritzat (si és necessari)
+        if (!$user) {
+            abort(403, 'Accés no autoritzat.');
+        }
+
+        // Renderitzar la vista del dashboard del treballador sense passar dades
+        return Inertia::render('Worker/Dashboard');
     }
+
     public function create()
     {
         return Inertia::render('Worker/Create');
@@ -31,6 +38,7 @@ class WorkerController extends Controller
             'email' => 'required|email|unique:workers,email',
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
+            'password' => 'required|string|min:8', // Afegir validació per a la contrasenya
         ]);
 
         // Obtenim l'empresa autenticada
@@ -49,10 +57,12 @@ class WorkerController extends Controller
             'address' => $request->address,
             'is_admin' => false,
             'is_company' => false,
+            'password' => bcrypt($request->password), // Emmagatzemar la contrasenya hashada
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
     }
+
 
     public function edit($workerId)
     {

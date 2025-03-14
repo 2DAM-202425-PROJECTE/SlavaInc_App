@@ -35,14 +35,19 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended('dashboard');
         }
 
-        // Intentar autenticar com a treballador
-        if (Auth::guard('worker')->attempt($request->only('email', 'password'))) {
-            $request->session()->regenerate();
-
+// Intentar autenticar com a treballador
+// Verificar si l'usuari és un treballador
+        if (Auth::guard('worker')->check()) {
             $user = Auth::guard('worker')->user();
-            return $user->is_admin
-                ? redirect()->intended(route('company.dashboard'))
-                : redirect()->intended(route('worker.dashboard'));
+
+            // Si és treballador i no és admin (is_admin == 0), mostrar la seva pròpia dashboard
+
+            if ($user->is_admin == 1) {
+                return Inertia::render('Company/Dashboard');  // Vista de treballador sense permisos d'admin
+            }
+
+            // Si és treballador i és admin (is_admin == 1), redirigir a la company dashboard
+            return Inertia::render('Worker/Dashboard');  // Vista d'empresa per treballadors amb permisos
         }
 
         return back()->withErrors([

@@ -29,9 +29,15 @@ Route::get('/dashboard', function () {
             : app(WorkerController::class)->index();
     }
 
-    // Si no està autenticat, redirigir a la pàgina de login
+    if (Auth::guard('worker')->check()) {
+        $user = Auth::guard('worker')->user();
+        return $user->is_admin
+            ? app(CompanyController::class)->index()
+            : app(WorkerController::class)->index();
+    }
+      // Si no està autenticat, redirigir a la pàgina de login
     return redirect()->route('login');
-})->middleware('auth:company,web')->name('dashboard');
+})->middleware('auth:company,web,worker')->name('dashboard');
 
 Route::middleware('auth:company,web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
