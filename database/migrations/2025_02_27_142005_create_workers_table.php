@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('workers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
-            $table->timestamps();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
             $table->string('phone');
             $table->string('address');
-            $table->boolean('is_admin')->default(false); // Es pot activar o desactivar
-            $table->boolean('is_worker')->default(false); // El rol `is_worker` desactivat
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->boolean('is_admin')->default(false);
+            $table->rememberToken();
+            $table->timestamps();
+
 
         });
     }

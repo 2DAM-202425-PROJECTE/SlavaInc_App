@@ -17,10 +17,19 @@ class Worker extends Model
         'phone',
         'address',
         'is_admin',
-        'is_company',
     ];
 
-    // Relació amb la Company
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'is_admin' => 'boolean',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');

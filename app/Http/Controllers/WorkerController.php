@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\In;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ class WorkerController extends Controller
 {
     public function index()
     {
+
         return Inertia::render('Worker/Index', [
             'workers' => Worker::all()
         ]);
