@@ -12,11 +12,16 @@ export default function CreateWorker() {
         state: '',
         zip_code: '',
         phone: '',
+        password: '',   // Afegit per al password
+        company_id: '', // Afegit per al company_id
+        is_admin: false, // Afegit per al camp is_admin, tot i que serà false per defecte
     });
 
+    // Gestionar el submit
     const handleSubmit = (e) => {
         e.preventDefault();
-        setData('is_company', true);
+        // Optional: Especifica automàticament el company_id per a l'empresa actual
+        setData('company_id', window.CompanyId);  // Supon que `CompanyId` és un valor passat pel backend
         post(route('worker.store'));
     };
 
@@ -124,6 +129,19 @@ export default function CreateWorker() {
                         {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
                     </div>
 
+                    {/* Password */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Contrasenya</label>
+                        <input
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#9e2a2f]"
+                            required
+                        />
+                        {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+                    </div>
+
                     <div className="mt-6">
                         <button
                             type="submit"
@@ -135,7 +153,7 @@ export default function CreateWorker() {
                     </div>
                 </form>
 
-                {/* Resumen de errores */}
+                {/* Resumen de errors */}
                 {Object.keys(errors).length > 0 && (
                     <div className="mt-6 bg-red-100 p-4 rounded-lg shadow-sm">
                         <h2 className="text-sm font-bold text-red-600">Errors en el formulari:</h2>

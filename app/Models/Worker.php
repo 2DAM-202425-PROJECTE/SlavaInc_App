@@ -2,34 +2,58 @@
 
 namespace App\Models;
 
+use Illuminate\Foundation\Auth\User as Authenticatable; // Heretar de Authenticatable
+use Illuminate\Notifications\Notifiable; // Afegir Notifiable
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Worker extends Model
+/**
+ * @method static create(array $array)
+ */
+class Worker extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable; // Afegir Notifiable
 
+    /**
+     * Atributs que es poden assignar massivament.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'company_id',
         'name',
-        'password',
         'email',
+        'password',
         'phone',
         'address',
         'is_admin',
     ];
 
+    /**
+     * Atributs que s'han de mantenir ocults per a la serialització.
+     *
+     * @var list<string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    protected $casts = [
-        'is_admin' => 'boolean',
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    /**
+     * Els atributs que s'han de convertir.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 
+    /**
+     * Relació amb el model Company.
+     */
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
