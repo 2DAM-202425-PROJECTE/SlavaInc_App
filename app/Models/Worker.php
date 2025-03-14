@@ -12,6 +12,7 @@ class Worker extends Model
     protected $fillable = [
         'company_id',
         'name',
+        'password',
         'email',
         'phone',
         'address',
@@ -28,9 +29,9 @@ class Worker extends Model
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
-
 }

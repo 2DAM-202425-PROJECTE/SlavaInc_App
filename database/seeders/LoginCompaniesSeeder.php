@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -15,39 +14,45 @@ class LoginCompaniesSeeder extends Seeder
     public function run(): void
     {
         // Primera empresa
-        $user1 = User::create([
-            'name'  => 'Empresa Demo',
-            'email' => 'empresa@demo.com',
-            'password' => Hash::make('password'),
-            'role' => 'company',
-        ]);
-
         Company::create([
-            'user_id' => $user1->id,
-            'name'    => $user1->name,
-            'address' => 'Carrer de l\'Empresa, 10',
+            'name'    => 'Empresa Demo',
+            'email'   => 'empresa@demo.com',
+            'password' => Hash::make('password'),
+            'address' => "Carrer de l'Empresa, 10",
             'city'    => 'Barcelona',
             'state'   => 'Catalunya',
             'zip_code'=> '08002',
             'phone'   => '123456789',
+            'is_company' => true,
+            'is_admin' => true
         ]);
 
         // Segona empresa
-        $user2 = User::create([
-            'name'  => 'Empresa Demo 2',
-            'email' => 'empresa2@demo.com',
-            'password' => Hash::make('password'),
-            'role' => 'company',
-        ]);
-
         Company::create([
-            'user_id' => $user2->id,
-            'name'    => $user2->name,
-            'address' => 'Avinguda de l\'Empresa, 20',
+            'name'    => 'Empresa Demo 2',
+            'email'   => 'empresa2@demo.com',
+            'password' => Hash::make('password'),
+            'address' => "Avinguda de l'Empresa, 20",
             'city'    => 'València',
             'state'   => 'Comunitat Valenciana',
             'zip_code'=> '46001',
             'phone'   => '987654321',
+            'is_company' => true,
+            'is_admin' => true
+        ]);
+
+        // Tercera empresa
+        Company::create([
+            'name'    => 'Empresa Demo 3',
+            'email'   => 'empresa3@demo.com',
+            'password' => Hash::make('password'),
+            'address' => "Plaça de l'Empresa, 30",
+            'city'    => 'Madrid',
+            'state'   => 'Comunitat de Madrid',
+            'zip_code'=> '28001',
+            'phone'   => '654987321',
+            'is_company' => true,
+            'is_admin' => true
         ]);
     }
 }

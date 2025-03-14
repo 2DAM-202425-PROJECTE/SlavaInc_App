@@ -36,6 +36,7 @@ class Company extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // Relació amb els treballadors
     public function workers(): HasMany
     {
         return $this->hasMany(Worker::class, 'company_id');
