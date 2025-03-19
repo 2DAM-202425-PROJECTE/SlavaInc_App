@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return redirect()->route('login'); // Redirigeix a la ruta de login
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {
@@ -54,4 +56,9 @@ Route::middleware('auth:company,web')->group(function () {
 
 
 
+// Add near other routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/client/services/{service}', [ClientController::class, 'show'])
+        ->name('client.services.show');
+});
 require __DIR__.'/auth.php';

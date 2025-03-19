@@ -15,11 +15,7 @@ class Service extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'type'
-    ];
+    protected $fillable = ['name', 'description', 'type'];
 
     public function companies(): BelongsToMany
     {
