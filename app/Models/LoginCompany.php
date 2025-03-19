@@ -15,6 +15,7 @@ class LoginCompany extends Model
 {
     use HasFactory;
 
+    protected $table = 'login_companies';
     protected $fillable = [
         'user_id',
         'name',
@@ -23,6 +24,7 @@ class LoginCompany extends Model
         'state',
         'zip_code',
         'phone',
+        'logo',
     ];
 
     // Relació inversa amb l'usuari
@@ -36,7 +38,14 @@ class LoginCompany extends Model
     }
     public function services(): BelongsToMany
     {
-        return $this->belongsToMany(Service::class, 'companies_services')
-            ->withTimestamps();
+        return $this->belongsToMany(Service::class, 'companies_services', 'login_company_id', 'service_id')
+            ->using(CompanyService::class)
+            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+    }
+
+    public function getLogoFromPivot($serviceId): ?string
+    {
+        $pivot = $this->services()->where('services.id', $serviceId)->first()->pivot ?? null;
+        return $pivot ? $pivot->logo : null;
     }
 }

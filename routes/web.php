@@ -44,4 +44,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/client/services/{service}', [ClientController::class, 'show'])
         ->name('client.services.show');
 });
+
+// web.php
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Ruta per mostrar el formulari de reserva
+    Route::get('/client/cita/{company}', [ClientController::class, 'showAppointment'])
+        ->name('client.cita.show');
+
+    // Ruta per processar la reserva
+    Route::post('/client/cita', [ClientController::class, 'showAppointment'])
+        ->name('client.cita.store');
+});
 require __DIR__.'/auth.php';

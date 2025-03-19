@@ -27,6 +27,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code' => '08001',
             'phone'   => '933112233',
+            'logo'    => ('logos/neteja_express.jpg'), // Logo existent
         ]);
 
         // Empresa 2 - Especialista en vehicles i piscines
@@ -45,6 +46,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Comunitat Valenciana',
             'zip_code' => '46002',
             'phone'   => '961234567',
+            'logo'    => ('logos/aquaclean.jpg'), // Logo existent
         ]);
 
         // Empresa 3 - Empresa generalista
@@ -63,6 +65,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code' => '25002',
             'phone'   => '973451234',
+            'logo'    => ('logos/neteges_integral.jpg'), // Logo existent
         ]);
 
         // Empresa 4 - Especialistes en llars
@@ -81,6 +84,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code' => '08006',
             'phone'   => '932345678',
+            'logo'    => ('logos/llar_net.jpg'), // Logo existent
         ]);
 
         // Empresa 5 - Especialistes en garatges
@@ -99,6 +103,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code' => '43002',
             'phone'   => '977891234',
+            'logo'    => ('logos/garagemasters.jpg'), // Logo existent
         ]);
 
         // Empresa 6 - Rentat de vehicles premium
@@ -117,6 +122,26 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code' => '08016',
             'phone'   => '934567890',
+            'logo'    => ('logos/autoshine.jpg'), // Logo existent
+        ]);
+
+        // Empresa 7 - Especialista en serveis diversos
+        $user7 = User::create([
+            'name'  => 'Serveis Diversos SL',
+            'email' => 'info@diversos.com',
+            'password' => Hash::make('password'),
+            'role' => 'company',
+        ]);
+
+        LoginCompany::create([
+            'user_id' => $user7->id,
+            'name'    => $user7->name,
+            'address' => 'Carrer Versàtil, 77',
+            'city'    => 'Tarragona',
+            'state'   => 'Catalunya',
+            'zip_code' => '43003',
+            'phone'   => '977445566',
+            'logo'    => 'logos/autoshine.jpg',
         ]);
     }
 }

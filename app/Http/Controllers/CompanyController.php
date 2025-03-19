@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class CompanyController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         // Carreguem l'usuari AMB company i workers
         $user = Auth::user()->load(['company.workers']);
