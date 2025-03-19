@@ -27,7 +27,6 @@ class WorkersSeeder extends Seeder
                 'phone' => '600111222',
                 'address' => $company->address,
                 'is_admin' => false,
-                'is_worker' => true,
             ]);
 
             // Treballador 2
@@ -39,7 +38,6 @@ class WorkersSeeder extends Seeder
                 'phone' => '600222333',
                 'address' => $company->address,
                 'is_admin' => false,
-                'is_worker' => true,
             ]);
 
             // Treballador 3
@@ -51,7 +49,6 @@ class WorkersSeeder extends Seeder
                 'phone' => '600333444',
                 'address' => $company->address,
                 'is_admin' => false,
-                'is_worker' => true,
             ]);
 
             // Treballador 4
@@ -63,7 +60,6 @@ class WorkersSeeder extends Seeder
                 'phone' => '600444555',
                 'address' => $company->address,
                 'is_admin' => false,
-                'is_worker' => true,
             ]);
 
             // Treballador 5
@@ -75,7 +71,6 @@ class WorkersSeeder extends Seeder
                 'phone' => '600555666',
                 'address' => $company->address,
                 'is_admin' => false,
-                'is_worker' => true,
             ]);
         }
     }
