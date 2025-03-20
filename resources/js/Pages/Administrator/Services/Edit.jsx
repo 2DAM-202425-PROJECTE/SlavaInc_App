@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useForm, usePage } from '@inertiajs/react';
+import Header from "@/Components/Header";
+import Footer from "@/Components/Footer.jsx";
+
 
 const ServicesEdit = ({ service }) => {
     const { data, setData, put, processing, errors } = useForm({
@@ -30,6 +33,7 @@ const ServicesEdit = ({ service }) => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
             {/* Capçalera amb botons de navegació */}
             <section className="w-full bg-gradient-to-r from-[#1e40af] to-[#3b82f6] py-12 px-6">
                 <div className="max-w-6xl mx-auto text-center">
@@ -195,6 +199,7 @@ const ServicesEdit = ({ service }) => {
                     </div>
                 </div>
             )}
+            <Footer/>
         </div>
     );
 };

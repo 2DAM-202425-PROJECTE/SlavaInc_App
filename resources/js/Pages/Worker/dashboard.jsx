@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
-import { Link, usePage } from '@inertiajs/react';
+import {
+    faCalendarAlt,
+    faInfoCircle,
+    faUser,
+    faSignOutAlt
+} from '@fortawesome/free-solid-svg-icons';
+import { Link, usePage, router } from '@inertiajs/react'; // Importa router d'Inertia
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import Header from "@/Components/Header";
+import Footer from "@/Components/Footer.jsx";
+
 
 // Definir fakeDates dins del component
 const fakeDates = [
@@ -12,7 +20,7 @@ const fakeDates = [
         id: 1,
         user_id: 1,
         service_id: 1,
-        date: '2025-02-26',
+        date: '2025-03-26',
         client: {
             name: 'Joan Pérez',
             phone: '123 456 789',
@@ -29,7 +37,7 @@ const fakeDates = [
         id: 2,
         user_id: 1,
         service_id: 2,
-        date: '2025-02-27',
+        date: '2025-03-27',
         client: {
             name: 'Maria García',
             phone: '987 654 321',
@@ -70,6 +78,7 @@ const Dashboard = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#7f1d1d] to-[#dc2626] text-white" />
             {/* Capçalera */}
             <section className="w-full bg-gradient-to-r from-[#7f1d1d] to-[#dc2626] py-12 px-6">
                 <div className="max-w-6xl mx-auto text-center">
@@ -90,6 +99,10 @@ const Dashboard = () => {
                     startAccessor="start"
                     endAccessor="end"
                     style={{ height: 500 }}
+                    onSelectEvent={(event) => {
+                        const serviceId = event.resource.service.id;
+                        window.location.href = `/worker/services/${serviceId}`;
+                    }}
                 />
             </div>
 
@@ -136,6 +149,7 @@ const Dashboard = () => {
                     </div>
                 )}
             </div>
+            <Footer/>
         </div>
     );
 };

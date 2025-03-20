@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
+import Header from "@/Components/Header";
+import Footer from "@/Components/Footer.jsx";
 
 const ServicesIndex = ({ services }) => {
     const { delete: destroy } = useForm();
@@ -24,6 +26,7 @@ const ServicesIndex = ({ services }) => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
             {/* Capçalera amb botons de navegació */}
             <section className="w-full bg-gradient-to-r from-[#1e40af] to-[#3b82f6] py-12 px-6">
                 <div className="max-w-6xl mx-auto text-center">
@@ -157,6 +160,7 @@ const ServicesIndex = ({ services }) => {
                     </div>
                 </div>
             )}
+            <Footer/>
         </div>
     );
 };

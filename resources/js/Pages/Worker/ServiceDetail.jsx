@@ -1,5 +1,7 @@
 import React from 'react';
 import { usePage } from '@inertiajs/react';
+import Header from "@/Components/Header";
+import Footer from "@/Components/Footer.jsx";
 
 const ServiceDetail = () => {
     const { service, date } = usePage().props;
@@ -22,6 +24,7 @@ const ServiceDetail = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#7f1d1d] to-[#dc2626] text-white" />
             {/* Capçalera */}
             <section className="w-full bg-gradient-to-r from-[#7f1d1d] to-[#dc2626] py-12 px-6">
                 <div className="max-w-6xl mx-auto text-center">
@@ -68,6 +71,7 @@ const ServiceDetail = () => {
                     </div>
                 </div>
             </div>
+            <Footer/>
         </div>
     );
 };

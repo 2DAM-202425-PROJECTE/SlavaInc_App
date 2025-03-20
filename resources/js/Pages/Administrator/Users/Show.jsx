@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import Header from "@/Components/Header";
+import Footer from "@/Components/Footer.jsx";
 
 const UsersShow = ({ user }) => {
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
             {/* Capçalera */}
             <section className="w-full bg-gradient-to-r from-[#1e40af] to-[#3b82f6] py-12 px-6">
                 <div className="max-w-6xl mx-auto text-center">
@@ -102,6 +105,7 @@ const UsersShow = ({ user }) => {
                     </div>
                 </div>
             </div>
+            <Footer/>
         </div>
     );
 };
