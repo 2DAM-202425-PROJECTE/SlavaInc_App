@@ -21,4 +21,10 @@ class Service extends Model
         return $this->belongsToMany(LoginCompany::class, 'companies_services')
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
     }
+
+    // Relació amb les dates (una servei pot tenir moltes dates)
+    public function dates()
+    {
+        return $this->hasMany(Date::class);
+    }
 }
