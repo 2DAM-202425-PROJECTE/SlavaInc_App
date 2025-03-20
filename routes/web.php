@@ -5,7 +5,6 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
 use App\Models\Service;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -24,36 +23,40 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    // Rutes perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rutes client
+    Route::prefix('client')->group(function () {
+        // Llistat d'empreses per servei: /client/services/1
+        Route::get('/services/{service}', [ClientController::class, 'show'])
+            ->name('client.services.show');
+
+        // Formulari de cita: /client/services/1/company/2
+        Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])
+            ->name('client.cita.show');
+
+        // Processar cita
+        Route::post('/cita', [ClientController::class, 'storeAppointment'])
+            ->name('client.cita.store');
+    });
+
+    // Rutes companyia
+    Route::prefix('company')->group(function () {
+        Route::get('/dashboard', [CompanyController::class, 'index'])
+            ->name('company.dashboard');
+    });
+
+    // Rutes treballador
+    Route::prefix('worker')->group(function () {
+        Route::get('/dashboard', function () {
+            return Inertia::render('Worker/dashboard');
+        });
+        Route::get('/create', [WorkerController::class, 'create'])
+            ->name('workers.create');
+    });
 });
 
-Route::get('/Worker/dashboard', function () {
-    return Inertia::render('Worker/dashboard');
-});
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/company/dashboard', [CompanyController::class, 'index'])->name('company.dashboard');
-});
-
-Route::get('/workers/create', [WorkerController::class, 'create'])->name('workers.create');
-
-// Add near other routes
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/client/services/{service}', [ClientController::class, 'show'])
-        ->name('client.services.show');
-});
-
-// web.php
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Ruta per mostrar el formulari de reserva
-    Route::get('/client/cita/{company}', [ClientController::class, 'showAppointment'])
-        ->name('client.cita.show');
-
-    // Ruta per processar la reserva
-    Route::post('/client/cita', [ClientController::class, 'showAppointment'])
-        ->name('client.cita.store');
-});
 require __DIR__.'/auth.php';

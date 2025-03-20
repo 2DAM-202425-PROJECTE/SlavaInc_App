@@ -23,40 +23,38 @@ class ClientController extends Controller
         if (auth()->user()->role !== 'client') {
             abort(403);
         }
-
-        $service->load('companies');
+        // Carrega les companyies amb les dades del pivot
+        $service->load(['companies' => function($query) {
+            $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+        }]);
 
         return Inertia::render('Client/ServiceInfo', [
             'service' => $service,
             'companies' => $service->companies
         ]);
     }
-
     /**
      * Mostra el formulari de reserva de cita.
      *
      * @param Request $request
      * @return Response
      */
-    public function showAppointment(Request $request, LoginCompany $company): Response
+    public function showAppointment(Service $service, LoginCompany $company): Response
     {
-        // Validar que el servei existeix (passat com a query parameter)
-        $serviceId = $request->query('service_id');
-        $service = Service::findOrFail($serviceId);
+        // Verificar que la companyia té aquest servei
+        if (!$company->services->contains($service->id)) {
+            abort(404, 'Aquesta empresa no ofereix aquest servei');
+        }
 
-        // Obtenir el preu estimat (passat com a query parameter)
-        $priceEstimate = $request->query('priceEstimate');
-
-        // Obtenir el logo del pivot (si existeix)
-        $logo = $company->getLogoFromPivot($service->id);
-
-        // Afegir el logo al objecte company
-        $company->pivot = ['logo' => $logo];
+        // Carregar dades del pivot
+        $company->load(['services' => function($query) use ($service) {
+            $query->where('services.id', $service->id)
+                ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+        }]);
 
         return Inertia::render('Client/CitesClients', [
-            'company' => $company,
             'service' => $service,
-            'priceEstimate' => $priceEstimate
+            'company' => $company
         ]);
     }
 
@@ -68,12 +66,8 @@ class ClientController extends Controller
      */
     public function storeAppointment(Request $request): RedirectResponse
     {
-        if (auth()->user()->role !== 'client') {
-            abort(403);
-        }
-
         $request->validate([
-            'company_id' => 'required|exists:companies,id',
+            'company_id' => 'required|exists:login_companies,id', // Corregit aquí
             'service_id' => 'required|exists:services,id',
             'date' => 'required|date|after_or_equal:today',
             'time' => 'required|date_format:H:i',
@@ -81,7 +75,6 @@ class ClientController extends Controller
             'notes' => 'nullable|string|max:500'
         ]);
 
-        // Crear la cita
         Appointment::create([
             'user_id' => auth()->id(),
             'company_id' => $request->company_id,
@@ -89,8 +82,7 @@ class ClientController extends Controller
             'date' => $request->date,
             'time' => $request->time,
             'price' => $request->price,
-            'notes' => $request->notes,
-            'status' => 'pending' // Estat per defecte
+            'notes' => $request->notes
         ]);
 
         return redirect()->route('client.dashboard')->with('success', 'Cita reservada correctament.');

@@ -5,7 +5,7 @@ import { faArrowLeft, faBuilding, faMapMarkerAlt, faFilter, faSort, faEuroSign }
 import { useDebounce } from 'use-debounce';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import {Inertia} from "@inertiajs/inertia";
+import { Inertia } from "@inertiajs/inertia";
 
 const backgroundImages = {
     casa: '/images/casa.jpg',
@@ -15,15 +15,27 @@ const backgroundImages = {
     altres: '/images/altres.jpg'
 };
 
-const CompanyCard = ({ company, serviceType, inputValue, selectedSize }) => {
+// ServiceInfo.jsx - CompanyCard corregit
+const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }) => {
+    // Accés universal al pivot (funciona per a tots els casos)
+    const pivot = company.pivot || (company.services?.[0]?.pivot);
+
+    if (!pivot) {
+        return (
+            <div className="bg-white rounded-xl shadow-lg p-6">
+                Error: Dades de la companyia no disponibles
+            </div>
+        );
+    }
+
     const getPriceEstimate = () => {
         if (['casa', 'garatge', 'altres'].includes(serviceType)) {
-            return inputValue ? company.pivot.price_per_unit * inputValue : 0;
+            return inputValue ? pivot.price_per_unit * inputValue : 0;
         } else {
             switch(selectedSize) {
-                case 'petit': return company.pivot.min_price;
-                case 'mitjà': return (company.pivot.min_price + company.pivot.max_price) / 2;
-                case 'gran': return company.pivot.max_price;
+                case 'petit': return pivot.min_price;
+                case 'mitjà': return (pivot.min_price + pivot.max_price) / 2;
+                case 'gran': return pivot.max_price;
                 default: return 0;
             }
         }
@@ -34,17 +46,25 @@ const CompanyCard = ({ company, serviceType, inputValue, selectedSize }) => {
         ? inputValue !== '' && inputValue > 0
         : !!selectedSize;
 
+    // Funció handleReserve corregida
     const handleReserve = () => {
-        const url = `/client/cita/${company.id}`;
-        Inertia.visit(url, { method: 'get' });
+        Inertia.visit(route('client.cita.show', {
+            service: service.id,
+            company: company.id
+        }));
     };
+
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
             <div className="flex flex-col md:flex-row items-start gap-4">
                 <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white rounded-lg">
-                    {company.pivot.logo ? (
-                        <img src={`/${company.pivot.logo}`} alt={`${company.name} logo`} className="w-12 h-12 rounded-full" />
+                    {pivot.logo ? (
+                        <img
+                            src={`/${pivot.logo}`}
+                            alt={`${company.name} logo`}
+                            className="w-12 h-12 rounded-full object-cover"
+                        />
                     ) : (
                         <FontAwesomeIcon icon={faBuilding} className="text-xl" />
                     )}
@@ -421,9 +441,10 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                 <CompanyCard
                                     key={company.id}
                                     company={company}
+                                    service={service}
                                     serviceType={service.type}
                                     inputValue={inputValue}
-                                    selectedSize={selectedSize}  // Afegim aquesta prop
+                                    selectedSize={selectedSize}
                                 />
                             ))}
                         </div>
