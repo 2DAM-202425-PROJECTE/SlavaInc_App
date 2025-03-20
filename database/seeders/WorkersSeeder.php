@@ -26,7 +26,7 @@ class WorkersSeeder extends Seeder
                 'password' => Hash::make('password'), // Poses una contrasenya segura
                 'phone' => '600111222',
                 'address' => $company->address,
-                'is_admin' => false,
+//                'is_admin' => false,
             ]);
 
             // Treballador 2
@@ -37,7 +37,7 @@ class WorkersSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '600222333',
                 'address' => $company->address,
-                'is_admin' => false,
+//                'is_admin' => false,
             ]);
 
             // Treballador 3
@@ -48,7 +48,7 @@ class WorkersSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '600333444',
                 'address' => $company->address,
-                'is_admin' => false,
+//                'is_admin' => false,
             ]);
 
             // Treballador 4
@@ -59,7 +59,7 @@ class WorkersSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '600444555',
                 'address' => $company->address,
-                'is_admin' => false,
+//                'is_admin' => false,
             ]);
 
             // Treballador 5
@@ -70,7 +70,7 @@ class WorkersSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'phone' => '600555666',
                 'address' => $company->address,
-                'is_admin' => false,
+//                'is_admin' => false,
             ]);
         }
     }

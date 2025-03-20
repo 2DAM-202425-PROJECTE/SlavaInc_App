@@ -23,7 +23,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code'=> '08002',
             'phone'   => '123456789',
-            'is_admin' => true
+//            'is_admin' => true
         ]);
 
         // Segona empresa
@@ -36,7 +36,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Comunitat Valenciana',
             'zip_code'=> '46001',
             'phone'   => '987654321',
-            'is_admin' => true
+//            'is_admin' => true
         ]);
 
         // Tercera empresa
@@ -49,7 +49,7 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Comunitat de Madrid',
             'zip_code'=> '28001',
             'phone'   => '654987321',
-            'is_admin' => true
+//            'is_admin' => true
         ]);
     }
 }

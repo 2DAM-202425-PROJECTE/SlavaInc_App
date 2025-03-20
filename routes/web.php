@@ -22,24 +22,17 @@ Route::get('/dashboard', function () {
 
     // Verificar després els treballadors/admins (guard 'company')
     if (Auth::guard('company')->check()) {
-        $user = Auth::guard('company')->user();
-
-        return $user->is_admin
-            ? app(CompanyController::class)->index()
-            : app(WorkerController::class)->index();
+        return app(CompanyController::class)->index();
     }
 
     if (Auth::guard('worker')->check()) {
-        $user = Auth::guard('worker')->user();
-        return $user->is_admin
-            ? app(CompanyController::class)->index()
-            : app(WorkerController::class)->index();
+        return app(WorkerController::class)->index();
     }
       // Si no està autenticat, redirigir a la pàgina de login
     return redirect()->route('login');
 })->middleware('auth:company,web,worker')->name('dashboard');
 
-Route::middleware('auth:company,web')->group(function () {
+Route::middleware('auth:company,web,worker')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

@@ -14,7 +14,7 @@ class CompanyController extends Controller
 
         $user = Auth::guard('company')->user(); // Assegurem que estem al guard correcte
 
-        if (!$user || !$user->is_admin) {
+        if (!$user) {
             abort(403, 'Accés no autoritzat.');
         }
 
