@@ -19,7 +19,12 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     // Verificar primer els clients (guard 'web')
     if (Auth::guard('web')->check()) {
-        return Inertia::render('Client/Dashboard');
+        // Carregar els serveis (pots afegir filtratge segons sigui necessari)
+        $services = Service::all();
+
+        return Inertia::render('Client/Dashboard', [
+            'services' => $services,
+        ]);
     }
 
     // Verificar després els treballadors/admins (guard 'company')
@@ -57,7 +62,7 @@ Route::middleware('auth:company,web')->group(function () {
 
 
 // Add near other routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth:web,company'])->group(function () {
     Route::get('/client/services/{service}', [ClientController::class, 'show'])
         ->name('client.services.show');
 });
