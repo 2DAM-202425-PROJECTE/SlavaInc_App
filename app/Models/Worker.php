@@ -21,14 +21,14 @@ class Worker extends Authenticatable
     protected $fillable = [
         'company_id',
         'name',
-        'schedule',
         'email',
         'password',
+        'phone',
+        'schedule',
         'address',
         'city',
         'state',
         'zip_code',
-        'phone',
         'is_admin',
     ];
 

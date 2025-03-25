@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -40,6 +41,11 @@ class Company extends Authenticatable
     public function workers(): HasMany
     {
         return $this->hasMany(Worker::class, 'company_id');
+    }
+    public function services(): BelongsToMany
+    {
+        return $this->belongsToMany(Service::class, 'companies_services')
+            ->withTimestamps();
     }
 
 
