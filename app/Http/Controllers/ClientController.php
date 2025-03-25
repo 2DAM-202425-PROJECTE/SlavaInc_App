@@ -9,6 +9,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -33,6 +35,7 @@ class ClientController extends Controller
             'companies' => $service->companies
         ]);
     }
+
     /**
      * Mostra el formulari de reserva de cita.
      *
@@ -59,6 +62,29 @@ class ClientController extends Controller
     }
 
     /**
+     * Obté les hores ocupades per una empresa en una data específica
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function getOccupiedSlots(Request $request): Response
+    {
+        $request->validate([
+            'company_id' => 'required|exists:login_companies,id',
+            'date' => 'required|date'
+        ]);
+
+        $occupiedSlots = Appointment::where('company_id', $request->company_id)
+            ->where('date', $request->date)
+            ->pluck('time')
+            ->toArray();
+
+        return Inertia::render('Client/CitesClients', [
+            'occupiedSlots' => $occupiedSlots
+        ]);
+    }
+
+    /**
      * Guarda una nova cita a la base de dades.
      *
      * @param Request $request
@@ -66,25 +92,128 @@ class ClientController extends Controller
      */
     public function storeAppointment(Request $request): RedirectResponse
     {
-        $request->validate([
-            'company_id' => 'required|exists:login_companies,id', // Corregit aquí
-            'service_id' => 'required|exists:services,id',
-            'date' => 'required|date|after_or_equal:today',
-            'time' => 'required|date_format:H:i',
-            'price' => 'required|numeric',
-            'notes' => 'nullable|string|max:500'
+        \Log::channel('appointments')->info('Inicio reserva', [
+            'user' => auth()->user() ? auth()->user()->id : 'guest',
+            'ip' => $request->ip(),
+            'data' => $request->all()
         ]);
 
-        Appointment::create([
-            'user_id' => auth()->id(),
-            'company_id' => $request->company_id,
-            'service_id' => $request->service_id,
-            'date' => $request->date,
-            'time' => $request->time,
-            'price' => $request->price,
-            'notes' => $request->notes
-        ]);
+        // Verifica autenticación primero
+        if (!auth()->check()) {
+            \Log::channel('appointments')->error('Usuario no autenticado');
+            return redirect()->route('login');
+        }
 
-        return redirect()->route('client.dashboard')->with('success', 'Cita reservada correctament.');
+        try {
+            $validated = $request->validate([
+                'company_id' => 'required|exists:login_companies,id',
+                'service_id' => 'required|exists:services,id',
+                'date' => [
+                    'required',
+                    'date',
+                    function ($attribute, $value, $fail) {
+                        if (strtotime($value) < strtotime('today')) {
+                            $fail('La fecha debe ser hoy o en el futuro');
+                        }
+                    }
+                ],
+                'time' => [
+                    'required',
+                    'date_format:H:i',
+                    function ($attribute, $value, $fail) use ($request) {
+                        if (date('Y-m-d') === $request->date &&
+                            strtotime($value) < strtotime('now')) {
+                            $fail('Para citas hoy, la hora debe ser futura');
+                        }
+                    }
+                ],
+                'price' => 'required|numeric|min:0.1',
+                'notes' => 'nullable|string|max:500'
+            ], [
+                'date.after_or_equal' => 'La fecha debe ser hoy o en el futuro',
+                'time.date_format' => 'Formato de hora inválido (HH:MM)'
+            ]);
+
+            \Log::channel('appointments')->debug('Datos validados', $validated);
+
+            // Verificación de relación empresa-servicio
+            $serviceExists = LoginCompany::whereHas('services', fn($q) => $q->where('services.id', $validated['service_id']))
+                ->where('id', $validated['company_id'])
+                ->exists();
+
+            if (!$serviceExists) {
+                \Log::channel('appointments')->error('Relación no existe', [
+                    'company_id' => $validated['company_id'],
+                    'service_id' => $validated['service_id']
+                ]);
+                return back()->withErrors(['error' => 'Relación empresa-servicio no válida']);
+            }
+
+            // Verificar si la cita ya existe
+            $existingAppointment = Appointment::where('company_id', $validated['company_id'])
+                ->where('date', $validated['date'])
+                ->where('time', $validated['time'])
+                ->first();
+
+            if ($existingAppointment) {
+                \Log::channel('appointments')->warning('Cita duplicada intentada', [
+                    'company_id' => $validated['company_id'],
+                    'date' => $validated['date'],
+                    'time' => $validated['time']
+                ]);
+                return back()->withErrors(['time' => 'Esta hora ya está reservada. Por favor elige otra hora.']);
+            }
+
+            // Creación con transacción
+            DB::beginTransaction();
+
+            $appointment = Appointment::create([
+                'user_id' => auth()->id(),
+                'company_id' => $validated['company_id'],
+                'service_id' => $validated['service_id'],
+                'date' => $validated['date'],
+                'time' => $validated['time'],
+                'price' => $validated['price'],
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'pending'
+            ]);
+
+            DB::commit();
+
+            \Log::channel('appointments')->info('Cita creada exitosamente', [
+                'appointment_id' => $appointment->id
+            ]);
+
+            return redirect()->route('client.appointments.index')->with('success', '¡Cita reservada con éxito!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            \Log::channel('appointments')->error('Error validación', [
+                'errors' => $e->errors()
+            ]);
+            return back()->withErrors($e->errors());
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::channel('appointments')->error('Error crítico', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return back()->withErrors(['error' => 'Error inesperado: '.$e->getMessage()]);
+        }
+    }
+
+    public function indexAppointments(): Response
+    {
+        $appointments = Appointment::with(['company', 'service'])
+            ->where('user_id', auth()->id())
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->get();
+
+        return Inertia::render('Client/CitesIndex', [
+            'appointments' => $appointments
+        ]);
     }
 }
