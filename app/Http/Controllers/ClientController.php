@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LoginCompany;
+use App\Models\Company;
 use App\Models\Service;
 use App\Models\Appointment;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +42,7 @@ class ClientController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function showAppointment(Service $service, LoginCompany $company): Response
+    public function showAppointment(Service $service, Company $company): Response
     {
         // Verificar que la companyia té aquest servei
         if (!$company->services->contains($service->id)) {
@@ -137,7 +137,7 @@ class ClientController extends Controller
             \Log::channel('appointments')->debug('Datos validados', $validated);
 
             // Verificación de relación empresa-servicio
-            $serviceExists = LoginCompany::whereHas('services', fn($q) => $q->where('services.id', $validated['service_id']))
+            $serviceExists = Company::whereHas('services', fn($q) => $q->where('services.id', $validated['service_id']))
                 ->where('id', $validated['company_id'])
                 ->exists();
 

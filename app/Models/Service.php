@@ -18,7 +18,7 @@ class Service extends Model
 
     public function companies(): BelongsToMany
     {
-        return $this->belongsToMany(LoginCompany::class, 'companies_services')
+        return $this->belongsToMany(Company::class, 'companies_services')
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
     }
 

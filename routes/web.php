@@ -4,6 +4,10 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
+use App\Models\User;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Company;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Models\Service;
@@ -27,17 +31,24 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    if (auth()->user()->role === 'client') {
-        return Inertia::render('Client/Dashboard', [
-            'services' => Service::all()
-        ]);
-    } elseif (auth()->user()->role === 'company') {
-        return Inertia::render('Worker/dashboard');
+    // Verificar primer els clients (guard 'web')
+    if (Auth::guard('web')->check()) {
+        return Inertia::render('Client/Dashboard');
     }
-})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    // Rutes perfil
+    // Verificar després els treballadors/admins (guard 'company')
+    if (Auth::guard('company')->check()) {
+        return app(CompanyController::class)->index();
+    }
+
+    if (Auth::guard('worker')->check()) {
+        return app(WorkerController::class)->index();
+    }
+      // Si no està autenticat, redirigir a la pàgina de login
+    return redirect()->route('login');
+})->middleware('auth:company,web,worker')->name('dashboard');
+
+Route::middleware('auth:company,web,worker')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -60,25 +71,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/mis-citas', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
     });
 
-    // Rutes companyia
-    Route::get('/dashboard', function () {
-        if (auth()->user()->role === 'client') {
-            return Inertia::render('Client/Dashboard', [
-                'services' => Service::all()
-            ]);
-        } elseif (auth()->user()->role === 'company') {
-            return Inertia::render('Worker/dashboard');
-        }
-    })->middleware(['auth', 'verified'])->name('client.services.index'); // Cambia el nombre de la ruta
+    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
 
-    // Rutes treballador
-    Route::prefix('worker')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Worker/dashboard');
-        });
-        Route::get('/create', [WorkerController::class, 'create'])
-            ->name('workers.create');
-    });
 });
+
+
 
 require __DIR__.'/auth.php';

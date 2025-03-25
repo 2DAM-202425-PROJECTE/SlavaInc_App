@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\LoginCompany;
+use App\Models\Company;
 use App\Models\Worker;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class WorkersSeeder extends Seeder
 {
@@ -16,31 +15,62 @@ class WorkersSeeder extends Seeder
     public function run(): void
     {
         // Obtenir totes les empreses existents
-        $companies = LoginCompany::all();
+        $companies = Company::all();
 
         foreach ($companies as $company) {
             // Treballador 1
             Worker::create([
                 'company_id' => $company->id,
                 'name' => 'Treballador 1 de ' . $company->name,
-                'schedule' => '08:00-16:00',
+                'email' => 'treballador1@' . $company->name . '.com',
+                'password' => Hash::make('password'), // Poses una contrasenya segura
+                'phone' => '600111222',
                 'address' => $company->address,
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'phone' => '600111222'
+//                'is_admin' => false,
             ]);
 
             // Treballador 2
             Worker::create([
-                'company_id' => 2,
+                'company_id' => $company->id,
                 'name' => 'Treballador 2 de ' . $company->name,
-                'schedule' => '09:00-17:00',
+                'email' => 'treballador2@' . $company->name . '.com',
+                'password' => Hash::make('password'),
+                'phone' => '600222333',
                 'address' => $company->address,
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'phone' => '600333444'
+//                'is_admin' => false,
+            ]);
+
+            // Treballador 3
+            Worker::create([
+                'company_id' => $company->id,
+                'name' => 'Treballador 3 de ' . $company->name,
+                'email' => 'treballador3@' . $company->name . '.com',
+                'password' => Hash::make('password'),
+                'phone' => '600333444',
+                'address' => $company->address,
+//                'is_admin' => false,
+            ]);
+
+            // Treballador 4
+            Worker::create([
+                'company_id' => $company->id,
+                'name' => 'Treballador 4 de ' . $company->name,
+                'email' => 'treballador4@' . $company->name . '.com',
+                'password' => Hash::make('password'),
+                'phone' => '600444555',
+                'address' => $company->address,
+//                'is_admin' => false,
+            ]);
+
+            // Treballador 5
+            Worker::create([
+                'company_id' => $company->id,
+                'name' => 'Treballador 5 de ' . $company->name,
+                'email' => 'treballador5@' . $company->name . '.com',
+                'password' => Hash::make('password'),
+                'phone' => '600555666',
+                'address' => $company->address,
+//                'is_admin' => false,
             ]);
         }
     }

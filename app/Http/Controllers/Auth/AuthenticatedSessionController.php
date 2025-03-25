@@ -16,15 +16,25 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
-            'role' => 'required|in:client,company',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
             $request->session()->regenerate();
+            return redirect()->intended('dashboard');
+        }
 
+        // Intentar autenticar com a empresa
+        if (Auth::guard('company')->attempt($request->only('email', 'password'))) {
+            $request->session()->regenerate();
+            return redirect()->intended('dashboard');
+        }
+
+        // Intentar autenticar com a treballador
+        if (Auth::guard('worker')->attempt($request->only('email', 'password'))) {
+            $request->session()->regenerate();
             return redirect()->intended('dashboard');
         }
 
@@ -33,12 +43,19 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
+
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
+        // Tancar la sessió segons el guard actual
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        } elseif (Auth::guard('company')->check()) {
+            Auth::guard('company')->logout();
+        } elseif (Auth::guard('worker')->check()) {
+            Auth::guard('worker')->logout();
+        }
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

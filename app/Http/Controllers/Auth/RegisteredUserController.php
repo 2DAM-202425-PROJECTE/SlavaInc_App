@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -22,21 +23,33 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email|unique:companies,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => 'required|in:client,company',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
+        // Crear l'usuari a la taula corresponent
+        if ($request->role === 'client') {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        event(new Registered($user));
+            Auth::guard('web')->login($user);
+        } else if ($request->role === 'company') {
+            $company = Company::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'is_admin' => true, // Per defecte, l'empresa és admin
+                'is_company' => true, // Per defecte, l'empresa és company
+            ]);
 
-        Auth::login($user);
+            Auth::guard('company')->login($company);
+
+        }
+
+        event(new Registered($user ?? $company));
 
         return redirect()->route('dashboard');
     }
