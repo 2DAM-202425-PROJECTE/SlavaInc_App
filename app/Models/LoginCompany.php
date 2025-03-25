@@ -44,6 +44,12 @@ class LoginCompany extends Model
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
     }
 
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+
     public function getLogoFromPivot($serviceId): ?string
     {
         $pivot = $this->services()->where('services.id', $serviceId)->first()->pivot ?? null;

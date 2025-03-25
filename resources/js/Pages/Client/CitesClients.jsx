@@ -1,34 +1,74 @@
 import React, { useState } from 'react';
 import { Inertia } from '@inertiajs/inertia';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding, faCalendarAlt, faClock, faEuroSign } from '@fortawesome/free-solid-svg-icons';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
+import {
+    faBuilding,
+    faCalendarAlt,
+    faClock,
+    faEuroSign,
+    faArrowLeft
+} from '@fortawesome/free-solid-svg-icons';
+import {
+    format,
+    startOfMonth,
+    endOfMonth,
+    eachDayOfInterval,
+    isSameMonth,
+    isSameDay,
+    isBefore,
+    isToday
+} from 'date-fns';
 import { es } from 'date-fns/locale';
+import Header from "@/Components/Header.jsx";
+import Footer from "@/Components/Footer.jsx";
 
 const CitesClients = ({ company, service }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState('');
     const [notes, setNotes] = useState('');
+    const [bookedSlots, setBookedSlots] = useState([]);
 
-    // Generar dies del mes
+    // Función para verificar si una fecha está deshabilitada
+    const isDateDisabled = (day) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return !isSameMonth(day, currentMonth) || isBefore(day, today);
+    };
+
+    // Generar días del mes
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    // Generar horari
+    // Generar horario con validación de horas pasadas para el día actual
     const generateTimeSlots = () => {
         const slots = [];
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const isTodaySelected = selectedDate && isToday(selectedDate);
+
         // Matí: 09:00 - 12:30
         for (let hour = 9; hour <= 12; hour++) {
-            slots.push(`${hour.toString().padStart(2, '0')}:00`);
-            if (hour !== 12) slots.push(`${hour.toString().padStart(2, '0')}:30`);
+            if (!isTodaySelected || hour > currentHour || (hour === currentHour && 0 > currentMinute)) {
+                slots.push(`${hour.toString().padStart(2, '0')}:00`);
+            }
+            if (hour !== 12 && (!isTodaySelected || hour > currentHour || (hour === currentHour && 30 > currentMinute))) {
+                slots.push(`${hour.toString().padStart(2, '0')}:30`);
+            }
         }
+
         // Tarda: 15:00 - 17:30
         for (let hour = 15; hour <= 17; hour++) {
-            slots.push(`${hour.toString().padStart(2, '0')}:00`);
-            slots.push(`${hour.toString().padStart(2, '0')}:30`);
+            if (!isTodaySelected || hour > currentHour || (hour === currentHour && 0 > currentMinute)) {
+                slots.push(`${hour.toString().padStart(2, '0')}:00`);
+            }
+            if (!isTodaySelected || hour > currentHour || (hour === currentHour && 30 > currentMinute)) {
+                slots.push(`${hour.toString().padStart(2, '0')}:30`);
+            }
         }
+
         return slots;
     };
 
@@ -36,28 +76,33 @@ const CitesClients = ({ company, service }) => {
 
     if (!company || !service) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="text-center bg-white p-8 rounded-xl shadow-lg max-w-md">
-                    <div className="text-4xl mb-4 text-red-500">⚠️</div>
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                        Dades no disponibles
-                    </h2>
-                    <p className="text-gray-600 mb-4">
-                        No s'han trobat les dades necessàries per a la reserva
-                    </p>
-                    <button
-                        onClick={() => Inertia.visit(route('client.services.show', service?.id))}
-                        className="bg-[#1f7275] text-white px-6 py-2 rounded-lg hover:bg-[#156568] transition"
-                    >
-                        Tornar als serveis
-                    </button>
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
+                <div className="flex-1 flex items-center justify-center p-4">
+                    <div className="text-center bg-white p-8 rounded-xl shadow-lg max-w-md">
+                        <div className="text-4xl mb-4 text-red-500">⚠️</div>
+                        <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                            Dades no disponibles
+                        </h2>
+                        <p className="text-gray-600 mb-4">
+                            No s'han trobat les dades necessàries per a la reserva
+                        </p>
+                        <button
+                            onClick={() => Inertia.visit(route('client.services.show', service?.id))}
+                            className="bg-[#1f7275] text-white px-6 py-2 rounded-lg hover:bg-[#156568] transition"
+                        >
+                            Tornar als serveis
+                        </button>
+                    </div>
                 </div>
+                <Footer />
             </div>
         );
     }
 
     const calculatePrice = () => {
-        const pivot = company.services?.[0]?.pivot;
+        const pivot = company.services?.find(s => s.id === service.id)?.pivot;
+
         if (!pivot) return 0;
 
         if (['casa', 'garatge', 'altres'].includes(service.type)) {
@@ -67,28 +112,80 @@ const CitesClients = ({ company, service }) => {
         return ((pivot.min_price || 0) + (pivot.max_price || 0)) / 2;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!selectedDate || !selectedTime) {
-            alert('Si us plau, selecciona una data i hora');
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (!selectedDate || isBefore(selectedDate, today)) {
+            alert('Per favor selecciona una data vàlida (avui o en el futur)');
             return;
         }
 
-        Inertia.post('/client/cita', {
-            company_id: company.id,
-            service_id: service.id,
-            date: format(selectedDate, 'yyyy-MM-dd'),
-            time: selectedTime,
-            price: calculatePrice(),
-            notes
-        });
+        if (!selectedTime) {
+            alert('Per favor selecciona una hora');
+            return;
+        }
+
+        try {
+            const response = await Inertia.post(route('client.cita.store'), {
+                company_id: company.id,
+                service_id: service.id,
+                date: format(selectedDate, 'yyyy-MM-dd'),
+                time: selectedTime,
+                price: calculatePrice(),
+                notes
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSelectedDate(null);
+                    setSelectedTime('');
+                    setNotes('');
+                    alert('Cita reservada amb èxit!');
+                },
+                onError: (errors) => {
+                    if (errors.time) {
+                        alert(errors.time);
+                        setSelectedTime('');
+                    } else {
+                        alert('Error al reservar: ' + Object.values(errors).join('\n'));
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error en la petició:', error);
+            alert('Error inesperat al processar la reserva');
+        }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+            <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
+
+            {/* Capçalera de la pàgina */}
+            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-white">Reserva de cita</h1>
+                            <p className="text-xl text-white/90">Selecciona data i hora per al teu servei</p>
+                        </div>
+                        <button
+                            onClick={() => Inertia.visit(route('client.services.show', service.id))}
+                            className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                        >
+                            <FontAwesomeIcon icon={faArrowLeft} />
+                            Tornar enrere
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* Contingut principal */}
+            <div className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
                 {/* Secció superior amb info */}
-                <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
                     <div className="flex flex-col md:flex-row gap-8">
                         {/* Info Empresa */}
                         <div className="flex items-start gap-4 flex-1">
@@ -130,8 +227,8 @@ const CitesClients = ({ company, service }) => {
                     </div>
                 </div>
 
-                {/* Calendari */}
-                <div className="bg-white rounded-lg shadow-lg p-8">
+                {/* Calendario */}
+                <div className="bg-white rounded-xl shadow-lg p-8">
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div>
                             <h2 className="text-xl font-semibold text-gray-800 mb-4">Selecciona una data</h2>
@@ -141,24 +238,30 @@ const CitesClients = ({ company, service }) => {
                                         {day}
                                     </div>
                                 ))}
-                                {daysInMonth.map(day => (
-                                    <button
-                                        type="button"
-                                        key={day}
-                                        onClick={() => setSelectedDate(day)}
-                                        className={`
-                                            p-3 rounded-lg text-center transition
-                                            ${isSameMonth(day, currentMonth) ? 'text-gray-800' : 'text-gray-400'}
-                                            ${selectedDate && isSameDay(day, selectedDate)
-                                            ? 'bg-[#1f7275] text-white'
-                                            : 'hover:bg-gray-100'}
-                                            ${!isSameMonth(day, currentMonth) && 'opacity-50'}
-                                        `}
-                                        disabled={!isSameMonth(day, currentMonth)}
-                                    >
-                                        {format(day, 'd')}
-                                    </button>
-                                ))}
+                                {daysInMonth.map(day => {
+                                    const disabled = isDateDisabled(day);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={day}
+                                            onClick={() => !disabled && setSelectedDate(day)}
+                                            className={`
+                                                p-3 rounded-lg text-center transition
+                                                ${isSameMonth(day, currentMonth) ? 'text-gray-800' : 'text-gray-400'}
+                                                ${selectedDate && isSameDay(day, selectedDate)
+                                                ? 'bg-[#1f7275] text-white'
+                                                : disabled
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    : 'hover:bg-gray-100'
+                                            }
+                                            `}
+                                            disabled={disabled}
+                                            aria-label={`Día ${format(day, 'd')}${disabled ? ' (no disponible)' : ''}`}
+                                        >
+                                            {format(day, 'd')}
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             <div className="flex justify-between items-center mt-4">
@@ -185,23 +288,37 @@ const CitesClients = ({ company, service }) => {
                         {selectedDate && (
                             <div className="pt-6 border-t border-gray-200">
                                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Selecciona una hora</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                    {timeSlots.map(time => (
-                                        <button
-                                            type="button"
-                                            key={time}
-                                            onClick={() => setSelectedTime(time)}
-                                            className={`
-                                                p-3 rounded-lg text-center transition
-                                                ${selectedTime === time
-                                                ? 'bg-[#1f7275] text-white'
-                                                : 'bg-gray-100 hover:bg-gray-200'}
-                                            `}
-                                        >
-                                            {time}
-                                        </button>
-                                    ))}
-                                </div>
+                                {timeSlots.length > 0 ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                        {timeSlots.map(time => {
+                                            const isBooked = bookedSlots.some(slot => slot.time === time);
+                                            return (
+                                                <button
+                                                    type="button"
+                                                    key={time}
+                                                    onClick={() => !isBooked && setSelectedTime(time)}
+                                                    className={`
+                                                        p-3 rounded-lg text-center transition
+                                                        ${selectedTime === time
+                                                        ? 'bg-[#1f7275] text-white'
+                                                        : isBooked
+                                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed line-through'
+                                                            : 'bg-gray-100 hover:bg-gray-200'
+                                                    }
+                                                    `}
+                                                    disabled={isBooked}
+                                                    title={isBooked ? 'Aquesta hora ja està reservada' : ''}
+                                                >
+                                                    {time}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500">
+                                        No hi ha horaris disponibles per aquest dia
+                                    </p>
+                                )}
                             </div>
                         )}
 
@@ -227,6 +344,8 @@ const CitesClients = ({ company, service }) => {
                     </form>
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 };

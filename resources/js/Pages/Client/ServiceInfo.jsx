@@ -6,6 +6,8 @@ import { useDebounce } from 'use-debounce';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { Inertia } from "@inertiajs/inertia";
+import Header from "@/Components/Header.jsx";
+import Footer from "@/Components/Footer.jsx";
 
 const backgroundImages = {
     casa: '/images/casa.jpg',
@@ -347,6 +349,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
             }}
             role="main"
         >
+            <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
             <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
@@ -474,6 +477,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                     </div>
                 </div>
             </div>
+            <Footer/>
         </div>
     );
 };

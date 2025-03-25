@@ -22,6 +22,11 @@ class Service extends Model
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
     }
 
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     // Relació amb les dates (una servei pot tenir moltes dates)
     public function dates()
     {

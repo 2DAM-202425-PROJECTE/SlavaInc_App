@@ -4,9 +4,23 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UserController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Rutes per a Serveis
+Route::resource('administrator/services', ServiceController::class)
+    ->names('administrator.services');
+
+// Rutes per a Usuaris
+Route::resource('administrator/users', UserController::class)
+    ->names('administrator.users');
+
+// Rutes per a Workers
+Route::resource('administrator/workers', WorkerController::class)
+    ->names('administrator.workers');
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -39,15 +53,23 @@ Route::middleware('auth')->group(function () {
             ->name('client.cita.show');
 
         // Processar cita
-        Route::post('/cita', [ClientController::class, 'storeAppointment'])
-            ->name('client.cita.store');
+        Route::post('/client/cita', [ClientController::class, 'storeAppointment'])
+            ->name('client.cita.store')
+            ->middleware(['auth', 'verified']);
+
+        Route::get('/mis-citas', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
     });
 
     // Rutes companyia
-    Route::prefix('company')->group(function () {
-        Route::get('/dashboard', [CompanyController::class, 'index'])
-            ->name('company.dashboard');
-    });
+    Route::get('/dashboard', function () {
+        if (auth()->user()->role === 'client') {
+            return Inertia::render('Client/Dashboard', [
+                'services' => Service::all()
+            ]);
+        } elseif (auth()->user()->role === 'company') {
+            return Inertia::render('Worker/dashboard');
+        }
+    })->middleware(['auth', 'verified'])->name('client.services.index'); // Cambia el nombre de la ruta
 
     // Rutes treballador
     Route::prefix('worker')->group(function () {
