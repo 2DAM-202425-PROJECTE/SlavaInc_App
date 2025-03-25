@@ -24,7 +24,11 @@ class Worker extends Authenticatable
         'email',
         'password',
         'phone',
+        'schedule',
         'address',
+        'city',
+        'state',
+        'zip_code',
         'is_admin',
     ];
 

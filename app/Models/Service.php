@@ -7,9 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * @method static create(string[] $serviceData)
- * @method static pluck(string $string)
- * @method static withCount(string $string)
+ * @method static findOrFail(array|string|null $query)
+ * @property mixed $id
  */
 class Service extends Model
 {
@@ -19,6 +18,18 @@ class Service extends Model
 
     public function companies(): BelongsToMany
     {
-        return $this->belongsToMany(Company::class, 'companies_services');
+        return $this->belongsToMany(Company::class, 'companies_services')
+            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    // Relació amb les dates (una servei pot tenir moltes dates)
+    public function dates()
+    {
+        return $this->hasMany(Date::class);
     }
 }

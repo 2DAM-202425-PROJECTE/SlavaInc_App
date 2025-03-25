@@ -48,4 +48,5 @@ class Company extends Authenticatable
             ->withTimestamps();
     }
 
+
 }

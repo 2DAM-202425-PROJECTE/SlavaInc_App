@@ -19,14 +19,11 @@ class AuthenticatedSessionController extends Controller
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
-            'role' => 'required|in:client,company',
         ]);
 
-        if ($request->role === 'client') {
-            if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
-                $request->session()->regenerate();
-                return redirect()->intended('dashboard');
-            }
+        if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
+            $request->session()->regenerate();
+            return redirect()->intended('dashboard');
         }
 
         // Intentar autenticar com a empresa
@@ -35,19 +32,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended('dashboard');
         }
 
-// Intentar autenticar com a treballador
-// Verificar si l'usuari és un treballador
-        if (Auth::guard('worker')->check()) {
-            $user = Auth::guard('worker')->user();
-
-            // Si és treballador i no és admin (is_admin == 0), mostrar la seva pròpia dashboard
-
-            if ($user->is_admin == 1) {
-                return Inertia::render('Company/Dashboard');  // Vista de treballador sense permisos d'admin
-            }
-
-            // Si és treballador i és admin (is_admin == 1), redirigir a la company dashboard
-            return Inertia::render('Worker/Dashboard');  // Vista d'empresa per treballadors amb permisos
+        // Intentar autenticar com a treballador
+        if (Auth::guard('worker')->attempt($request->only('email', 'password'))) {
+            $request->session()->regenerate();
+            return redirect()->intended('dashboard');
         }
 
         return back()->withErrors([
@@ -63,6 +51,8 @@ class AuthenticatedSessionController extends Controller
             Auth::guard('web')->logout();
         } elseif (Auth::guard('company')->check()) {
             Auth::guard('company')->logout();
+        } elseif (Auth::guard('worker')->check()) {
+            Auth::guard('worker')->logout();
         }
 
         $request->session()->invalidate();
