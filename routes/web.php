@@ -80,23 +80,48 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::get('/client/services/{service}', [ClientController::class, 'show'])
         ->name('client.services.show');
 });
-// Rutes client
-Route::prefix('client')->group(function () {
-    // Llistat d'empreses per servei: /client/services/1
+
+// Y corrige el grupo de rutas client así:
+Route::prefix('client')->middleware(['auth:web'])->group(function () {
     Route::get('/services/{service}', [ClientController::class, 'show'])
         ->name('client.services.show');
 
-    // Formulari de cita: /client/services/1/company/2
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])
         ->name('client.cita.show');
 
-    // Processar cita
-    Route::post('/client/cita', [ClientController::class, 'storeAppointment'])
-        ->name('client.cita.store')
-        ->middleware(['auth', 'verified']);
+    Route::post('/appointments', [ClientController::class, 'storeAppointment'])
+        ->name('client.appointments.store'); // Cambiado a nombre más RESTful
 
-    Route::get('/mis-citas', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
+    Route::get('/appointments', [ClientController::class, 'indexAppointments'])
+        ->name('client.appointments.index');
+
+    Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])
+        ->name('client.appointments.show');
+
+    Route::get('/services', [ClientController::class, 'indexServices'])
+        ->name('client.services.index');
 });
+// Rutes per a Workers
+Route::middleware('auth:worker')->group(function () {
+    // Dashboard del worker
+    Route::get('/worker/dashboard', [WorkerController::class, 'index'])
+        ->name('worker.dashboard');
+
+    // Gestión de citas del worker
+    Route::get('/worker/appointments', [WorkerController::class, 'indexAppointments'])
+        ->name('worker.appointments.index');
+
+    Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])
+        ->name('worker.appointments.show');
+
+    // Otras rutas de worker...
+    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
+});
+
 
 
 require __DIR__.'/auth.php';

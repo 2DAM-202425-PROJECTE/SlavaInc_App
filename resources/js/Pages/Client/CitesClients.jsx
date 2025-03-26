@@ -88,15 +88,16 @@ const CitesClients = ({ company, service }) => {
                             No s'han trobat les dades necessàries per a la reserva
                         </p>
                         <button
-                            onClick={() => Inertia.visit(route('client.services.show', service?.id))}
+                            onClick={() => Inertia.visit(route('dashboard'))}  // Canviat a dashboard
                             className="bg-[#1f7275] text-white px-6 py-2 rounded-lg hover:bg-[#156568] transition"
                         >
-                            Tornar als serveis
+                            Tornar al dashboard
                         </button>
                     </div>
                 </div>
                 <Footer />
             </div>
+
         );
     }
 
@@ -105,57 +106,53 @@ const CitesClients = ({ company, service }) => {
 
         if (!pivot) return 0;
 
+        let price;
         if (['casa', 'garatge', 'altres'].includes(service.type)) {
             const unitValue = service.type === 'altres' ? 1 : 100;
-            return (pivot.price_per_unit || 0) * unitValue;
+            price = (parseFloat(pivot.price_per_unit) || 0) * unitValue;
+        } else {
+            price = ((parseFloat(pivot.min_price) || 0) + (parseFloat(pivot.max_price) || 0)) / 2;
         }
-        return ((pivot.min_price || 0) + (pivot.max_price || 0)) / 2;
+
+        // Asegurarse de que es un número con 2 decimales
+        return parseFloat(price.toFixed(2));
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (!selectedDate || isBefore(selectedDate, today)) {
-            alert('Per favor selecciona una data vàlida (avui o en el futur)');
+        if (!selectedDate || !selectedTime) {
+            alert('Por favor selecciona fecha y hora');
             return;
         }
 
-        if (!selectedTime) {
-            alert('Per favor selecciona una hora');
-            return;
-        }
+        const price = calculatePrice();
 
         try {
-            const response = await Inertia.post(route('client.cita.store'), {
+            await Inertia.post(route('client.appointments.store'), {
                 company_id: company.id,
                 service_id: service.id,
                 date: format(selectedDate, 'yyyy-MM-dd'),
                 time: selectedTime,
-                price: calculatePrice(),
-                notes
+                price: price, // Enviamos el precio ya calculado como número
+                notes: notes
             }, {
-                preserveScroll: true,
                 onSuccess: () => {
-                    setSelectedDate(null);
-                    setSelectedTime('');
-                    setNotes('');
-                    alert('Cita reservada amb èxit!');
+                    // Éxito - la redirección se maneja desde el controlador
                 },
                 onError: (errors) => {
-                    if (errors.time) {
-                        alert(errors.time);
-                        setSelectedTime('');
+                    if (errors.error) {
+                        alert(errors.error);
                     } else {
-                        alert('Error al reservar: ' + Object.values(errors).join('\n'));
+                        alert('Error al procesar la reserva');
+                        console.error(errors);
                     }
                 }
             });
         } catch (error) {
-            console.error('Error en la petició:', error);
-            alert('Error inesperat al processar la reserva');
+            console.error('Error:', error);
+            alert('Error inesperado');
         }
     };
 

@@ -50,7 +50,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
 
     // Funció handleReserve corregida
     const handleReserve = () => {
-        Inertia.visit(route('client.cita.show', {
+        Inertia.get(route('client.cita.show', {
             service: service.id,
             company: company.id
         }));

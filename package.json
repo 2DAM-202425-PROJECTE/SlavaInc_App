@@ -7,7 +7,7 @@
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
-        "@inertiajs/react": "^2.0.0",
+        "@inertiajs/react": "^2.0.5",
         "@tailwindcss/forms": "^0.5.3",
         "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.12",
@@ -24,10 +24,14 @@
         "@fortawesome/fontawesome-svg-core": "^6.7.2",
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@fortawesome/react-fontawesome": "^0.2.2",
-        "@heroicons/react": "^2.2.0",
+        "@heroicons/react": "^2.1.1",
+        "@inertiajs/inertia": "^0.11.1",
+        "date-fns": "^4.1.0",
         "lucide-react": "^0.474.0",
+        "rc-slider": "^11.1.8",
         "react-big-calendar": "^1.18.0",
         "react-calendar": "^5.1.0",
-        "react-router-dom": "^7.2.0"
+        "react-router-dom": "^7.2.0",
+        "use-debounce": "^10.0.4"
     }
 }

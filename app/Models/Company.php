@@ -42,10 +42,10 @@ class Company extends Authenticatable
     {
         return $this->hasMany(Worker::class, 'company_id');
     }
-    public function services(): BelongsToMany
+    public function services()
     {
         return $this->belongsToMany(Service::class, 'companies_services')
-            ->withTimestamps();
+            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
     }
 
 

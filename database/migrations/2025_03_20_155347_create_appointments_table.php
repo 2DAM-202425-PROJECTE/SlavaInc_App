@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
+            $table->foreignId('worker_id')->nullable()->constrained('workers')->onDelete('cascade');
             $table->date('date');
             $table->time('time');
             $table->decimal('price', 8, 2);

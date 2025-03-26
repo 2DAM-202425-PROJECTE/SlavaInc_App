@@ -154,7 +154,7 @@ const Dashboard = ({ services }) => {
                                             </p>
 
                                             <Link
-                                                href={`/client/services/${service.id}`}
+                                                href={route('client.services.show', service.id)} // Usar el helper route()
                                                 className="w-full bg-[#1f7275] hover:bg-[#01a0a6] text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
                                             >
                                                 <FontAwesomeIcon icon={faInfoCircle} />

@@ -8,21 +8,32 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\In;
 use Inertia\Inertia;
 use App\Models\Worker;
+use App\Models\Appointment;
+
 
 class WorkerController extends Controller
 {
     public function index()
     {
         // Obtenir el treballador autenticat
-        $user = Auth::guard('worker')->user();
+        $worker = Auth::guard('worker')->user();
 
-        // Verificar que l'usuari existeix i que és un treballador autoritzat (si és necessari)
-        if (!$user) {
+        // Verificar que l'usuari existeix i que és un treballador
+        if (!$worker) {
             abort(403, 'Accés no autoritzat.');
         }
 
-        // Renderitzar la vista del dashboard del treballador sense passar dades
-        return Inertia::render('Worker/Dashboard');
+        // Carregar les cites del treballador amb les relacions necessàries
+        $appointments = $worker->appointments()
+            ->with(['user', 'company', 'service'])
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get();
+
+        // Renderitzar la vista del dashboard del treballador amb les cites
+        return Inertia::render('Worker/Dashboard', [
+            'appointments' => $appointments
+        ]);
     }
 
     public function create()
@@ -108,5 +119,23 @@ class WorkerController extends Controller
 
         // Redirigir amb un missatge de confirmació
         return redirect()->route('dashboard')->with('success', 'Treballador eliminat correctament.');
+    }
+
+    public function showAppointment($id)
+    {
+        $worker = Auth::guard('worker')->user();
+
+        if (!$worker) {
+            abort(403, 'Accés no autoritzat.');
+        }
+
+        // Buscar la cita que pertenezca a este worker
+        $appointment = Appointment::where('worker_id', $worker->id)
+            ->with(['user', 'company', 'service'])
+            ->findOrFail($id);
+
+        return Inertia::render('Worker/ServiceDetail', [
+            'appointment' => $appointment
+        ]);
     }
 }

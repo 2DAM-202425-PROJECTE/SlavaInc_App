@@ -20,12 +20,24 @@ class ClientController extends Controller
      * @param Service $service
      * @return Response
      */
-    public function show(Service $service): Response
+    public function show($serviceTypeOrId)
     {
-        if (auth()->user()->role !== 'client') {
+        // Verificar que el usuario está autenticado como cliente
+        if (!auth()->guard('web')->check()) {
             abort(403);
         }
-        // Carrega les companyies amb les dades del pivot
+
+        // Resto de la lógica permanece igual
+        $service = Service::find($serviceTypeOrId);
+
+        if (!$service) {
+            $service = Service::where('type', $serviceTypeOrId)->first();
+        }
+
+        if (!$service) {
+            abort(404, 'Servei no trobat');
+        }
+
         $service->load(['companies' => function($query) {
             $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
         }]);
@@ -93,120 +105,78 @@ class ClientController extends Controller
     public function storeAppointment(Request $request): RedirectResponse
     {
         \Log::channel('appointments')->info('Inicio reserva', [
-            'user' => auth()->user() ? auth()->user()->id : 'guest',
-            'ip' => $request->ip(),
+            'user' => auth()->id(),
             'data' => $request->all()
         ]);
 
-        // Verifica autenticación primero
-        if (!auth()->check()) {
-            \Log::channel('appointments')->error('Usuario no autenticado');
-            return redirect()->route('login');
-        }
-
         try {
             $validated = $request->validate([
-                'company_id' => 'required|exists:login_companies,id',
+                'company_id' => 'required|exists:companies,id',
                 'service_id' => 'required|exists:services,id',
-                'date' => [
-                    'required',
-                    'date',
-                    function ($attribute, $value, $fail) {
-                        if (strtotime($value) < strtotime('today')) {
-                            $fail('La fecha debe ser hoy o en el futuro');
-                        }
-                    }
-                ],
+                'date' => 'required|date|after_or_equal:today',
                 'time' => [
                     'required',
                     'date_format:H:i',
                     function ($attribute, $value, $fail) use ($request) {
-                        if (date('Y-m-d') === $request->date &&
-                            strtotime($value) < strtotime('now')) {
+                        if ($request->date === now()->format('Y-m-d') &&
+                            strtotime($value) < strtotime(now()->format('H:i'))) {
                             $fail('Para citas hoy, la hora debe ser futura');
                         }
                     }
                 ],
                 'price' => 'required|numeric|min:0.1',
                 'notes' => 'nullable|string|max:500'
-            ], [
-                'date.after_or_equal' => 'La fecha debe ser hoy o en el futuro',
-                'time.date_format' => 'Formato de hora inválido (HH:MM)'
             ]);
 
-            \Log::channel('appointments')->debug('Datos validados', $validated);
+            $validated['worker_id'] = 6;
 
             // Verificación de relación empresa-servicio
-            $serviceExists = Company::whereHas('services', fn($q) => $q->where('services.id', $validated['service_id']))
-                ->where('id', $validated['company_id'])
+            $serviceExists = DB::table('companies_services')
+                ->where('company_id', $validated['company_id'])
+                ->where('service_id', $validated['service_id'])
                 ->exists();
 
             if (!$serviceExists) {
-                \Log::channel('appointments')->error('Relación no existe', [
-                    'company_id' => $validated['company_id'],
-                    'service_id' => $validated['service_id']
-                ]);
-                return back()->withErrors(['error' => 'Relación empresa-servicio no válida']);
+                throw new \Exception('Relación empresa-servicio no válida');
             }
 
             // Verificar si la cita ya existe
-            $existingAppointment = Appointment::where('company_id', $validated['company_id'])
+            if (Appointment::where('company_id', $validated['company_id'])
                 ->where('date', $validated['date'])
                 ->where('time', $validated['time'])
-                ->first();
-
-            if ($existingAppointment) {
-                \Log::channel('appointments')->warning('Cita duplicada intentada', [
-                    'company_id' => $validated['company_id'],
-                    'date' => $validated['date'],
-                    'time' => $validated['time']
-                ]);
-                return back()->withErrors(['time' => 'Esta hora ya está reservada. Por favor elige otra hora.']);
+                ->exists()) {
+                throw new \Exception('Esta hora ya está reservada');
             }
 
-            // Creación con transacción
             DB::beginTransaction();
 
             $appointment = Appointment::create([
                 'user_id' => auth()->id(),
                 'company_id' => $validated['company_id'],
                 'service_id' => $validated['service_id'],
+                'worker_id' => $validated['worker_id'] ?? null,
                 'date' => $validated['date'],
                 'time' => $validated['time'],
-                'price' => $validated['price'],
-                'notes' => $validated['notes'] ?? null,
+                'price' => (float)$validated['price'],
+                'notes' => $validated['notes'],
                 'status' => 'pending'
             ]);
 
             DB::commit();
 
-            \Log::channel('appointments')->info('Cita creada exitosamente', [
-                'appointment_id' => $appointment->id
-            ]);
-
-            return redirect()->route('client.appointments.index')->with('success', '¡Cita reservada con éxito!');
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            \Log::channel('appointments')->error('Error validación', [
-                'errors' => $e->errors()
-            ]);
-            return back()->withErrors($e->errors());
+            return redirect()->route('client.appointments.show', $appointment->id)
+                ->with('success', '¡Cita reservada con éxito!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::channel('appointments')->error('Error crítico', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return back()->withErrors(['error' => 'Error inesperado: '.$e->getMessage()]);
+            \Log::channel('appointments')->error('Error en reserva: '.$e->getMessage());
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
     public function indexAppointments(): Response
     {
-        $appointments = Appointment::with(['company', 'service'])
+        $appointments = Appointment::with(['company', 'service', 'worker'])
             ->where('user_id', auth()->id())
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
@@ -214,6 +184,23 @@ class ClientController extends Controller
 
         return Inertia::render('Client/CitesIndex', [
             'appointments' => $appointments
+        ]);
+    }
+
+    public function showAppointmentDetail(Appointment $appointment): Response
+    {
+        if (!auth()->guard('web')->check() && !auth()->guard('company')->check()) {
+            abort(403);
+        }
+
+        // Cargar las relaciones necesarias incluyendo el worker
+        $appointment->load(['company', 'service', 'worker']);
+
+        // Convertir price a float explícitamente
+        $appointment->price = (float)$appointment->price;
+
+        return Inertia::render('Client/AppointmentDetail', [
+            'appointment' => $appointment
         ]);
     }
 }

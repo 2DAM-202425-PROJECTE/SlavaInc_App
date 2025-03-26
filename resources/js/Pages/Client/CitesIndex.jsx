@@ -1,6 +1,5 @@
 import React from 'react';
-import { Inertia } from '@inertiajs/inertia';
-import { Link } from '@inertiajs/react'; // Añade esta importación
+import { Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faClock, faBuilding, faEuroSign, faInfoCircle, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { format, parseISO } from 'date-fns';
@@ -9,7 +8,6 @@ import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
 
 const CitesIndex = ({ appointments }) => {
-
     const statusStyles = {
         pending: 'bg-yellow-100 text-yellow-800',
         confirmed: 'bg-green-100 text-green-800',
@@ -17,9 +15,18 @@ const CitesIndex = ({ appointments }) => {
         completed: 'bg-blue-100 text-blue-800'
     };
 
+    // Función para formatear el precio de manera segura
+    const formatPrice = (price) => {
+        // Convertir a número si no lo es
+        const numericPrice = typeof price === 'number' ? price : parseFloat(price);
+        // Verificar que sea un número válido
+        return isNaN(numericPrice) ? '0.00' : numericPrice.toFixed(2);
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 min-h-screen flex flex-col">
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
+
             {/* Capçalera */}
             <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
@@ -28,7 +35,7 @@ const CitesIndex = ({ appointments }) => {
                         Mis Citas
                     </h1>
                     <Link
-                        href={route('client.services.index')} // Nombre de ruta actualizado
+                        href={route('dashboard')}
                         className="bg-white/90 text-[#1f7275] px-6 py-2 rounded-full shadow-md hover:bg-white transition-all flex items-center gap-2"
                     >
                         <FontAwesomeIcon icon={faPlus} />
@@ -38,7 +45,7 @@ const CitesIndex = ({ appointments }) => {
             </section>
 
             {/* Contingut principal */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="max-w-7xl mx-auto px-6 py-8 flex-grow">
                 <div className="grid grid-cols-1 gap-6">
                     {appointments.length === 0 ? (
                         <div className="text-center bg-white p-8 rounded-xl shadow-lg">
@@ -49,7 +56,11 @@ const CitesIndex = ({ appointments }) => {
                         </div>
                     ) : (
                         appointments.map((appointment) => (
-                            <div key={appointment.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                            <Link
+                                href={route('client.appointments.show', appointment.id)}
+                                key={appointment.id}
+                                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow block"
+                            >
                                 <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center">
                                     {/* Información principal */}
                                     <div className="space-y-3 flex-1">
@@ -94,7 +105,7 @@ const CitesIndex = ({ appointments }) => {
                                         </div>
 
                                         <div className="text-2xl font-bold text-[#1f7275]">
-                                            {appointment.price.toFixed(2)} €
+                                            {formatPrice(appointment.price)} €
                                         </div>
 
                                         <div className="text-sm text-gray-500">
@@ -102,7 +113,7 @@ const CitesIndex = ({ appointments }) => {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         ))
                     )}
                 </div>

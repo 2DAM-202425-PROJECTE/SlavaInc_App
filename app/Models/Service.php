@@ -16,7 +16,7 @@ class Service extends Model
 
     protected $fillable = ['name', 'description', 'type'];
 
-    public function companies(): BelongsToMany
+    public function companies()
     {
         return $this->belongsToMany(Company::class, 'companies_services')
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
