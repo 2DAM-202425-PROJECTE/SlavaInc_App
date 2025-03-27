@@ -70,6 +70,7 @@ Route::middleware('auth:company,web,worker')->group(function () {
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
     Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
+    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
 });
 
@@ -120,6 +121,8 @@ Route::middleware('auth:worker')->group(function () {
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
     Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
+    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
+
 });
 
 

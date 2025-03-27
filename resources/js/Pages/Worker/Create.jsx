@@ -12,9 +12,9 @@ export default function CreateWorker() {
         state: '',
         zip_code: '',
         phone: '',
-        password: '',   // Afegit per al password
-        company_id: '', // Afegit per al company_id
-        is_admin: false, // Afegit per al camp is_admin, tot i que serà false per defecte
+        password: '',
+        company_id: '',
+        is_admin: false,
     });
 
     // Gestionar el submit
