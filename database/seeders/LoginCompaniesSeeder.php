@@ -20,7 +20,6 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code'=> '08001',
             'phone'   => '933112233',
-            'is_admin' => true
         ]);
 
         // Empresa 2 - Especialista en vehicles i piscines
@@ -33,7 +32,6 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Comunitat Valenciana',
             'zip_code'=> '46002',
             'phone'   => '961234567',
-            'is_admin' => true
         ]);
 
         // Empresa 3 - Empresa generalista
@@ -46,7 +44,6 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code'=> '25002',
             'phone'   => '973451234',
-            'is_admin' => true
         ]);
 
         // Empresa 4 - Especialistes en llars
@@ -59,7 +56,6 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code'=> '08006',
             'phone'   => '932345678',
-            'is_admin' => true
         ]);
 
         // Empresa 5 - Especialistes en garatges
@@ -72,7 +68,6 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code'=> '43002',
             'phone'   => '977891234',
-            'is_admin' => true
         ]);
 
         // Empresa 6 - Rentat de vehicles premium
@@ -85,7 +80,6 @@ class LoginCompaniesSeeder extends Seeder
             'state'   => 'Catalunya',
             'zip_code'=> '08016',
             'phone'   => '934567890',
-            'is_admin' => true
         ]);
     }
 }
