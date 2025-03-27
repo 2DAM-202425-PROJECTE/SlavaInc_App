@@ -10,16 +10,25 @@ use Inertia\Inertia;
 
 class CompanyController extends Controller
 {
-    public function index(){
+    public function index()
+    {
+        $user = null;
 
-        $user = Auth::guard('company')->user(); // Assegurem que estem al guard correcte
+        if (Auth::guard('worker')->check()) {
+            $user = Auth::guard('worker')->user();
 
-        if (!$user || !$user->is_admin) {
-            abort(403, 'Accés no autoritzat.');
+            if ($user->is_admin) {
+                // Carregar la informació de l'empresa associada al treballador
+                $company = Company::where('id', $user->company_id)->with('workers')->first();
+            }
+        } elseif (Auth::guard('company')->check()) {
+            $user = Auth::guard('company')->user();
+            $company = Company::where('id', $user->id)->with('workers')->first();
         }
 
-        // Carregar la informació de l'empresa i els seus treballadors
-        $company = Company::where('id', $user->id)->with('workers')->first();
+        if (!$user || !isset($company)) {
+            return redirect()->route('login');
+        }
 
         return Inertia::render('Company/Dashboard', [
             'companyData' => [
@@ -40,7 +49,6 @@ class CompanyController extends Controller
 //            'email' => 'required|string|email|max:255|unique:workers',
 //            'phone' => 'required|string|max:20',
 //            'address' => 'required|string|max:255',
-//            'is_admin' => 'nullable|boolean', // El rol admin es pot activar o desactivar
 //        ]);
 //
 //        // Crear el treballador amb el rol is_company desactivat per defecte
@@ -50,8 +58,6 @@ class CompanyController extends Controller
 //            'email' => $request->email,
 //            'phone' => $request->phone,
 //            'address' => $request->address,
-//            'is_admin' => $request->is_admin ?? false, // Només es pot activar si s'indica
-//            'is_company' => false, // Sempre desactivat
 //        ]);
 //
 //        return redirect()->route('company.dashboard')->with('success', 'Treballador creat correctament.');

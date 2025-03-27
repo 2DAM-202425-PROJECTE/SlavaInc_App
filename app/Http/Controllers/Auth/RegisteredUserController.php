@@ -36,13 +36,12 @@ class RegisteredUserController extends Controller
             ]);
 
             Auth::guard('web')->login($user);
-        } else if ($request->role === 'company') {
+        }
+        else if ($request->role === 'company') {
             $company = Company::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'is_admin' => true, // Per defecte, l'empresa és admin
-                'is_company' => true, // Per defecte, l'empresa és company
             ]);
 
             Auth::guard('company')->login($company);

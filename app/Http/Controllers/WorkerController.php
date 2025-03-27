@@ -67,7 +67,6 @@ class WorkerController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
             'is_admin' => false,
-            'is_company' => false,
             'password' => bcrypt($request->password), // Emmagatzemar la contrasenya hashada
         ]);
 
