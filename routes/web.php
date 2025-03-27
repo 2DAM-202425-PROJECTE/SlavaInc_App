@@ -29,11 +29,7 @@ Route::get('/dashboard', function () {
 
     // Verificar després els treballadors/admins (guard 'company')
     if (Auth::guard('company')->check()) {
-        $user = Auth::guard('company')->user();
-
-        return $user->is_admin
-            ? app(CompanyController::class)->index()
-            : app(WorkerController::class)->index();
+        return app(CompanyController::class)->index();
     }
 
     if (Auth::guard('worker')->check()) {

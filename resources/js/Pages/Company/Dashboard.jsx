@@ -76,61 +76,60 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="bg-white overflow-hidden shadow-lg sm:rounded-xl">
-                        <div className="p-6">
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                                <UserGroupIcon className="h-6 w-6 inline-block mr-2 text-[#9e2a2f]" />
-                                Treballadors
-                            </h2>
-                            {workers.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {workers.map(worker => (
-                                        <div key={worker.id} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                                            <h3 className="font-medium text-lg text-gray-900 mb-2">{worker.name}</h3>
-                                            <p className="text-gray-600 flex items-center">
-                                                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                {worker.schedule}
-                                            </p>
-                                            <p className="text-gray-600 flex items-center mt-1">
-                                                <PhoneIcon className="h-4 w-4 mr-2" />
-                                                {worker.phone}
-                                            </p>
+                    <div className="mt-8 bg-white shadow-lg rounded-lg p-6">
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                            <UserGroupIcon className="h-6 w-6 inline-block mr-2 text-[#9e2a2f]" />
+                            Treballadors
+                        </h2>
+                        {workers.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {workers.map(worker => (
+                                    <div key={worker.id} className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-xl transition-shadow">
+                                        <h3 className="font-medium text-lg text-gray-900 mb-2">{worker.name}</h3>
+                                        <p className="text-gray-600 flex items-center">
+                                            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {worker.schedule}
+                                        </p>
+                                        <p className="text-gray-600 flex items-center mt-1">
+                                            <PhoneIcon className="h-4 w-4 mr-2" />
+                                            {worker.phone}
+                                        </p>
 
-                                            <div className="mt-4 flex space-x-4">
-                                                <button
-                                                    onClick={() => handleEditWorker(worker.id)}
-                                                    className="text-indigo-600 hover:text-indigo-900"
-                                                >
-                                                    <PencilIcon className="h-5 w-5 inline-block mr-2" />
-                                                    Editar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteWorker(worker.id)}
-                                                    className="text-red-600 hover:text-red-900"
-                                                >
-                                                    <TrashIcon className="h-5 w-5 inline-block mr-2" />
-                                                    Eliminar
-                                                </button>
-                                            </div>
+                                        <div className="mt-4 flex space-x-4">
+                                            <button
+                                                onClick={() => handleEditWorker(worker.id)}
+                                                className="text-blue-600 hover:text-blue-800 transition"
+                                            >
+                                                <PencilIcon className="h-5 w-5 inline-block mr-2" />
+                                                Editar
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteWorker(worker.id)}
+                                                className="text-red-600 hover:text-red-800 transition"
+                                            >
+                                                <TrashIcon className="h-5 w-5 inline-block mr-2" />
+                                                Eliminar
+                                            </button>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-16">
-                                    <div className="text-6xl mb-4">😕</div>
-                                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                                        No hi ha treballadors registrats
-                                    </h2>
-                                    <p className="text-gray-600">
-                                        Afegeix un nou treballador per començar
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16">
+                                <div className="text-6xl mb-4">😕</div>
+                                <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                                    No hi ha treballadors registrats
+                                </h2>
+                                <p className="text-gray-600">
+                                    Afegeix un nou treballador per començar
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
+
 
                 {/* Modal de confirmació d'eliminació */}
                 {showModal && (
