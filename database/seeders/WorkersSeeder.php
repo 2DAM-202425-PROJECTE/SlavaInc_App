@@ -27,6 +27,11 @@ class WorkersSeeder extends Seeder
                 'phone' => '600111222',
                 'address' => $company->address,
                 'is_admin' => false,
+                'schedule' => '08:00-16:00',
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => 'https://via.placeholder.com/150',
             ]);
 
             // Treballador 2
@@ -38,6 +43,12 @@ class WorkersSeeder extends Seeder
                 'phone' => '600222333',
                 'address' => $company->address,
                 'is_admin' => false,
+                'schedule' => '08:00-16:00',
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => 'https://via.placeholder.com/150',
+
             ]);
 
             // Treballador 3
@@ -49,6 +60,12 @@ class WorkersSeeder extends Seeder
                 'phone' => '600333444',
                 'address' => $company->address,
                 'is_admin' => false,
+                'schedule' => '08:00-16:00',
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => 'https://via.placeholder.com/150',
+
             ]);
 
             // Treballador 4
@@ -60,6 +77,12 @@ class WorkersSeeder extends Seeder
                 'phone' => '600444555',
                 'address' => $company->address,
                 'is_admin' => false,
+                'schedule' => '08:00-16:00',
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => 'https://via.placeholder.com/150',
+
             ]);
 
             // Treballador 5
@@ -71,6 +94,13 @@ class WorkersSeeder extends Seeder
                 'phone' => '600555666',
                 'address' => $company->address,
                 'is_admin' => false,
+                'schedule' => '08:00-16:00',
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => 'https://via.placeholder.com/150',
+
+
             ]);
         }
     }

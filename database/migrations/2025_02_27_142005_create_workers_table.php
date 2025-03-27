@@ -15,13 +15,19 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('name');
-            $table->string('phone');
+            $table->string('schedule');
             $table->string('address');
+            $table->string('city');
+            $table->string('state');
+            $table->string('zip_code');
+            $table->string('phone');
+
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('is_admin')->default(false);
             $table->rememberToken();
+            $table->string('logo');
             $table->timestamps();
 
 

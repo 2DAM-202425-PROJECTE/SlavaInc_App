@@ -4,13 +4,27 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkerController;
-use App\Models\Service;
 use App\Models\User;
+use App\Models\Service;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Rutes per a Serveis
+Route::resource('administrator/services', ServiceController::class)
+    ->names('administrator.services');
+
+// Rutes per a Usuaris
+Route::resource('administrator/users', UserController::class)
+    ->names('administrator.users');
+
+// Rutes per a Workers
+Route::resource('administrator/workers', WorkerController::class)
+    ->names('administrator.workers');
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -42,7 +56,7 @@ Route::get('/dashboard', function () {
     return redirect()->route('login');
 })->middleware('auth:company,web,worker')->name('dashboard');
 
-Route::middleware('auth:company,web')->group(function () {
+Route::middleware('auth:company,web,worker')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -62,4 +76,23 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::get('/client/services/{service}', [ClientController::class, 'show'])
         ->name('client.services.show');
 });
+// Rutes client
+Route::prefix('client')->group(function () {
+    // Llistat d'empreses per servei: /client/services/1
+    Route::get('/services/{service}', [ClientController::class, 'show'])
+        ->name('client.services.show');
+
+    // Formulari de cita: /client/services/1/company/2
+    Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])
+        ->name('client.cita.show');
+
+    // Processar cita
+    Route::post('/client/cita', [ClientController::class, 'storeAppointment'])
+        ->name('client.cita.store')
+        ->middleware(['auth', 'verified']);
+
+    Route::get('/mis-citas', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
+});
+
+
 require __DIR__.'/auth.php';

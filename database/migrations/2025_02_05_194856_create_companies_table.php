@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string('state')->nullable();
             $table->string('zip_code')->nullable();
             $table->string('phone')->nullable();
-            $table->boolean('is_admin')->default(true);
+            $table->boolean('is_admin')->default(false);
+//            $table->boolean('is_company')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

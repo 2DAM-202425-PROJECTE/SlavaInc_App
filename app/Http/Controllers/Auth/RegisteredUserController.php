@@ -25,7 +25,6 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email|unique:companies,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => 'required|in:client,company',
         ]);
 
         // Crear l'usuari a la taula corresponent
