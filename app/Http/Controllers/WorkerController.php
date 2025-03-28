@@ -72,6 +72,7 @@ class WorkerController extends Controller
             'phone' => $request->phone,
             'password' => bcrypt($request->password),
             'is_admin' => false,
+            'is_company' => false,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');

@@ -21,21 +21,21 @@ class AuthenticatedSessionController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('web')->attempt($request->only('email', 'password'))) {
-            $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+        $guards = ['web', 'worker', 'company'];
+
+        foreach ($guards as $guard) {
+            Auth::guard($guard)->logout();
         }
 
-        // Intentar autenticar com a empresa
-        if (Auth::guard('company')->attempt($request->only('email', 'password'))) {
-            $request->session()->regenerate();
-            return redirect()->intended('dashboard');
-        }
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        // Intentar autenticar com a treballador
-        if (Auth::guard('worker')->attempt($request->only('email', 'password'))) {
-            $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+        // Intenta iniciar sessió amb cada guard amb el següent ordre ['web', 'worker', 'company']
+        foreach ($guards as $guard) {
+            if (Auth::guard($guard)->attempt($request->only('email', 'password'))) {
+                $request->session()->regenerate();
+                return redirect()->intended('dashboard');
+            }
         }
 
         return back()->withErrors([
@@ -46,13 +46,12 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request)
     {
-        // Tancar la sessió segons el guard actual
-        if (Auth::guard('web')->check()) {
-            Auth::guard('web')->logout();
-        } elseif (Auth::guard('company')->check()) {
-            Auth::guard('company')->logout();
-        } elseif (Auth::guard('worker')->check()) {
-            Auth::guard('worker')->logout();
+        $guards = ['web', 'worker', 'company'];
+
+        foreach ($guards as $guard) {
+            if (Auth::guard($guard)->check()) {
+                Auth::guard($guard)->logout();
+            }
         }
 
         $request->session()->invalidate();
