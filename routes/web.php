@@ -71,6 +71,8 @@ Route::middleware(['auth:company'])->group(function () {
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
     Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
+    Route::get('/service/create', [ServiceController::class, 'create'])
+        ->name('service.create');
 });
 
 Route::middleware(['auth:web'])->group(function () {
