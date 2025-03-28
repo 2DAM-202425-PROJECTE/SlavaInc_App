@@ -61,13 +61,18 @@ class WorkerController extends Controller
 
         // Crear el treballador vinculat a l'empresa
         Worker::create([
-            'company_id' => $company->id, // Associem el treballador a l'empresa autenticada
+            'company_id' => $company->id,
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $request->phone,
+            'schedule' => $request->schedule,
             'address' => $request->address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'zip_code' => $request->zip_code,
+            'phone' => $request->phone,
+            'password' => bcrypt($request->password),
             'is_admin' => false,
-            'password' => bcrypt($request->password), // Emmagatzemar la contrasenya hashada
+            'is_company' => false,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
@@ -137,4 +142,38 @@ class WorkerController extends Controller
             'appointment' => $appointment
         ]);
     }
+
+    public function list(Request $request)
+    {
+        // Obtener el company_id del usuario logueado
+        $companyId = $request->user()->company_id;
+
+        $query = Worker::query();
+
+        // Filtrar por empresa
+        $query->where('company_id', $companyId);
+
+        // Agregar otros filtros opcionales
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+        if ($request->filled('city')) {
+            $query->where('city', $request->city);
+        }
+        if ($request->filled('schedule')) {
+            $query->where('schedule', $request->schedule);
+        }
+        if ($request->filled('is_admin')) {
+            $query->where('is_admin', $request->is_admin);
+        }
+
+        $workers = $query->paginate(10);
+
+        return Inertia::render('Worker/List', [
+            'workers' => $workers->items(),
+            'nextPageUrl' => $workers->nextPageUrl(),
+        ]);
+    }
+
+
 }
