@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { usePage, router } from "@inertiajs/react"
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
 import {
@@ -13,6 +13,7 @@ import {
     ClockIcon,
     BanknotesIcon,
 } from "@heroicons/react/24/outline"
+import Header from "@/Components/Header.jsx";
 
 export default function Dashboard() {
     const { companyData } = usePage().props
@@ -88,7 +89,8 @@ export default function Dashboard() {
     }
 
     return (
-        <AuthenticatedLayout>
+        <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#600f0f] to-[#b81b1b] text-white" />
             {/* Hero Section with Gradient Background */}
             <section className="relative w-full bg-gradient-to-br from-[#9e2a2f] via-[#b83e43] to-[#9e2a2f] py-16 px-6 overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0MCIgaGVpZ2h0PSI3NjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBmaWxsPSIjMDAwIiBvcGFjaXR5PSIuMDUiIGQ9Ik0wIDBoMTQ0MHY3NjBIMHoiLz48cGF0aCBkPSJNLTcwLjUgNDg5LjVjMTkuMzMzLTI0LjY2NyA0MC42NjctNDQgNjQtNTggNzAtNDIgMTE3IDAgMTY4IDMyIDUxLjMzMyAzMiAxMDIuNjY3IDI4IDE1NC0xMiA1MS4zMzMtNDAgMTAyLjY2Ny01MiAxNTQtMzYgNTEuMzMzIDE2IDEwMi42NjcgNjggMTU0IDE1NiA1MS4zMzMgODggMTAyLjY2NyAxMzIgMTU0IDEzMiA1MS4zMzMgMCAxMDIuNjY3LTQ0IDE1NC0xMzIgNTEuMzMzLTg4IDEwMi42NjctMTQwIDE1NC0xNTYgNTEuMzMzLTE2IDEwMi42NjcgNCAxNTQgNjAgNTEuMzMzIDU2IDEwMi42NjcgNzYgMTU0IDYwIDUxLjMzMy0xNiAxMDIuNjY3LTY4IDE1NC0xNTYgNTEuMzMzLTg4IDEwMi42NjctMTMyIDE1NC0xMzIgNTEuMzMzIDAgMTAyLjY2NyA0NCAxNTQgMTMyIDUxLjMzMyA4OCAxMDIuNjY3IDE0MCAxNTQgMTU2IDUxLjMzMyAxNiAxMDIuNjY3LTQgMTU0LTYwIDUxLjMzMy01NiAxMDIuNjY3LTc2IDE1NC02MCIgc3Ryb2tlPSIjRkZGIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=')]"></div>
@@ -345,8 +347,6 @@ export default function Dashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
                         <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">Informació Personal de {selectedWorker.name}</h3>
-                        <pre>{JSON.stringify(selectedWorker, null, 2)}</pre> {/* Aquí es mostrarà tot l'objecte en format JSON */}
-
                         {/* Informació personal */}
                         <p><strong>Nom:</strong> {selectedWorker.name}</p>
                         <p><strong>Telèfon:</strong> {selectedWorker.phone}</p>
@@ -421,7 +421,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
-        </AuthenticatedLayout>
+        </div>
     )
 }
 

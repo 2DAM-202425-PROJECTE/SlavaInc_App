@@ -14,9 +14,6 @@ class CompanyController extends Controller
 
         $user = Auth::guard('company')->user();
 
-        if (!$user || !$user->is_admin) {
-            abort(403, 'Accés no autoritzat.');
-        }
 
         // Carregar la informació de l'empresa i els seus treballadors
         $company = Company::where('id', $user->id)->with('workers')->first();
