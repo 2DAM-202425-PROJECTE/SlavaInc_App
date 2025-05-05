@@ -145,15 +145,12 @@ class WorkerController extends Controller
 
     public function list(Request $request)
     {
-        // Obtener el company_id del usuario logueado
         $companyId = $request->user()->company_id;
 
         $query = Worker::query();
 
-        // Filtrar por empresa
         $query->where('company_id', $companyId);
 
-        // Agregar otros filtros opcionales
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
         }
