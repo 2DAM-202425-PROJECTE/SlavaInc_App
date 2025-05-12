@@ -10,26 +10,31 @@ use Inertia\Inertia;
 
 class CompanyController extends Controller
 {
-    public function index(){
-
+    public function index()
+    {
         $user = Auth::guard('company')->user();
 
-
-        // Carregar la informació de l'empresa i els seus treballadors
-        $company = Company::where('id', $user->id)->with('workers')->first();
+        // Carreguem l'empresa amb els treballadors i serveis associats
+        $company = Company::where('id', $user->id)
+            ->with(['workers', 'services' => function ($query) {
+                $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo','custom_name', 'description');
+            }])
+            ->first();
 
         return Inertia::render('Company/Dashboard', [
             'companyData' => [
                 'user_info' => $user->only('id', 'name', 'email'),
                 'company_details' => [
                     'info' => $company,
-                    'workers' => $company->workers ?? []
+                    'workers' => $company->workers ?? [],
+                    'services' => $company->services ?? []
                 ]
             ]
         ]);
     }
 
-        //Funcio per crear treballadors associats a l'empresa
+
+    //Funcio per crear treballadors associats a l'empresa
 //    public function createWorker(Request $request)
 //    {
 //        $request->validate([

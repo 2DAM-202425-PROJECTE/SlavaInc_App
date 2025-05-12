@@ -24,6 +24,7 @@ export default function Dashboard() {
     const [showWorkerModal, setShowWorkerModal] = useState(false)
     const [workerToDelete, setWorkerToDelete] = useState(null)
     const [selectedWorker, setSelectedWorker] = useState(null)
+    const [selectedService, setSelectedService] = useState(null)
 
     const [showServiceModal, setShowServiceModal] = useState(false)
     const [serviceToDelete, setServiceToDelete] = useState(null)
@@ -65,11 +66,15 @@ export default function Dashboard() {
 
     // Service management functions
     const handleAddService = () => {
-        router.get(route("service.create"))
+        router.get(route("company.services.create"))
+    }
+
+    const handleListServices = () => {
+        router.get(route("company.services.index"))
     }
 
     const handleEditService = (serviceId) => {
-        router.get(route("service.edit", serviceId))
+        router.get(route("company.services.edit", serviceId))
     }
 
     const handleDeleteService = (serviceId) => {
@@ -79,14 +84,17 @@ export default function Dashboard() {
 
     const confirmDeleteService = () => {
         if (serviceToDelete) {
-            router.delete(route("service.destroy", serviceToDelete))
+            router.delete(route("company.services.destroy", serviceToDelete));
         }
-        setShowServiceModal(false)
+        setShowServiceModal(false);
     }
+
 
     const cancelDeleteService = () => {
         setShowServiceModal(false)
     }
+
+
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -231,7 +239,7 @@ export default function Dashboard() {
                                 ))}
                             </div>
                             {workers.length > 3 && (
-                                <div className="mt-6 text-center">
+                                <div className="mt-6 text-center col-span-full flex justify-center">
                                     <button
                                         onClick={handleListWorkers}
                                         className="px-5 py-2.5 rounded-lg bg-[#9e2a2f] text-white font-medium transition-all hover:bg-[#8a2329] shadow-md hover:shadow-lg"
@@ -279,9 +287,9 @@ export default function Dashboard() {
 
                     {services.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {services.map((service) => (
+                            {services.slice(0, 3).map((service) => (
                                 <div
-                                    key={service.id}
+                                    key={`company-service-${service.pivot?.id || service.id}`}
                                     className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 transform hover:-translate-y-1"
                                 >
                                     <div className="flex justify-between items-start mb-4">
@@ -311,16 +319,39 @@ export default function Dashboard() {
                                             Editar
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteService(service.id)}
+                                            onClick={() => setSelectedService(service)}
+                                            className="inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium transition-all hover:bg-blue-100"
+                                        >
+                                            <UsersIcon className="h-4 w-4 mr-2" />
+                                            Info
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleDeleteService(service.pivot.id)}
                                             className="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 text-red-700 font-medium transition-all hover:bg-red-100"
                                         >
                                             <TrashIcon className="h-4 w-4 mr-2" />
                                             Eliminar
                                         </button>
                                     </div>
+
                                 </div>
+
                             ))}
+                            {services.length > 3 && (
+                                <div key="view-more-button" className="flex justify-center col-span-full">
+                                    <button
+                                        onClick={handleListServices}
+                                        className="px-5 py-2.5 rounded-lg bg-[#9e2a2f] text-white font-medium transition-all hover:bg-[#8a2329] shadow-md hover:shadow-lg"
+                                    >
+                                        Veure més
+                                    </button>
+                                </div>
+                            )}
+
                         </div>
+
+
                     ) : (
                         <div className="text-center py-20 bg-white rounded-xl shadow-md border border-gray-100">
                             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
@@ -421,6 +452,46 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
+            {selectedService && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all space-y-3">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                            Informació del Servei d'Empresa
+                        </h3>
+
+                        <div className="space-y-2">
+                            <p><strong>Nom:</strong> {selectedService.pivot?.custom_name || selectedService.name}</p>
+                            {selectedService.pivot?.description && (
+                                <p><strong>Descripció:</strong> {selectedService.pivot.description}</p>
+                            )}
+                            {selectedService.pivot?.unit && (
+                                <p><strong>Unitat:</strong> {selectedService.pivot.unit}</p>
+                            )}
+                            {selectedService.pivot?.price_per_unit && (
+                                <p><strong>Preu per unitat:</strong> {selectedService.pivot.price_per_unit} €</p>
+                            )}
+                            {selectedService.pivot?.min_price && (
+                                <p><strong>Preu mínim:</strong> {selectedService.pivot.min_price} €</p>
+                            )}
+                            {selectedService.pivot?.max_price && (
+                                <p><strong>Preu màxim:</strong> {selectedService.pivot.max_price} €</p>
+                            )}
+
+
+                        </div>
+
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={() => setSelectedService(null)}
+                                className="px-6 py-2 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-800"
+                            >
+                                Tancar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     )
 }

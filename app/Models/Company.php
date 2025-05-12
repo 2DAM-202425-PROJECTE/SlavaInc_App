@@ -45,8 +45,11 @@ class Company extends Authenticatable
     public function services()
     {
         return $this->belongsToMany(Service::class, 'companies_services')
-            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+            ->withPivot(['id', 'price_per_unit', 'unit', 'min_price', 'max_price', 'logo', 'custom_name', 'description']);
     }
+
+
+
 
 
 }
