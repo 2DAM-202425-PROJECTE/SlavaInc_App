@@ -3,18 +3,49 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class CompanyServiceController extends Controller
 {
-    public function index(Company $company)
+    public function index()
     {
-        $services = $company->services()->get();
-        return response()->json($services);
+        $company = Auth::guard('company')->user();
+
+        $services = $company->services()
+            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo')
+            ->get();
+
+        return Inertia::render('Service/List', [
+            'services' => $services,
+            'company' => $company,
+        ]);
     }
 
-    public function store(Request $request, Company $company)
+    public function create()
     {
+        $company = Auth::guard('company')->user();
+
+        $attachedServiceIds = $company->services()
+            ->where('type', '!=', 'altres') // ✅ Aquí filtrem directament sobre la taula services
+            ->pluck('service_id')
+            ->toArray();
+        $services = Service::whereNotIn('id', $attachedServiceIds)->get();
+
+        return Inertia::render('Service/Create', [
+            'services' => $services,
+            'company' => $company,
+        ]);
+    }
+
+
+    public function store(Request $request)
+    {
+        $company = Auth::guard('company')->user();
+
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'price_per_unit' => 'nullable|numeric',
@@ -22,25 +53,64 @@ class CompanyServiceController extends Controller
             'min_price' => 'nullable|numeric',
             'max_price' => 'nullable|numeric',
             'logo' => 'nullable|string',
+            'custom_name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
-        if ($company->services()->where('service_id', $validated['service_id'])->exists()) {
-            return response()->json(['message' => 'Aquest servei ja està vinculat a aquesta empresa'], 422);
+        $selectedService = Service::findOrFail($validated['service_id']);
+
+        // Validació: només evitar duplicats si NO és de tipus 'altres'
+        if ($selectedService->type !== 'altres') {
+            $alreadyAttached = $company->services()
+                ->where('service_id', $validated['service_id'])
+                ->exists();
+
+            if ($alreadyAttached) {
+                return redirect()->back()->withErrors([
+                    'service_id' => 'Aquest servei ja està vinculat a aquesta empresa.',
+                ]);
+            }
         }
 
-        $company->services()->attach($validated['service_id'], [
-            'price_per_unit' => $validated['price_per_unit'],
-            'unit' => $validated['unit'],
-            'min_price' => $validated['min_price'],
-            'max_price' => $validated['max_price'],
-            'logo' => $validated['logo'],
+        $company->services()->attach($request->service_id, [
+            'custom_name' => $request->custom_name,
+            'description' => $request->custom_description,
+            'price_per_unit' => $request->price_per_unit,
+            'unit' => $request->unit,
+            'min_price' => $request->min_price,
+            'max_price' => $request->max_price,
         ]);
 
-        return response()->json(['message' => 'Servei vinculat correctament']);
+
+        return redirect()->route('dashboard')->with('success', 'Servei afegit correctament.');
     }
 
-    public function update(Request $request, Company $company, $serviceId)
+
+    public function edit($serviceId)
     {
+        $company = Auth::guard('company')->user();
+
+        $pivot = $company->services()
+            ->where('service_id', $serviceId)
+            ->first();
+
+        if (!$pivot) {
+            abort(404, 'Servei no trobat.');
+        }
+
+        $service = Service::findOrFail($serviceId);
+
+        return Inertia::render('Service/Edit', [
+            'service' => $service,
+            'pivot' => $pivot->pivot, // accés a les dades personalitzades
+            'company' => $company,
+        ]);
+    }
+
+    public function update(Request $request, $serviceId)
+    {
+        $company = Auth::guard('company')->user();
+
         $validated = $request->validate([
             'price_per_unit' => 'nullable|numeric',
             'unit' => 'nullable|string',
@@ -50,22 +120,31 @@ class CompanyServiceController extends Controller
         ]);
 
         if (!$company->services()->where('service_id', $serviceId)->exists()) {
-            return response()->json(['message' => 'Servei no trobat per aquesta empresa'], 404);
+            return redirect()->back()->withErrors(['general' => 'Servei no trobat.']);
         }
 
         $company->services()->updateExistingPivot($serviceId, $validated);
 
-        return response()->json(['message' => 'Servei actualitzat correctament']);
+        return redirect()->route('dashboard')->with('success', 'Servei actualitzat correctament.');
     }
 
-    public function destroy(Company $company, $serviceId)
+    public function destroy($pivotId)
     {
-        if (!$company->services()->where('service_id', $serviceId)->exists()) {
-            return response()->json(['message' => 'Servei no trobat'], 404);
+        $company = Auth::guard('company')->user();
+
+        // Comprovem si el pivot realment pertany a aquesta companyia
+        $pivot = DB::table('companies_services')
+            ->where('id', $pivotId)
+            ->where('company_id', $company->id)
+            ->first();
+
+        if (!$pivot) {
+            return redirect()->back()->withErrors(['general' => 'No s\'ha trobat el servei o no tens permís per eliminar-lo.']);
         }
 
-        $company->services()->detach($serviceId);
+        DB::table('companies_services')->where('id', $pivotId)->delete();
 
-        return response()->json(['message' => 'Servei eliminat correctament']);
+        return redirect()->route('dashboard')->with('success', 'Servei eliminat correctament.');
     }
+
 }

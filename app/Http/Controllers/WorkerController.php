@@ -145,32 +145,22 @@ class WorkerController extends Controller
 
     public function list(Request $request)
     {
-        $companyId = $request->user()->company_id;
+        $company = Auth::guard('company')->user();
 
-        $query = Worker::query();
-
-        $query->where('company_id', $companyId);
-
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
-        }
-        if ($request->filled('city')) {
-            $query->where('city', $request->city);
-        }
-        if ($request->filled('schedule')) {
-            $query->where('schedule', $request->schedule);
-        }
-        if ($request->filled('is_admin')) {
-            $query->where('is_admin', $request->is_admin);
+        if (!$company) {
+            abort(403, 'No autoritzat: empresa no autenticada.');
         }
 
-        $workers = $query->paginate(10);
+        // Ara obtenim el paginator complet
+        $workers = Worker::where('company_id', $company->id)->paginate(10);
 
         return Inertia::render('Worker/List', [
-            'workers' => $workers->items(),
-            'nextPageUrl' => $workers->nextPageUrl(),
+            'workers' => $workers, // No .items()!
         ]);
     }
+
+
+
 
 
 }

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('state')->nullable();
             $table->string('zip_code')->nullable();
             $table->string('phone')->nullable();
+            $table->string('logo')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
