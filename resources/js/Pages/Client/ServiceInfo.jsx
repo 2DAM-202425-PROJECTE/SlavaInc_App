@@ -5,7 +5,7 @@ import { faArrowLeft, faBuilding, faMapMarkerAlt, faFilter, faSort, faEuroSign }
 import { useDebounce } from 'use-debounce';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { Inertia } from "@inertiajs/inertia";
+import { router } from '@inertiajs/react';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
 
@@ -50,7 +50,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
 
     // Funció handleReserve corregida
     const handleReserve = () => {
-        Inertia.get(route('client.cita.show', {
+        router.get(route('client.cita.show', {
             service: service.id,
             company: company.id
         }));
@@ -63,7 +63,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                 <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white rounded-lg">
                     {pivot.logo ? (
                         <img
-                            src={`/${pivot.logo}`}
+                            src={pivot.logo}
                             alt={`${company.name} logo`}
                             className="w-12 h-12 rounded-full object-cover"
                         />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCalendarAlt,
@@ -29,7 +29,7 @@ const AppointmentDetail = ({ appointment }) => {
                             <p className="text-xl text-white/90">Informació completa de la teva reserva</p>
                         </div>
                         <button
-                            onClick={() => Inertia.visit(route('client.appointments.index'))}
+                            onClick={() => router.visit(route('client.appointments.index'))}
                             className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
                         >
                             <FontAwesomeIcon icon={faArrowLeft} />

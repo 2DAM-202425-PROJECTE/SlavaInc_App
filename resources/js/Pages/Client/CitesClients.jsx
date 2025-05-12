@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBuilding,
@@ -88,7 +88,8 @@ const CitesClients = ({ company, service }) => {
                             No s'han trobat les dades necessàries per a la reserva
                         </p>
                         <button
-                            onClick={() => Inertia.visit(route('dashboard'))}  // Canviat a dashboard
+                            onClick={() => router.visit(route('dashboard'))
+                            }  // Canviat a dashboard
                             className="bg-[#1f7275] text-white px-6 py-2 rounded-lg hover:bg-[#156568] transition"
                         >
                             Tornar al dashboard
@@ -130,12 +131,12 @@ const CitesClients = ({ company, service }) => {
         const price = calculatePrice();
 
         try {
-            await Inertia.post(route('client.appointments.store'), {
+            router.post(route('client.appointments.store'), {
                 company_id: company.id,
                 service_id: service.id,
                 date: format(selectedDate, 'yyyy-MM-dd'),
                 time: selectedTime,
-                price: price, // Enviamos el precio ya calculado como número
+                price: price,
                 notes: notes
             }, {
                 onSuccess: () => {
@@ -169,7 +170,7 @@ const CitesClients = ({ company, service }) => {
                             <p className="text-xl text-white/90">Selecciona data i hora per al teu servei</p>
                         </div>
                         <button
-                            onClick={() => Inertia.visit(route('client.services.show', service.id))}
+                            onClick={() => router.visit(route('client.services.show', service.id))}
                             className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
                         >
                             <FontAwesomeIcon icon={faArrowLeft} />
@@ -189,10 +190,14 @@ const CitesClients = ({ company, service }) => {
                             <div className="w-16 h-16 flex-shrink-0 bg-gradient-to-r from-[#1f7275] to-[#01a0a6] rounded-lg flex items-center justify-center">
                                 {company.services?.[0]?.pivot?.logo ? (
                                     <img
-                                        src={`/${company.services[0].pivot.logo}`}
+                                        src={company.services[0].pivot.logo?.startsWith('http')
+                                            ? company.services[0].pivot.logo
+                                            : `/${company.services[0].pivot.logo}`
+                                        }
                                         alt={company.name}
                                         className="w-12 h-12 rounded-full object-cover"
                                     />
+
                                 ) : (
                                     <FontAwesomeIcon icon={faBuilding} className="text-white text-xl" />
                                 )}

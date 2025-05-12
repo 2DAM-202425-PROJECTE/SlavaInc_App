@@ -56,12 +56,10 @@ class ClientController extends Controller
      */
     public function showAppointment(Service $service, Company $company): Response
     {
-        // Verificar que la companyia té aquest servei
         if (!$company->services->contains($service->id)) {
             abort(404, 'Aquesta empresa no ofereix aquest servei');
         }
 
-        // Carregar dades del pivot
         $company->load(['services' => function($query) use ($service) {
             $query->where('services.id', $service->id)
                 ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
@@ -72,6 +70,8 @@ class ClientController extends Controller
             'company' => $company
         ]);
     }
+
+
 
     /**
      * Obté les hores ocupades per una empresa en una data específica
