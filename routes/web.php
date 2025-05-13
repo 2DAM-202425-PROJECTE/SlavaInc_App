@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Administrator\AdminDashboardController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
@@ -17,6 +18,9 @@ Route::prefix('administrator')
     ->middleware('auth:worker')
     ->name('administrator.')
     ->group(function () {
+        // Ruta principal del panell d'administració
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        // Altres recursos
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
         Route::resource('workers', WorkerController::class)->names('workers');
