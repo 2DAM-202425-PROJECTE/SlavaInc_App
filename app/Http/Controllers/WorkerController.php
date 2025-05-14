@@ -2,139 +2,165 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Service; // Importa el model Service
-use App\Models\Date;    // Importa el model Date
-use App\Models\Worker;
-use App\Models\LoginCompany;
-use Inertia\Inertia;   // Importa Inertia per renderitzar la vista
 use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\In;
+use Inertia\Inertia;
+use App\Models\Worker;
+use App\Models\Appointment;
+
 
 class WorkerController extends Controller
 {
-
-// Mostra la llista de workers
-    // Mostra la llista de workers
     public function index()
     {
-        $workers = Worker::all();
-        return Inertia::render('Administrator/Workers/Index', [
-            'workers' => $workers,
+        // Obtenir el treballador autenticat
+        $worker = Auth::guard('worker')->user();
+
+        // Verificar que l'usuari existeix i que és un treballador
+        if (!$worker) {
+            abort(403, 'Accés no autoritzat.');
+        }
+
+        // Carregar les cites del treballador amb les relacions necessàries
+        $appointments = $worker->appointments()
+            ->with(['user', 'company', 'service'])
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get();
+
+        // Renderitzar la vista del dashboard del treballador amb les cites
+        return Inertia::render('Worker/Dashboard', [
+            'appointments' => $appointments
         ]);
     }
 
-    // Mostra el formulari per crear un worker
     public function create()
     {
-        $companies = LoginCompany::all(); // Usa LoginCompany en lloc de Company
-        return Inertia::render('Administrator/Workers/Create', [
-            'companies' => $companies,
-        ]);
+        return Inertia::render('Worker/Create');
     }
 
-    // Guarda un nou worker
     public function store(Request $request)
     {
-        // Validació de dades
+        // Validació de la petició
         $request->validate([
-            'company_id' => 'required|exists:login_companies,id', // Usa login_companies com a taula
             'name' => 'required|string|max:255',
-            'schedule' => 'required|string|max:255',
+            'email' => 'required|email|unique:workers,email',
+            'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
-            'zip_code' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
+            'password' => 'required|string|min:8', // Afegir validació per a la contrasenya
         ]);
 
-        // Crea el worker
+        // Obtenim l'empresa autenticada
+        $company = Auth::guard('company')->user();
+
+        if (!$company) {
+            return redirect()->route('login')->withErrors(['error' => 'No tens permisos per crear treballadors.']);
+        }
+
+        // Crear el treballador vinculat a l'empresa
         Worker::create([
-            'company_id' => $request->company_id,
+            'company_id' => $company->id,
             'name' => $request->name,
+            'email' => $request->email,
             'schedule' => $request->schedule,
             'address' => $request->address,
             'city' => $request->city,
             'state' => $request->state,
             'zip_code' => $request->zip_code,
             'phone' => $request->phone,
+            'password' => bcrypt($request->password),
+            'is_admin' => false,
+            'is_company' => false,
         ]);
 
-        // Redirigeix a la llista de workers
-        return redirect()->route('administrator.workers.index');
+        return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
     }
 
-    // Mostra els detalls d'un worker
-    public function show(Worker $worker)
-    {
-        return Inertia::render('Administrator/Workers/Show', [
-            'worker' => $worker,
-        ]);
-    }
 
-    // Mostra el formulari per editar un worker
-    public function edit(Worker $worker)
+    public function edit($workerId)
     {
-        $companies = LoginCompany::all(); // Usa LoginCompany en lloc de Company
-        return Inertia::render('Administrator/Workers/Edit', [
-            'worker' => $worker,
-            'companies' => $companies,
+        // Trobar el treballador pel seu ID
+        $worker = Worker::findOrFail($workerId);
+
+        return Inertia::render('Worker/Edit', [
+            'worker' => $worker
         ]);
     }
 
-    // Actualitza un worker
-    public function update(Request $request, Worker $worker)
+    public function update(Request $request, $workerId)
     {
-        // Validació de dades
+        // Validació de la petició
         $request->validate([
-            'company_id' => 'required|exists:login_companies,id', // Usa login_companies com a taula
             'name' => 'required|string|max:255',
-            'schedule' => 'required|string|max:255',
+            'email' => 'required|email|unique:workers,email,' . $workerId,
+            'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
-            'zip_code' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
         ]);
 
-        // Actualitza el worker
+        // Trobar el treballador pel seu ID
+        $worker = Worker::findOrFail($workerId);
+
+        // Actualitzar el treballador
         $worker->update([
-            'company_id' => $request->company_id,
             'name' => $request->name,
-            'schedule' => $request->schedule,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state,
-            'zip_code' => $request->zip_code,
+            'email' => $request->email,
             'phone' => $request->phone,
+            'address' => $request->address,
         ]);
 
-        // Redirigeix a la llista de workers
-        return redirect()->route('administrator.workers.index');
+        return redirect()->route('dashboard')->with('success', 'Treballador actualitzat correctament!');
     }
 
-    // Elimina un worker
-    public function destroy(Worker $worker)
+    public function destroy($workerId)
     {
+        // Trobar el treballador pel seu ID
+        $worker = Worker::findOrFail($workerId);
+
+        // Eliminar el treballador
         $worker->delete();
-        return redirect()->route('administrator.workers.index');
-    }
-    public function showService($id)
-    {
-        // Obté el servei
-        $service = Service::findOrFail($id);
 
-        // Simula una cita falsa
-        $date = [
-            'date' => '2025-02-26', // Data falsa
-            'client' => [
-                'name' => 'Joan Pérez', // Client fals
-                'phone' => '123 456 789', // Telèfon fals
-                'address' => 'Carrer Major, 123, Barcelona', // Adreça falsa
-            ],
-        ];
+        // Redirigir amb un missatge de confirmació
+        return redirect()->route('dashboard')->with('success', 'Treballador eliminat correctament.');
+    }
+
+    public function showAppointment($id)
+    {
+        $worker = Auth::guard('worker')->user();
+
+        if (!$worker) {
+            abort(403, 'Accés no autoritzat.');
+        }
+
+        // Buscar la cita que pertenezca a este worker
+        $appointment = Appointment::where('worker_id', $worker->id)
+            ->with(['user', 'company', 'service'])
+            ->findOrFail($id);
 
         return Inertia::render('Worker/ServiceDetail', [
-            'service' => $service,
-            'date' => $date,
+            'appointment' => $appointment
         ]);
     }
+
+    public function list(Request $request)
+    {
+        $company = Auth::guard('company')->user();
+
+        if (!$company) {
+            abort(403, 'No autoritzat: empresa no autenticada.');
+        }
+
+        // Ara obtenim el paginator complet
+        $workers = Worker::where('company_id', $company->id)->paginate(10);
+
+        return Inertia::render('Worker/List', [
+            'workers' => $workers, // No .items()!
+        ]);
+    }
+
+
+
+
+
 }

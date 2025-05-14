@@ -11,7 +11,7 @@ class CompanyService extends Pivot
     use HasFactory;
 
     protected $fillable = [
-        'login_company_id',
+        'company_id',
         'service_id',
         'price_per_unit',
         'unit',
@@ -28,11 +28,14 @@ class CompanyService extends Pivot
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(LoginCompany::class, 'login_company_id');
+        return $this->belongsTo(Company::class, 'company_id');
     }
 
-    public function service(): BelongsTo
+    public function services(): BelongsToMany
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsToMany(Service::class, 'companies_services')
+            ->using(CompanyService::class) // Añadir esta línea
+            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo')
+            ->withTimestamps();
     }
 }

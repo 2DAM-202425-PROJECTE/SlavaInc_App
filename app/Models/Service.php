@@ -16,10 +16,16 @@ class Service extends Model
 
     protected $fillable = ['name', 'description', 'type'];
 
-    public function companies(): BelongsToMany
+    public function companies()
     {
-        return $this->belongsToMany(LoginCompany::class, 'companies_services')
-            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+        return $this->belongsToMany(Company::class, 'companies_services')
+            ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo', 'custom_name', 'description');
+    }
+
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
     }
 
     // Relació amb les dates (una servei pot tenir moltes dates)

@@ -2,30 +2,61 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
+use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class CompanyController extends Controller
 {
-    public function index(): Response
+    public function index()
     {
-        // Carreguem l'usuari AMB company i workers
-        $user = Auth::user()->load(['company.workers']);
+        $user = Auth::guard('company')->user();
 
-        if ($user->role !== 'company' || !$user->company) {
-            abort(403, 'Accés no autoritzat o empresa no registrada.');
-        }
+        // Carreguem l'empresa amb els treballadors i serveis associats
+        $company = Company::where('id', $user->id)
+            ->with(['workers', 'services' => function ($query) {
+                $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo','custom_name', 'description');
+            }])
+            ->first();
 
         return Inertia::render('Company/Dashboard', [
             'companyData' => [
                 'user_info' => $user->only('id', 'name', 'email'),
                 'company_details' => [
-                    'info' => $user->company,
-                    'workers' => $user->company->workers
+                    'info' => $company,
+                    'workers' => $company->workers ?? [],
+                    'services' => $company->services ?? []
                 ]
             ]
         ]);
     }
+
+
+    //Funcio per crear treballadors associats a l'empresa
+//    public function createWorker(Request $request)
+//    {
+//        $request->validate([
+//            'name' => 'required|string|max:255',
+//            'email' => 'required|string|email|max:255|unique:workers',
+//            'phone' => 'required|string|max:20',
+//            'address' => 'required|string|max:255',
+//            'is_admin' => 'nullable|boolean', // El rol admin es pot activar o desactivar
+//        ]);
+//
+//        // Crear el treballador amb el rol is_company desactivat per defecte
+//        $worker = Worker::create([
+//            'company_id' => Auth::guard('company')->user()->id,
+//            'name' => $request->name,
+//            'email' => $request->email,
+//            'phone' => $request->phone,
+//            'address' => $request->address,
+//            'is_admin' => $request->is_admin ?? false, // Només es pot activar si s'indica
+//            'is_company' => false, // Sempre desactivat
+//        ]);
+//
+//        return redirect()->route('company.dashboard')->with('success', 'Treballador creat correctament.');
+//    }
+
 }

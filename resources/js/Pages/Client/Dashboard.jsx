@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faCar, faWrench, faSwimmingPool, faInfoCircle, faSearch, faStar, faFrown, faPlus, faFilter } from '@fortawesome/free-solid-svg-icons';
 import { Link } from '@inertiajs/react';
+import Header from "@/Components/Header.jsx";
+import Footer from "@/Components/Footer.jsx";
 
 const Dashboard = ({ services }) => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +43,7 @@ const Dashboard = ({ services }) => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
             {/* Capçalera millorada */}
             <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6">
                 <div className="max-w-6xl mx-auto text-center">
@@ -151,7 +154,7 @@ const Dashboard = ({ services }) => {
                                             </p>
 
                                             <Link
-                                                href={`/client/services/${service.id}`}
+                                                href={route('client.services.show', service.id)} // Usar el helper route()
                                                 className="w-full bg-[#1f7275] hover:bg-[#01a0a6] text-white px-5 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
                                             >
                                                 <FontAwesomeIcon icon={faInfoCircle} />
@@ -177,6 +180,7 @@ const Dashboard = ({ services }) => {
                     </div>
                 </div>
             </div>
+            <Footer/>
         </div>
     );
 };

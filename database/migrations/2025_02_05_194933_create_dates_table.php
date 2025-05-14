@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
             $table->foreignId('transaction_id')->constrained('transactions')->onDelete('cascade');
             $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade');
-            $table->foreignId('client_id')->constrained('login_clients')->onDelete('cascade');
+            $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
             $table->date('date');
             $table->timestamps();
         });

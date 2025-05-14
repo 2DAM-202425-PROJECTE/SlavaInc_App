@@ -16,16 +16,26 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
-            'role' => 'required|in:client,company',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        $guards = ['web', 'worker', 'company'];
 
-            return redirect()->intended('dashboard');
+        foreach ($guards as $guard) {
+            Auth::guard($guard)->logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // Intenta iniciar sessió amb cada guard amb el següent ordre ['web', 'worker', 'company']
+        foreach ($guards as $guard) {
+            if (Auth::guard($guard)->attempt($request->only('email', 'password'))) {
+                $request->session()->regenerate();
+                return redirect()->intended('dashboard');
+            }
         }
 
         return back()->withErrors([
@@ -33,12 +43,18 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
+
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
+        $guards = ['web', 'worker', 'company'];
+
+        foreach ($guards as $guard) {
+            if (Auth::guard($guard)->check()) {
+                Auth::guard($guard)->logout();
+            }
+        }
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
