@@ -69,7 +69,12 @@ Route::middleware('auth:company,web,worker')->group(function () {
         }
 
         if (Auth::guard('company')->check()) {
-            return Inertia::render('Company/Profile');
+            $company = Auth::guard('company')->user();
+            $company->load(['services', 'workers']);
+
+            return Inertia::render('Company/Profile', [
+                'company' => $company,
+            ]);
         }
 
         return redirect()->route('login');
