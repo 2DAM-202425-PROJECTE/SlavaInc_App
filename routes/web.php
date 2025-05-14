@@ -56,11 +56,29 @@ Route::get('/dashboard', function () {
 
 // RUTES COMUNES AUTENTICATS
 Route::middleware('auth:company,web,worker')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', function () {
+        if (Auth::guard('web')->check()) {
+            return Inertia::render('Client/Profile');
+        }
+
+        if (Auth::guard('worker')->check()) {
+            $user = Auth::guard('worker')->user();
+            return $user->is_admin
+                ? Inertia::render('Company/Profile')
+                : Inertia::render('Worker/Profile');
+        }
+
+        if (Auth::guard('company')->check()) {
+            return Inertia::render('Company/Profile');
+        }
+
+        return redirect()->route('login');
+    })->middleware('auth:company,web,worker')->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
 });
+
 
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
