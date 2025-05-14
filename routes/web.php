@@ -99,5 +99,12 @@ Route::middleware('auth:worker')->group(function () {
     Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])->name('worker.appointments.show');
 });
 
+Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots'])
+    ->name('client.get.occupied.slots');
+
+// ALTRES
+Route::get('/privacy', function () {return Inertia::render('Other/Privacy');})->name('privacy');
+Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->name('terms');
+
 // RUTES D’AUTENTICACIÓ
 require __DIR__.'/auth.php';

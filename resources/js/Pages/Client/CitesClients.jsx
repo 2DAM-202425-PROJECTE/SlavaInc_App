@@ -21,6 +21,24 @@ import {
 import { es } from 'date-fns/locale';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
+import axios from 'axios';
+
+useEffect(() => {
+    if (selectedDate) {
+        axios.get(route('client.get.occupied.slots'), {
+            params: {
+                company_id: company.id,
+                date: format(selectedDate, 'yyyy-MM-dd')
+            }
+        })
+            .then(response => {
+                setBookedSlots(response.data.occupiedSlots || []);
+            })
+            .catch(error => {
+                console.error('Error carregant hores ocupades:', error);
+            });
+    }
+}, [selectedDate]);
 
 const CitesClients = ({ company, service }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());

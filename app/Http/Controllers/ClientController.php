@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Service;
 use App\Models\Appointment;
+use App\Models\Worker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -104,7 +105,7 @@ class ClientController extends Controller
      */
     public function storeAppointment(Request $request): RedirectResponse
     {
-        \Log::channel('appointments')->info('Inicio reserva', [
+        \Log::channel('appointments')->info('Inici reserva', [
             'user' => auth()->id(),
             'data' => $request->all()
         ]);
@@ -113,14 +114,14 @@ class ClientController extends Controller
             $validated = $request->validate([
                 'company_id' => 'required|exists:companies,id',
                 'service_id' => 'required|exists:services,id',
-                'date' => 'required|date|after_or_equal:today',
+                'date' => 'required|date_format:Y-m-d|after_or_equal:today',
                 'time' => [
                     'required',
                     'date_format:H:i',
                     function ($attribute, $value, $fail) use ($request) {
                         if ($request->date === now()->format('Y-m-d') &&
                             strtotime($value) < strtotime(now()->format('H:i'))) {
-                            $fail('Para citas hoy, la hora debe ser futura');
+                            $fail('Per a cites d\'avui, l\'hora ha de ser futura');
                         }
                     }
                 ],
@@ -128,24 +129,19 @@ class ClientController extends Controller
                 'notes' => 'nullable|string|max:500'
             ]);
 
-            $validated['worker_id'] = 6;
+            // Troba el primer treballador disponible (no té una cita en aquest horari)
+            $availableWorker = Worker::where('company_id', $validated['company_id'])
+                ->get()
+                ->filter(function ($worker) use ($validated) {
+                    return !$worker->appointments()
+                        ->where('date', $validated['date'])
+                        ->where('time', $validated['time'])
+                        ->exists();
+                })
+                ->first();
 
-            // Verificación de relación empresa-servicio
-            $serviceExists = DB::table('companies_services')
-                ->where('company_id', $validated['company_id'])
-                ->where('service_id', $validated['service_id'])
-                ->exists();
-
-            if (!$serviceExists) {
-                throw new \Exception('Relación empresa-servicio no válida');
-            }
-
-            // Verificar si la cita ya existe
-            if (Appointment::where('company_id', $validated['company_id'])
-                ->where('date', $validated['date'])
-                ->where('time', $validated['time'])
-                ->exists()) {
-                throw new \Exception('Esta hora ya está reservada');
+            if (!$availableWorker) {
+                throw new \Exception('Tots els treballadors estan ocupats en aquest horari. Si us plau, selecciona una altra hora.');
             }
 
             DB::beginTransaction();
@@ -154,7 +150,7 @@ class ClientController extends Controller
                 'user_id' => auth()->id(),
                 'company_id' => $validated['company_id'],
                 'service_id' => $validated['service_id'],
-                'worker_id' => $validated['worker_id'] ?? null,
+                'worker_id' => $availableWorker->id,
                 'date' => $validated['date'],
                 'time' => $validated['time'],
                 'price' => (float)$validated['price'],
@@ -165,11 +161,11 @@ class ClientController extends Controller
             DB::commit();
 
             return redirect()->route('client.appointments.show', $appointment->id)
-                ->with('success', '¡Cita reservada con éxito!');
+                ->with('success', '¡Cita reservada amb èxit!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::channel('appointments')->error('Error en reserva: '.$e->getMessage());
+            \Log::channel('appointments')->error('Error en reserva: ' . $e->getMessage());
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
