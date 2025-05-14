@@ -50,6 +50,6 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user ?? $company));
 
-        return redirect()->route('dashboard');
+        return redirect()->route('profile');
     }
 }
