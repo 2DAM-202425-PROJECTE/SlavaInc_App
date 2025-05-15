@@ -34,7 +34,7 @@ class CompanyController extends Controller
         ]);
     }
 
-    public function profile()
+    public function index()
     {
         return Inertia::render('Company/Profile', [
             'company' => $this->getCompanyFullData(),
@@ -182,6 +182,14 @@ class CompanyController extends Controller
             'clientReviews' => $clientReviews,
             'plans' => $plans,
         ];
+    }
+
+    public function show(Company $company, Request $request)
+    {
+        return Inertia::render('Client/CompanyInfo', [
+            'company' => $company,
+            'serviceId' => $request->input('serviceId') // Passa serviceId a la vista
+        ]);
     }
 
     //Funcio per crear treballadors associats a l'empresa

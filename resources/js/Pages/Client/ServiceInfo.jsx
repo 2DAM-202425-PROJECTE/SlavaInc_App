@@ -8,6 +8,7 @@ import 'rc-slider/assets/index.css';
 import { router } from '@inertiajs/react';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
+import {route} from "ziggy-js";
 
 const backgroundImages = {
     casa: '/images/casa.jpg',
@@ -73,7 +74,16 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                 </div>
 
                 <div className="flex-1">
-                    <h2 className="text-xl font-bold text-gray-800">{company.name}</h2>
+                    <h2 className="text-xl font-bold text-gray-800">
+                        <Link
+                            href={route('client.companies.show', {
+                                company: company.id,
+                                serviceId: service.id // Afegeix serviceId com a paràmetre
+                            })}
+                        >
+                            {company.name}
+                        </Link>
+                    </h2>
                     <div className="text-gray-600 mt-2 flex items-start gap-2">
                         <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400 mt-1" />
                         <div>
