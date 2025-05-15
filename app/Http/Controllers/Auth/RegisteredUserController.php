@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -38,10 +39,13 @@ class RegisteredUserController extends Controller
             Auth::guard('web')->login($user);
         }
         else if ($request->role === 'company') {
+            $basicPlan = Plan::where('name', 'Bàsic')->first();
+
             $company = Company::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'plan_id' => $basicPlan?->id,
             ]);
 
             Auth::guard('company')->login($company);
@@ -50,6 +54,6 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user ?? $company));
 
-        return redirect()->route('profile');
+        return redirect()->route('profile.edit');
     }
 }

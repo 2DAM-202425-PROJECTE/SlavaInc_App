@@ -24,6 +24,7 @@ class Company extends Authenticatable
         'state',
         'zip_code',
         'phone',
+        'plan_id',
     ];
 
 
@@ -48,6 +49,10 @@ class Company extends Authenticatable
             ->withPivot(['id', 'price_per_unit', 'unit', 'min_price', 'max_price', 'logo', 'custom_name', 'description']);
     }
 
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
+    }
 
 
 

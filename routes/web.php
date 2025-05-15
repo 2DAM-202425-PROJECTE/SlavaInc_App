@@ -69,8 +69,12 @@ Route::middleware('auth:company,web,worker')->group(function () {
         }
 
         if (Auth::guard('company')->check()) {
-            return Inertia::render('Company/Profile');
+            return Inertia::render('Company/Profile', [
+                'company' => app(\App\Http\Controllers\CompanyController::class)->getCompanyFullData(),
+            ]);
         }
+
+
 
         return redirect()->route('login');
     })->middleware('auth:company,web,worker')->name('profile.edit');
