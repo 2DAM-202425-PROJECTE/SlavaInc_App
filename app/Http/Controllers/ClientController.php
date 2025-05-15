@@ -199,4 +199,10 @@ class ClientController extends Controller
             'appointment' => $appointment
         ]);
     }
+
+    public function showCompany($companyId): Response
+    {
+        $company = Company::findOrFail($companyId);
+        return Inertia::render('Client/CompanyInfo', ['company' => $company]);
+    }
 }

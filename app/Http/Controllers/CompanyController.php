@@ -33,7 +33,13 @@ class CompanyController extends Controller
         ]);
     }
 
-
+    public function show(Company $company, Request $request)
+    {
+        return Inertia::render('Client/CompanyInfo', [
+            'company' => $company,
+            'serviceId' => $request->input('serviceId') // Passa serviceId a la vista
+        ]);
+    }
     //Funcio per crear treballadors associats a l'empresa
 //    public function createWorker(Request $request)
 //    {
