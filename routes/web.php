@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\Administrator\AdminWorkerController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -23,7 +24,7 @@ Route::prefix('administrator')
         // Altres recursos
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
-        Route::resource('workers', WorkerController::class)->names('workers');
+        Route::resource('workers', AdminWorkerController::class)->names('workers');
     });
 
 // RUTA INICIAL
@@ -65,12 +66,12 @@ Route::middleware('auth:company,web,worker')->group(function () {
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
     // CRUD Treballadors
-    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
-    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
-    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
-    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
-    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
-    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
+    Route::get('/worker/create', [AdminWorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [AdminWorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [AdminWorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [AdminWorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [AdminWorkerController::class, 'destroy'])->name('worker.destroy');
+    Route::get('/worker/list', [AdminWorkerController::class, 'list'])->name('worker.list');
 
     // CRUD serveis associats a l'empresa (pivot company_service)
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
@@ -98,9 +99,9 @@ Route::middleware(['auth:web'])->group(function () {
 
 // RUTES PER A TREBALLADORS (WORKERS)
 Route::middleware('auth:worker')->group(function () {
-    Route::get('/worker/dashboard', [WorkerController::class, 'index'])->name('worker.dashboard');
-    Route::get('/worker/appointments', [WorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
-    Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])->name('worker.appointments.show');
+    Route::get('/worker/dashboard', [AdminWorkerController::class, 'index'])->name('worker.dashboard');
+    Route::get('/worker/appointments', [AdminWorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
+    Route::get('/worker/appointments/{appointment}', [AdminWorkerController::class, 'showAppointment'])->name('worker.appointments.show');
 });
 
 // RUTES D’AUTENTICACIÓ
