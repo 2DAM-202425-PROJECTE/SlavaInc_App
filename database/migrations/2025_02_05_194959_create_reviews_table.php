@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+            $table->foreignId('company_service_id')->constrained('companies_services')->onDelete('cascade');
             $table->float('rate');
             $table->string('comment');
             $table->timestamps();
+            $table->unique(['client_id', 'company_service_id']); // Ensure one review per client per company service
         });
     }
 

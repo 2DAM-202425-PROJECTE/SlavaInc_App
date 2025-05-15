@@ -111,7 +111,7 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show'); // Nova ruta
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
     Route::get('/companies/{company}', [CompanyController::class, 'show'])
         ->name('client.companies.show')
         ->where('company', '[0-9]+');
@@ -120,6 +120,11 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
     Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])->name('client.appointments.show');
+
+    // Reviews
+    Route::get('/reviews/create', [ClientController::class, 'createReview'])->name('client.reviews.create');
+    Route::post('/reviews', [ClientController::class, 'storeReview'])->name('client.reviews.store');
+    Route::put('/reviews/{review}', [ClientController::class, 'updateReview'])->name('client.reviews.update');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)

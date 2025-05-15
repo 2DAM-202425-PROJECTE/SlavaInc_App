@@ -4,15 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class CompanyService extends Pivot
 {
     use HasFactory;
+    protected $table = 'companies_services'; // Explicitly set the table name
 
     protected $fillable = [
         'company_id',
         'service_id',
+        'custom_name',
+        'description',
         'price_per_unit',
         'unit',
         'min_price',
@@ -38,4 +43,15 @@ class CompanyService extends Pivot
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo')
             ->withTimestamps();
     }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'company_service_id');
+    }
 }
+

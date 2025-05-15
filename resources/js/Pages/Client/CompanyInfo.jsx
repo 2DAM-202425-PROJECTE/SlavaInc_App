@@ -1,12 +1,38 @@
 import React from 'react';
 import { Link } from "@inertiajs/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding, faMapMarkerAlt, faPhone, faEnvelope, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faMapMarkerAlt, faPhone, faEnvelope, faArrowLeft, faStar } from '@fortawesome/free-solid-svg-icons';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
 import { route } from "ziggy-js";
 
 const CompanyInfo = ({ company, serviceId }) => {
+    // Function to render star icons based on average rating
+    const renderStars = (rating) => {
+        const fullStars = Math.floor(rating); // Full stars
+        const halfStar = rating % 1 >= 0.5 ? 1 : 0; // Half star if decimal >= 0.5
+        const emptyStars = 5 - fullStars - halfStar; // Remaining empty stars
+
+        return (
+            <div className="flex">
+                {[...Array(fullStars)].map((_, i) => (
+                    <FontAwesomeIcon key={`full-${i}`} icon={faStar} className="text-yellow-400" />
+                ))}
+                {halfStar === 1 && (
+                    <FontAwesomeIcon icon={faStar} className="text-yellow-400 opacity-50" />
+                )}
+                {[...Array(emptyStars)].map((_, i) => (
+                    <FontAwesomeIcon key={`empty-${i}`} icon={faStar} className="text-gray-300" />
+                ))}
+            </div>
+        );
+    };
+
+    // Get top 3 reviews sorted by rating
+    const topReviews = company.reviews
+        ? company.reviews.sort((a, b) => b.rate - a.rate).slice(0, 3)
+        : [];
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[#f0fdfa]">
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
@@ -19,7 +45,7 @@ const CompanyInfo = ({ company, serviceId }) => {
                         <p className="text-lg text-white/90 mt-2">Informació detallada de l'empresa</p>
                     </div>
                     <Link
-                        href={route('client.services.show', { service: serviceId })} // Canvia serviceId per service
+                        href={route('client.services.show', { service: serviceId })}
                         className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
                     >
                         <FontAwesomeIcon icon={faArrowLeft} />
@@ -30,7 +56,7 @@ const CompanyInfo = ({ company, serviceId }) => {
 
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#1f727522] to-[#01a0a611] z-0" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1f7275] to-[#01a0a6] z-0" />
 
                     <div className="relative z-10 flex flex-col md:flex-row items-start gap-8">
                         {/* Secció logo */}
@@ -109,6 +135,41 @@ const CompanyInfo = ({ company, serviceId }) => {
                                     <p className="text-gray-600 leading-relaxed">
                                         {company.description}
                                     </p>
+                                </div>
+                            )}
+
+                            {/* Average Rating and Stars */}
+                            {company.average_rating && (
+                                <div className="space-y-4">
+                                    <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-[#1f7275] pl-4">
+                                        Valoració Mitjana
+                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        {renderStars(company.average_rating)}
+                                        <span className="text-gray-800 font-semibold">
+                                            {company.average_rating.toFixed(1)}/5
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Top 3 Reviews */}
+                            {topReviews.length > 0 && (
+                                <div className="space-y-4">
+                                    <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-[#1f7275] pl-4">
+                                        Millors Ressenyes
+                                    </h2>
+                                    <div className="space-y-4">
+                                        {topReviews.map((review, index) => (
+                                            <div key={index} className="bg-gray-50 p-4 rounded-xl">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    {renderStars(review.rate)}
+                                                    <span className="text-gray-800">{review.rate.toFixed(1)}/5</span>
+                                                </div>
+                                                <p className="text-gray-600">{review.comment}</p>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>

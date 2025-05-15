@@ -3,38 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Review;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Plan;
+use Inertia\Response;
 
 class CompanyController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::guard('company')->user();
-
-        // Carreguem l'empresa amb els treballadors i serveis associats
-        $company = Company::where('id', $user->id)
-            ->with(['workers', 'services' => function ($query) {
-                $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo','custom_name', 'description');
-            }])
-            ->first();
-
-        return Inertia::render('Company/Dashboard', [
-            'companyData' => [
-                'user_info' => $user->only('id', 'name', 'email'),
-                'company_details' => [
-                    'info' => $company,
-                    'workers' => $company->workers ?? [],
-                    'services' => $company->services ?? []
-                ]
-            ]
-        ]);
-    }
-
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('Company/Profile', [
             'company' => $this->getCompanyFullData(),
@@ -42,7 +21,7 @@ class CompanyController extends Controller
     }
 
 
-    public function getCompanyFullData()
+    public function getCompanyFullData(): array
     {
         $company = Auth::guard('company')->user();
 
@@ -156,7 +135,7 @@ class CompanyController extends Controller
             ],
         ];
 
-        // 🔁 Carreguem els plans reals de la taula plans
+        // Carreguem els plans reals de la taula plans
         $plans = Plan::all()->map(function ($plan) use ($companyData) {
             return [
                 'id' => $plan->id,
@@ -184,11 +163,34 @@ class CompanyController extends Controller
         ];
     }
 
-    public function show(Company $company, Request $request)
+    public function show(Company $company, Request $request): \Inertia\Response
     {
+        // Calculate average rating for the company
+        $averageRating = Review::whereHas('companyService', function ($query) use ($company) {
+            $query->where('company_id', $company->id);
+        })->avg('rate');
+
+        // Fetch reviews for the company
+        $reviews = Review::whereHas('companyService', function ($query) use ($company) {
+            $query->where('company_id', $company->id);
+        })->select('rate', 'comment')->get();
+
         return Inertia::render('Client/CompanyInfo', [
-            'company' => $company,
-            'serviceId' => $request->input('serviceId') // Passa serviceId a la vista
+            'company' => [
+                'id' => $company->id,
+                'name' => $company->name,
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'address' => $company->address,
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => $company->logo,
+                'description' => $company->description,
+                'average_rating' => $averageRating ? round($averageRating, 1) : null,
+                'reviews' => $reviews,
+            ],
+            'serviceId' => $request->input('serviceId')
         ]);
     }
 

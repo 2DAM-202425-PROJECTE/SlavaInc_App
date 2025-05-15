@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\CompanyService;
+use App\Models\Review;
 use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\Worker;
@@ -21,7 +23,7 @@ class ClientController extends Controller
      * @param Service $service
      * @return Response
      */
-    public function show($serviceTypeOrId)
+    public function show($serviceTypeOrId): Response
     {
         // Verificar que el usuario está autenticado como cliente
         if (!auth()->guard('web')->check()) {
@@ -52,7 +54,8 @@ class ClientController extends Controller
     /**
      * Mostra el formulari de reserva de cita.
      *
-     * @param Request $request
+     * @param Service $service
+     * @param Company $company
      * @return Response
      */
     public function showAppointment(Service $service, Company $company): Response
@@ -71,8 +74,6 @@ class ClientController extends Controller
             'company' => $company
         ]);
     }
-
-
 
     /**
      * Obté les hores ocupades per una empresa en una data específica
@@ -129,7 +130,7 @@ class ClientController extends Controller
                 'notes' => 'nullable|string|max:500'
             ]);
 
-            // Troba el primer treballador disponible (no té una cita en aquest horari)
+            // Troba el primer treballador disponible
             $availableWorker = Worker::where('company_id', $validated['company_id'])
                 ->get()
                 ->filter(function ($worker) use ($validated) {
@@ -172,11 +173,47 @@ class ClientController extends Controller
 
     public function indexAppointments(): Response
     {
-        $appointments = Appointment::with(['company', 'service', 'worker'])
+        $appointments = Appointment::with([
+            'company' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'service' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'companyService' => function ($query) {
+                $query->select('id', 'company_id', 'service_id');
+            }
+        ])
             ->where('user_id', auth()->id())
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($appointment) {
+                $review = Review::where('client_id', auth()->id())
+                    ->where('company_service_id', $appointment->companyService?->id)
+                    ->first(['id', 'rate', 'comment']);
+
+                return [
+                    'id' => $appointment->id,
+                    'company' => [
+                        'name' => $appointment->company->name,
+                    ],
+                    'service' => [
+                        'name' => $appointment->service->name,
+                    ],
+                    'date' => $appointment->date,
+                    'time' => $appointment->time,
+                    'price' => $appointment->price,
+                    'status' => $appointment->status,
+                    'notes' => $appointment->notes,
+                    'company_service_id' => $appointment->companyService?->id,
+                    'review' => $review ? [
+                        'id' => $review->id,
+                        'rate' => $review->rate,
+                        'comment' => $review->comment,
+                    ] : null,
+                ];
+            });
 
         return Inertia::render('Client/CitesIndex', [
             'appointments' => $appointments
@@ -204,5 +241,68 @@ class ClientController extends Controller
     {
         $company = Company::findOrFail($companyId);
         return Inertia::render('Client/CompanyInfo', ['company' => $company]);
+    }
+
+    public function createReview(Request $request): Response
+    {
+        $companyService = CompanyService::findOrFail($request->query('companyServiceId'));
+        $appointment = Appointment::findOrFail($request->query('appointmentId'));
+        $existingReview = Review::where('client_id', auth()->id())
+            ->where('company_service_id', $companyService->id)
+            ->first();
+
+        return Inertia::render('Client/ReviewForm', [
+            'companyService' => [
+                'id' => $companyService->id,
+                'company' => ['name' => $companyService->company->name],
+                'service' => ['name' => $companyService->service->name],
+            ],
+            'appointmentId' => $appointment->id,
+            'existingReview' => $existingReview ? [
+                'id' => $existingReview->id,
+                'rate' => $existingReview->rate,
+                'comment' => $existingReview->comment,
+            ] : null,
+        ]);
+    }
+
+    public function storeReview(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'company_service_id' => 'required|exists:companies_services,id',
+            'appointment_id' => 'required|exists:appointments,id',
+            'rate' => 'required|numeric|min:1|max:5',
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        Review::create([
+            'client_id' => auth()->id(),
+            'company_service_id' => $validated['company_service_id'],
+            'rate' => $validated['rate'],
+            'comment' => $validated['comment'],
+        ]);
+
+        return redirect()->route('client.appointments.index');
+    }
+
+    public function updateReview(Request $request, Review $review): RedirectResponse
+    {
+        if ($review->client_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'company_service_id' => 'required|exists:companies_services,id',
+            'appointment_id' => 'required|exists:appointments,id',
+            'rate' => 'required|numeric|min:1|max:5',
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        $review->update([
+            'rate' => $validated['rate'],
+            'comment' => $validated['comment'],
+        ]);
+
+        return redirect()->route('client.appointments.index');
     }
 }
