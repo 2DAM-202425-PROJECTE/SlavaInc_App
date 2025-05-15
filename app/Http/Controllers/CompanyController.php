@@ -2,44 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Models\Plan;
-
 class CompanyController extends Controller
 {
+
+
     public function index()
     {
-        $user = Auth::guard('company')->user();
-
-        // Carreguem l'empresa amb els treballadors i serveis associats
-        $company = Company::where('id', $user->id)
-            ->with(['workers', 'services' => function ($query) {
-                $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo','custom_name', 'description');
-            }])
-            ->first();
-
         return Inertia::render('Company/Dashboard', [
-            'companyData' => [
-                'user_info' => $user->only('id', 'name', 'email'),
-                'company_details' => [
-                    'info' => $company,
-                    'workers' => $company->workers ?? [],
-                    'services' => $company->services ?? []
-                ]
-            ]
-        ]);
-    }
-
-    public function profile()
-    {
-        return Inertia::render('Company/Profile', [
             'company' => $this->getCompanyFullData(),
         ]);
     }
+
+
 
 
     public function getCompanyFullData()
@@ -49,7 +31,7 @@ class CompanyController extends Controller
         $companyData = Company::with([
             'workers',
             'services',
-            'plan', // carregar també el pla actiu
+            'plan',
         ])->findOrFail($company->id);
 
         // Preparar serveis
@@ -83,7 +65,11 @@ class CompanyController extends Controller
         $activeServices = $services->where('status', 'active')->count();
 
         $completedProjects = $services->sum('completedProjects');
-        $ongoingProjects = rand(5, 15);
+
+        // ✅ Comptar projectes en curs reals (cites actives)
+        $ongoingProjects = Appointment::where('company_id', $company->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->count();
 
         $clientsRating = round($services->avg('averageRating'), 1);
         $totalReviews = rand(50, 100);
@@ -93,7 +79,15 @@ class CompanyController extends Controller
         $monthlyIncome = rand(20000, 30000);
         $yearlyGrowth = rand(10, 30);
 
-        $mostRequestedService = $services->sortByDesc('completedProjects')->first()?->name ?? 'Cap';
+        $mostRequestedServiceId = Appointment::where('company_id', $company->id)
+            ->select('service_id', DB::raw('count(*) as total'))
+            ->groupBy('service_id')
+            ->orderByDesc('total')
+            ->first()?->service_id;
+
+        $mostRequestedService = $mostRequestedServiceId
+            ? \App\Models\Service::find($mostRequestedServiceId)?->name
+            : 'Cap';
         $averageProjectDuration = rand(30, 60);
         $clientRetentionRate = rand(70, 95);
 
@@ -156,7 +150,6 @@ class CompanyController extends Controller
             ],
         ];
 
-        // 🔁 Carreguem els plans reals de la taula plans
         $plans = Plan::all()->map(function ($plan) use ($companyData) {
             return [
                 'id' => $plan->id,
@@ -183,6 +176,7 @@ class CompanyController extends Controller
             'plans' => $plans,
         ];
     }
+
 
     //Funcio per crear treballadors associats a l'empresa
 //    public function createWorker(Request $request)
