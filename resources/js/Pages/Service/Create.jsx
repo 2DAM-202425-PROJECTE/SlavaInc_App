@@ -45,6 +45,12 @@ export default function Create({ services, company }) {
                 <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
                     <h2 className="text-3xl font-bold text-gray-800 mb-8">Afegir Servei a {company.name}</h2>
 
+                    {errors.limit && (
+                        <div className="bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded mb-6">
+                            {errors.limit}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Servei base</label>
@@ -64,7 +70,6 @@ export default function Create({ services, company }) {
                             {errors.service_id && <p className="text-red-600 text-sm mt-1">{errors.service_id}</p>}
                         </div>
 
-                        {/* Mostrar només si és tipus "altres" */}
                         {selectedType === "altres" && (
                             <>
                                 <div>
@@ -91,7 +96,6 @@ export default function Create({ services, company }) {
                             </>
                         )}
 
-                        {/* Mostrar només si NO és "altres" */}
                         {selectedType !== "altres" && (
                             <>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -144,8 +148,6 @@ export default function Create({ services, company }) {
                                         {errors.max_price && <p className="text-red-600 text-sm mt-1">{errors.max_price}</p>}
                                     </div>
                                 </div>
-
-
                             </>
                         )}
 
