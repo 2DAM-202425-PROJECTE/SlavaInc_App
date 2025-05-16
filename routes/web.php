@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Administrator\AdminCompanyController;
+use App\Http\Controllers\Administrator\AdminCompanyServicesController;
 use App\Http\Controllers\Administrator\AdminDashboardController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
@@ -25,6 +27,8 @@ Route::prefix('administrator')
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
         Route::resource('workers', AdminWorkerController::class)->names('workers');
+        Route::resource('company-services', AdminCompanyServicesController::class);
+        Route::resource('companies', AdminCompanyController::class);
     });
 
 // RUTA INICIAL

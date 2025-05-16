@@ -41,7 +41,7 @@ const WorkersIndex = ({workers, companies}) => {
 
     const confirmDelete = () => {
         if (selectedWorkerId) {
-            destroy(route('administrator.workers.destroy', selectedWorkerId));
+            router.delete(`/administrator/workers/${selectedWorkerId}`);
         }
         setShowDialog(false);
     };
