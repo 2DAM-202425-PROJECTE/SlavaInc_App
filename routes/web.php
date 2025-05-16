@@ -4,6 +4,7 @@ use App\Http\Controllers\Administrator\AdminDashboardController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
@@ -103,8 +104,16 @@ Route::middleware(['auth:company'])->group(function () {
     Route::delete('/company/services/pivot/{pivotId}', [CompanyServiceController::class, 'destroy'])
         ->name('company.services.destroy');
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
+    Route::patch('/company/appointments/{appointment}/complete', [\App\Http\Controllers\AppointmentController::class, 'markAsCompleted'])->name('appointments.complete');
+    Route::patch('/company/appointments/{appointment}/cancel', [\App\Http\Controllers\AppointmentController::class, 'markAsCancelled'])->name('appointments.cancel');
+    Route::patch('/company/settings/notifications', [CompanyController::class, 'updateNotifications'])
+        ->name('company.notifications.update')
+        ->middleware('auth:company');
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
 
 });
+
 
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {

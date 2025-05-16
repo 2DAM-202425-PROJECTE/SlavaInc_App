@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { usePage } from "@inertiajs/react"
+import {useEffect, useState} from "react"
+import { usePage, router } from "@inertiajs/react"
+import { route } from "ziggy-js"
 import {
     ChartBarIcon,
     UsersIcon,
@@ -10,6 +11,7 @@ import {
     StarIcon,
     UserCircleIcon,
     Cog6ToothIcon,
+    TrashIcon,
 } from "@heroicons/react/24/outline"
 
 import DashboardStats from "./components/dashboard-stats"
@@ -19,12 +21,39 @@ import OngoingServicesSection from "./components/ongoing-services-section"
 import RatingsSection from "./components/ratings-section"
 import ProfileSection from "./components/profile-section"
 import SettingsSection from "./components/settings-section"
+import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
+import Notification from "./components/Notification"
+import NotificationsPanel from "./components/notifications-panel"
+
+import { BellIcon } from "@heroicons/react/24/outline"
 
 export default function CompanyProfileAdmin() {
-    const { company } = usePage().props
+    const { company, flash } = usePage().props
     const [activeTab, setActiveTab] = useState("dashboard")
 
-    // Tabs configuration
+    const [selectedWorker, setSelectedWorker] = useState(null)
+    const [workerToDelete, setWorkerToDelete] = useState(null)
+    const [showWorkerModal, setShowWorkerModal] = useState(false)
+    const [selectedService, setSelectedService] = useState(null)
+    const [serviceToDelete, setServiceToDelete] = useState(null)
+    const [showServiceModal, setShowServiceModal] = useState(false)
+    const [appointmentToAction, setAppointmentToAction] = useState(null)
+    const [actionType, setActionType] = useState(null)
+    const [showNotifications, setShowNotifications] = useState(false)
+    const [notifications, setNotifications] = useState([])
+    const unreadCount = company.notifications?.filter(n => !n.read).length || 0
+
+    const addNotification = (message, type = "success", duration = 4000) => {
+        const id = Date.now()
+        setNotifications((prev) => [...prev, { id, message, type, duration }])
+    }
+
+    useEffect(() => {
+        if (flash?.success) addNotification(flash.success, "success")
+        if (flash?.error) addNotification(flash.error, "error")
+    }, [flash])
+
+
     const tabs = [
         { id: "dashboard", name: "Dashboard", icon: ChartBarIcon },
         { id: "workers", name: "Treballadors", icon: UsersIcon },
@@ -35,17 +64,39 @@ export default function CompanyProfileAdmin() {
         { id: "settings", name: "Configuració", icon: Cog6ToothIcon },
     ]
 
-    // Render the active section based on the selected tab
     const renderActiveSection = () => {
         switch (activeTab) {
             case "dashboard":
                 return <DashboardStats company={company} />
             case "workers":
-                return <WorkersSection company={company} />
+                return (
+                    <WorkersSection
+                        company={company}
+                        onViewWorkerInfo={setSelectedWorker}
+                        onDeleteWorker={setWorkerToDelete}
+                        showDeleteModal={() => setShowWorkerModal(true)}
+                    />
+                )
             case "services":
-                return <ServicesSection company={company} />
+                return <ServicesSection
+                    company={company}
+                    onViewServiceInfo={setSelectedService}
+                    onDeleteService={setServiceToDelete}
+                    showDeleteModal={() => setShowServiceModal(true)}
+                />
+
             case "ongoing":
-                return <OngoingServicesSection company={company} />
+                return <OngoingServicesSection
+                    company={company}
+                    onConfirmComplete={(id) => {
+                        setAppointmentToAction(id)
+                        setActionType("complete")
+                    }}
+                    onConfirmCancel={(id) => {
+                        setAppointmentToAction(id)
+                        setActionType("cancel")
+                    }} />
+
             case "ratings":
                 return <RatingsSection company={company} />
             case "profile":
@@ -56,15 +107,35 @@ export default function CompanyProfileAdmin() {
                 return <DashboardStats company={company} />
         }
     }
+    const confirmAppointmentAction = () => {
+        if (!appointmentToAction || !actionType) return
+        const routeName = actionType === "complete" ? "appointments.complete" : "appointments.cancel"
+        router.patch(route(routeName, appointmentToAction))
+        setAppointmentToAction(null)
+        setActionType(null)
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-            {/* Hero Section with Animated Gradient Background */}
             <section className="relative w-full bg-gradient-to-br from-[#9e2a2f] via-[#b83e43] to-[#9e2a2f] py-12 px-6 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0MCIgaGVpZ2h0PSI3NjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBmaWxsPSIjMDAwIiBvcGFjaXR5PSIuMDUiIGQ9Ik0wIDBoMTQ0MHY3NjBIMHoiLz48cGF0aCBkPSJNLTcwLjUgNDg5LjVjMTkuMzMzLTI0LjY2NyA0MC42NjctNDQgNjQtNTggNzAtNDIgMTE3IDAgMTY4IDMyIDUxLjMzMyAzMiAxMDIuNjY3IDI4IDE1NC0xMiA1MS4zMzMtNDAgMTAyLjY2Ny01MiAxNTQtMzYgNTEuMzMzIDE2IDEwMi42NjcgNjggMTU0IDE1NiA1MS4zMzMgODggMTAyLjY2NyAxMzIgMTU0IDEzMiA1MS4zMzMgMCAxMDIuNjY3LTQ0IDE1NC0xMzIgNTEuMzMzLTg4IDEwMi42NjctMTQwIDE1NC0xNTYgNTEuMzMzLTE2IDEwMi42NjcgNCAxNTQgNjAgNTEuMzMzIDU2IDEwMi42NjcgNzYgMTU0IDYwIDUxLjMzMy0xNiAxMDIuNjY3LTY4IDE1NC0xNTYgNTEuMzMzLTg4IDEwMi42NjctMTMyIDE1NC0xMzIgNTEuMzMzIDAgMTAyLjY2NyA0NCAxNTQgMTMyIDUxLjMzMyA4OCAxMDIuNjY3IDE0MCAxNTQgMTU2IDUxLjMzMyAxNiAxMDIuNjY3LTQgMTU0LTYwIDUxLjMzMy01NiAxMDIuNjY3LTc2IDE1NC02MCIgc3Ryb2tlPSIjRkZGIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=')] animate-pulse"></div>
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,...')] animate-pulse"></div>
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#9e2a2f]/30"></div>
+                <div className="absolute top-4 right-6 z-10">
+                    <button
+                        onClick={() => setShowNotifications(true)}
+                        className="relative p-2 rounded-full bg-white shadow hover:bg-gray-100"
+                    >
+                        <BellIcon className="h-6 w-6 text-[#9e2a2f]" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+                        )}
+                    </button>
+                </div>
 
-                <div className="max-w-6xl mx-auto text-center relative z-10 transition-all duration-1000 opacity-100 translate-y-0">
+
+                <div className="max-w-6xl mx-auto text-center relative z-10">
                     <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">{company.info.name}</h1>
                     <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
                         Gestiona la teva empresa, treballadors i serveis fàcilment des d'un sol lloc
@@ -72,7 +143,6 @@ export default function CompanyProfileAdmin() {
                 </div>
             </section>
 
-            {/* Navigation Tabs */}
             <div className="bg-white shadow-md border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="flex overflow-x-auto py-3 space-x-8">
@@ -94,33 +164,200 @@ export default function CompanyProfileAdmin() {
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{renderActiveSection()}</div>
 
-            {/* Add CSS animations */}
+            {notifications.map((n) => (
+                <Notification
+                    key={n.id}
+                    id={n.id}
+                    message={n.message}
+                    type={n.type}
+                    duration={n.duration}
+                    onClose={(id) => setNotifications((prev) => prev.filter((x) => x.id !== id))}
+                />
+            ))}
+            <NotificationsPanel
+                isOpen={showNotifications}
+                onClose={() => setShowNotifications(false)}
+                notifications={company.notifications || []}
+                showSystemNotifications={company.info.notifications_system}
+                onRead={() => router.reload({ only: ['company'] })}
+            />
+
+
+
+
+            {/* Modal Confirmació Cita */}
+            {appointmentToAction && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn text-center">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-yellow-100 flex items-center justify-center mb-4">
+                            {actionType === "complete" ? <CheckCircleIcon className="h-8 w-8 text-green-600" /> : <XCircleIcon className="h-8 w-8 text-red-600" />}
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">
+                            {actionType === "complete" ? "Completar cita" : "Cancel·lar cita"}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            Estàs segur que vols {actionType === "complete" ? "marcar com a completada" : "cancel·lar"} aquesta cita?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => {
+                                    setAppointmentToAction(null)
+                                    setActionType(null)
+                                }}
+                                className="px-5 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300"
+                            >
+                                Cancel·lar
+                            </button>
+                            <button
+                                onClick={confirmAppointmentAction}
+                                className={`px-5 py-2 rounded-lg ${actionType === "complete" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"} text-white`}
+                            >
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Worker Info Modal */}
+            {selectedWorker && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
+                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-full bg-[#9e2a2f]/10 flex items-center justify-center">
+                            <UsersIcon className="h-10 w-10 text-[#9e2a2f]" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-center text-gray-900 pt-8 mb-6">Informació del Treballador</h3>
+                        <div className="space-y-3 divide-y divide-gray-100">
+                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Nom:</span><span className="w-2/3">{selectedWorker.name}</span></div>
+                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Correu:</span><span className="w-2/3">{selectedWorker.email}</span></div>
+                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Telèfon:</span><span className="w-2/3">{selectedWorker.phone}</span></div>
+                            {selectedWorker.schedule && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Horari:</span><span className="w-2/3">{selectedWorker.schedule}</span></div>}
+                        </div>
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={() => setSelectedWorker(null)}
+                                className="px-6 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-800 transition"
+                            >
+                                Tancar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Worker Delete Modal */}
+            {showWorkerModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4">
+                                <TrashIcon className="h-8 w-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">Eliminar Treballador</h3>
+                            <p className="text-gray-600 mb-6">Estàs segur que vols eliminar aquest treballador?</p>
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={() => setShowWorkerModal(false)}
+                                    className="px-5 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                >
+                                    Cancel·lar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        router.delete(route("worker.destroy", workerToDelete))
+                                        setShowWorkerModal(false)
+                                    }}
+                                    className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                                >
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {selectedService && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
+                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-full bg-[#9e2a2f]/10 flex items-center justify-center">
+                            <WrenchScrewdriverIcon className="h-10 w-10 text-[#9e2a2f]" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-center text-gray-900 pt-8 mb-6">Informació del Servei</h3>
+                        <div className="space-y-3 divide-y divide-gray-100">
+                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Nom:</span><span className="w-2/3">{selectedService.custom_name || selectedService.name}</span></div>
+                            {selectedService.description && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Descripció:</span><span className="w-2/3">{selectedService.description}</span></div>}
+                            {selectedService.unit && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Unitat:</span><span className="w-2/3">{selectedService.unit}</span></div>}
+                            {selectedService.price_per_unit && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Preu/unitat:</span><span className="w-2/3">{selectedService.price_per_unit} €</span></div>}
+                            {selectedService.min_price && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Preu mínim:</span><span className="w-2/3">{selectedService.min_price} €</span></div>}
+                            {selectedService.max_price && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Preu màxim:</span><span className="w-2/3">{selectedService.max_price} €</span></div>}
+                            {selectedService.type && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Tipus:</span><span className="w-2/3">{selectedService.type}</span></div>}
+                        </div>
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={() => setSelectedService(null)}
+                                className="px-6 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-800 transition"
+                            >
+                                Tancar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showServiceModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4">
+                                <TrashIcon className="h-8 w-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">Eliminar Servei</h3>
+                            <p className="text-gray-600 mb-6">Estàs segur que vols eliminar aquest servei?</p>
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={() => setShowServiceModal(false)}
+                                    className="px-5 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                >
+                                    Cancel·lar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        router.delete(route("company.services.destroy", serviceToDelete))
+                                        setShowServiceModal(false)
+                                    }}
+                                    className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                                >
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
             <style jsx>{`
                 @keyframes fadeIn {
                     from { opacity: 0; }
                     to { opacity: 1; }
                 }
-
                 @keyframes scaleIn {
                     from { transform: scale(0.95); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
                 }
-
                 .animate-fadeIn {
                     animation: fadeIn 0.3s ease-out forwards;
                 }
-
                 .animate-scaleIn {
                     animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }
-
                 .animate-pulse {
                     animation: pulse 3s infinite;
                 }
-
                 @keyframes pulse {
                     0%, 100% { opacity: 0.7; }
                     50% { opacity: 0.9; }

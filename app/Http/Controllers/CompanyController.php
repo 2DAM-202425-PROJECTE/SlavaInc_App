@@ -66,7 +66,6 @@ class CompanyController extends Controller
 
         $completedProjects = $services->sum('completedProjects');
 
-        // ✅ Comptar projectes en curs reals (cites actives)
         $ongoingProjects = Appointment::where('company_id', $company->id)
             ->whereIn('status', ['pending', 'confirmed'])
             ->count();
@@ -88,6 +87,7 @@ class CompanyController extends Controller
         $mostRequestedService = $mostRequestedServiceId
             ? \App\Models\Service::find($mostRequestedServiceId)?->name
             : 'Cap';
+
         $averageProjectDuration = rand(30, 60);
         $clientRetentionRate = rand(70, 95);
 
@@ -160,6 +160,31 @@ class CompanyController extends Controller
             ];
         });
 
+        $ongoingAppointments = Appointment::with(['service', 'user', 'worker'])
+            ->where('company_id', $company->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->latest('date')
+            ->take(15)
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'date' => $appointment->date,
+                    'time' => $appointment->time,
+                    'price' => $appointment->price,
+                    'status' => $appointment->status,
+                    'notes' => $appointment->notes,
+                    'service' => $appointment->service?->name,
+                    'user' => $appointment->user?->name,
+                    'worker' => $appointment->worker?->name,
+                ];
+            });
+
+        $notifications = \App\Models\Notification::where('company_id', $company->id)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
         return [
             'info' => $companyData->only([
                 'id', 'name', 'email', 'phone', 'website',
@@ -174,9 +199,29 @@ class CompanyController extends Controller
             'monthlyStats' => $monthlyStats,
             'clientReviews' => $clientReviews,
             'plans' => $plans,
+            'appointments' => $ongoingAppointments,
+            'notifications' => $notifications,
+            'notifications_system' => $companyData->notifications_system,
+            'notifications_appointments' => $companyData->notifications_appointments,
+            'notifications_reviews' => $companyData->notifications_reviews,
         ];
     }
 
+    public function updateNotifications(Request $request)
+    {
+        $company = auth()->guard('company')->user();
+
+        $validated = $request->validate([
+            'field' => 'required|in:notifications_system,notifications_appointments,notifications_reviews',
+            'value' => 'required|boolean',
+        ]);
+
+        $company->update([
+            $validated['field'] => $validated['value'],
+        ]);
+
+        return redirect()->back()->with('success', 'Preferència de notificació actualitzada correctament.');
+    }
 
     //Funcio per crear treballadors associats a l'empresa
 //    public function createWorker(Request $request)

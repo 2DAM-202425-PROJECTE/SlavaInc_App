@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Notification;
 use App\Models\Service;
 use App\Models\Appointment;
 use Illuminate\Http\RedirectResponse;
@@ -120,7 +121,7 @@ class ClientController extends Controller
                     function ($attribute, $value, $fail) use ($request) {
                         if ($request->date === now()->format('Y-m-d') &&
                             strtotime($value) < strtotime(now()->format('H:i'))) {
-                            $fail('Para citas hoy, la hora debe ser futura');
+                            $fail("Per a cites avui, l'hora ha de ser futura");
                         }
                     }
                 ],
@@ -130,22 +131,22 @@ class ClientController extends Controller
 
             $validated['worker_id'] = 6;
 
-            // Verificación de relación empresa-servicio
+            // Verificació relació empresa-servei
             $serviceExists = DB::table('companies_services')
                 ->where('company_id', $validated['company_id'])
                 ->where('service_id', $validated['service_id'])
                 ->exists();
 
             if (!$serviceExists) {
-                throw new \Exception('Relación empresa-servicio no válida');
+                throw new \Exception('Relació empresa-servei no vàlida');
             }
 
-            // Verificar si la cita ya existe
+            // Comprovar conflicte d'horari
             if (Appointment::where('company_id', $validated['company_id'])
                 ->where('date', $validated['date'])
                 ->where('time', $validated['time'])
                 ->exists()) {
-                throw new \Exception('Esta hora ya está reservada');
+                throw new \Exception('Aquesta hora ja està reservada');
             }
 
             DB::beginTransaction();
@@ -154,7 +155,7 @@ class ClientController extends Controller
                 'user_id' => auth()->id(),
                 'company_id' => $validated['company_id'],
                 'service_id' => $validated['service_id'],
-                'worker_id' => $validated['worker_id'] ?? null,
+                'worker_id' => $validated['worker_id'],
                 'date' => $validated['date'],
                 'time' => $validated['time'],
                 'price' => (float)$validated['price'],
@@ -162,17 +163,38 @@ class ClientController extends Controller
                 'status' => 'pending'
             ]);
 
+            // ✅ Guardar notificació
+            $user = auth()->user();
+            $service = Service::find($validated['service_id']);
+
+            Notification::create([
+                'company_id' => $validated['company_id'],
+                'type' => 'service', // o 'appointment' si ho prefereixes
+                'action' => 'appointment_created',
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'date' => $validated['date'],
+                    'time' => $validated['time'],
+                ],
+                'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
+                'read' => false,
+            ]);
+
             DB::commit();
 
             return redirect()->route('client.appointments.show', $appointment->id)
-                ->with('success', '¡Cita reservada con éxito!');
+                ->with('success', 'Cita reservada amb èxit!');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::channel('appointments')->error('Error en reserva: '.$e->getMessage());
+            \Log::channel('appointments')->error('Error en reserva: ' . $e->getMessage());
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
 
     public function indexAppointments(): Response
     {
