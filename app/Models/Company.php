@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 
 /**
  * @property bool $is_admin // 👈 Documenta la propietat
+ * @method static create(array $array)
  */
 class Company extends Authenticatable
 {

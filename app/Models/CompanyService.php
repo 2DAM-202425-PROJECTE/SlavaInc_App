@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
+/**
+ * @method static where(string $string, mixed $company_id)
+ */
 class CompanyService extends Pivot
 {
     use HasFactory;

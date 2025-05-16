@@ -7,28 +7,42 @@ import Footer from "@/Components/Footer.jsx";
 import { route } from "ziggy-js";
 
 const CompanyInfo = ({ company, serviceId }) => {
-    // Function to render star icons based on average rating
+    // Funció per renderitzar estrelles segons la valoració mitjana
     const renderStars = (rating) => {
-        const fullStars = Math.floor(rating); // Full stars
-        const halfStar = rating % 1 >= 0.5 ? 1 : 0; // Half star if decimal >= 0.5
-        const emptyStars = 5 - fullStars - halfStar; // Remaining empty stars
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+        const emptyStars = 5 - fullStars - halfStar;
 
         return (
-            <div className="flex">
+            <div className="flex" aria-label={`Valoració: ${rating.toFixed(1)} de 5`}>
                 {[...Array(fullStars)].map((_, i) => (
-                    <FontAwesomeIcon key={`full-${i}`} icon={faStar} className="text-yellow-400" />
+                    <FontAwesomeIcon
+                        key={`full-${i}`}
+                        icon={faStar}
+                        className="text-yellow-400"
+                        aria-label="Estrella plena"
+                    />
                 ))}
                 {halfStar === 1 && (
-                    <FontAwesomeIcon icon={faStar} className="text-yellow-400 opacity-50" />
+                    <FontAwesomeIcon
+                        icon={faStar}
+                        className="text-yellow-400 opacity-50"
+                        aria-label="Mitja estrella"
+                    />
                 )}
                 {[...Array(emptyStars)].map((_, i) => (
-                    <FontAwesomeIcon key={`empty-${i}`} icon={faStar} className="text-gray-300" />
+                    <FontAwesomeIcon
+                        key={`empty-${i}`}
+                        icon={faStar}
+                        className="text-gray-300"
+                        aria-label="Estrella buida"
+                    />
                 ))}
             </div>
         );
     };
 
-    // Get top 3 reviews sorted by rating
+    // Obtenir les 3 millors ressenyes ordenades per valoració
     const topReviews = company.reviews
         ? company.reviews.sort((a, b) => b.rate - a.rate).slice(0, 3)
         : [];
@@ -79,11 +93,11 @@ const CompanyInfo = ({ company, serviceId }) => {
                         {/* Secció informació */}
                         <div className="w-full md:w-2/3 space-y-6">
                             <div className="space-y-4">
-                                <h2 className="text-3xl font-bold text-gray-800 border-l-4 border-[#1f7275] pl-4">
+                                <h2 className="text-3xl font-bold text-white border-l-4 border-[#1f7275] pl-4">
                                     Informació de contacte
                                 </h2>
 
-                                {/* Detalls de contacte */}
+                                {/* Detalls de contacte amb mitja de valoracions */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="bg-gray-50 p-4 rounded-xl">
                                         <div className="flex items-start gap-3">
@@ -123,13 +137,28 @@ const CompanyInfo = ({ company, serviceId }) => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {company.average_rating && (
+                                        <div className="bg-gray-50 p-4 rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <FontAwesomeIcon icon={faStar} className="text-[#1f7275] text-xl" />
+                                                <div>
+                                                    <p className="font-semibold text-gray-800">Valoració mitjana</p>
+                                                    <div className="flex items-center gap-2">
+                                                        {renderStars(company.average_rating)}
+                                                        <span className="text-gray-800 font-semibold">{company.average_rating.toFixed(1)}/5</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Descripció (si existeix) */}
+                            {/* Secció "Sobre nosaltres" */}
                             {company.description && (
                                 <div className="space-y-4">
-                                    <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-[#1f7275] pl-4">
+                                    <h2 className="text-2xl font-bold text-white border-l-4 border-[#1f7275] pl-4">
                                         Sobre nosaltres
                                     </h2>
                                     <p className="text-gray-600 leading-relaxed">
@@ -138,27 +167,12 @@ const CompanyInfo = ({ company, serviceId }) => {
                                 </div>
                             )}
 
-                            {/* Average Rating and Stars */}
-                            {company.average_rating && (
-                                <div className="space-y-4">
-                                    <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-[#1f7275] pl-4">
-                                        Valoració Mitjana
-                                    </h2>
-                                    <div className="flex items-center gap-2">
-                                        {renderStars(company.average_rating)}
-                                        <span className="text-gray-800 font-semibold">
-                                            {company.average_rating.toFixed(1)}/5
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Top 3 Reviews */}
-                            {topReviews.length > 0 && (
-                                <div className="space-y-4">
-                                    <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-[#1f7275] pl-4">
-                                        Millors Ressenyes
-                                    </h2>
+                            {/* Secció "Millors ressenyes" */}
+                            <div className="space-y-4">
+                                <h2 className="text-2xl font-bold text-white border-l-4 border-[#1f7275] pl-4">
+                                    Millors Ressenyes
+                                </h2>
+                                {topReviews.length > 0 ? (
                                     <div className="space-y-4">
                                         {topReviews.map((review, index) => (
                                             <div key={index} className="bg-gray-50 p-4 rounded-xl">
@@ -167,11 +181,22 @@ const CompanyInfo = ({ company, serviceId }) => {
                                                     <span className="text-gray-800">{review.rate.toFixed(1)}/5</span>
                                                 </div>
                                                 <p className="text-gray-600">{review.comment}</p>
+                                                {review.created_at && (
+                                                    <p className="text-gray-500 text-sm mt-1">
+                                                        {new Date(review.created_at).toLocaleDateString('ca-ES', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </p>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <p className="text-gray-600">Encara no hi ha ressenyes disponibles.</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
