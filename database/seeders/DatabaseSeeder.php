@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             LoginCompaniesSeeder::class,
             ServicesSeeder::class,
             WorkersSeeder::class,
-
+            UserSeeder::class,
         ]);
     }
 }

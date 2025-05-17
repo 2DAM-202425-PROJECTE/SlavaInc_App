@@ -206,6 +206,7 @@ class CompanyController extends Controller
         ];
     }
 
+
     public function updateNotifications(Request $request)
     {
         $company = auth()->guard('company')->user();
@@ -325,6 +326,16 @@ class CompanyController extends Controller
     }
 
 
+
+
+
+    public function show(Company $company, Request $request)
+    {
+        return Inertia::render('Client/CompanyInfo', [
+            'company' => $company,
+            'serviceId' => $request->input('serviceId') // Passa serviceId a la vista
+        ]);
+    }
 
 
 

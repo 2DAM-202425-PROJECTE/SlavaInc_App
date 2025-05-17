@@ -138,6 +138,10 @@ Route::middleware(['auth:company'])->group(function () {
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show'); // Nova ruta
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])
+        ->name('client.companies.show')
+        ->where('company', '[0-9]+');
 
     // Cites
     Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
@@ -151,6 +155,13 @@ Route::middleware('auth:worker')->group(function () {
     Route::get('/worker/appointments', [WorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
     Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])->name('worker.appointments.show');
 });
+
+Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots'])
+    ->name('client.get.occupied.slots');
+
+// ALTRES
+Route::get('/privacy', function () {return Inertia::render('Other/Privacy');})->name('privacy');
+Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->name('terms');
 
 // RUTES D’AUTENTICACIÓ
 require __DIR__.'/auth.php';

@@ -519,11 +519,21 @@ export default function Register() {
                                             />
                                             <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
                                                 Accepto els{" "}
-                                                <a href="#" className={`text-${data.role === "client" ? "teal" : "red"}-500 hover:underline`}>
+                                                <a
+                                                    href={route("terms")}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`text-${data.role === "client" ? "teal" : "red"}-500 hover:underline`}
+                                                >
                                                     termes i condicions
                                                 </a>{" "}
                                                 i la{" "}
-                                                <a href="#" className={`text-${data.role === "client" ? "teal" : "red"}-500 hover:underline`}>
+                                                <a
+                                                    href={route("privacy")}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`text-${data.role === "client" ? "teal" : "red"}-500 hover:underline`}
+                                                >
                                                     política de privacitat
                                                 </a>
                                             </label>
