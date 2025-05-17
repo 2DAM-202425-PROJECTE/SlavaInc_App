@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Notification;
 use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\Worker;
@@ -24,7 +25,7 @@ class ClientController extends Controller
     public function show($serviceTypeOrId)
     {
         // Verificar que el usuario está autenticado como cliente
-        if (!auth()->guard('web')->check()) {
+        if (!auth()->guard('web')->check() && !session('impersonating_client')) {
             abort(403);
         }
 
@@ -45,7 +46,9 @@ class ClientController extends Controller
 
         return Inertia::render('Client/ServiceInfo', [
             'service' => $service,
-            'companies' => $service->companies
+            'companies' => $service->companies,
+            'impersonating_client' => session('impersonating_client', false),
+
         ]);
     }
 
@@ -121,13 +124,16 @@ class ClientController extends Controller
                     function ($attribute, $value, $fail) use ($request) {
                         if ($request->date === now()->format('Y-m-d') &&
                             strtotime($value) < strtotime(now()->format('H:i'))) {
+
                             $fail('Per a cites d\'avui, l\'hora ha de ser futura');
+
                         }
                     }
                 ],
                 'price' => 'required|numeric|min:0.1',
                 'notes' => 'nullable|string|max:500'
             ]);
+
 
             // Troba el primer treballador disponible (no té una cita en aquest horari)
             $availableWorker = Worker::where('company_id', $validated['company_id'])
@@ -142,6 +148,7 @@ class ClientController extends Controller
 
             if (!$availableWorker) {
                 throw new \Exception('Tots els treballadors estan ocupats en aquest horari. Si us plau, selecciona una altra hora.');
+
             }
 
             DB::beginTransaction();
@@ -150,7 +157,9 @@ class ClientController extends Controller
                 'user_id' => auth()->id(),
                 'company_id' => $validated['company_id'],
                 'service_id' => $validated['service_id'],
+
                 'worker_id' => $availableWorker->id,
+
                 'date' => $validated['date'],
                 'time' => $validated['time'],
                 'price' => (float)$validated['price'],
@@ -158,9 +167,30 @@ class ClientController extends Controller
                 'status' => 'pending'
             ]);
 
+            // ✅ Guardar notificació
+            $user = auth()->user();
+            $service = Service::find($validated['service_id']);
+
+            Notification::create([
+                'company_id' => $validated['company_id'],
+                'type' => 'service', // o 'appointment' si ho prefereixes
+                'action' => 'appointment_created',
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'date' => $validated['date'],
+                    'time' => $validated['time'],
+                ],
+                'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
+                'read' => false,
+            ]);
+
             DB::commit();
 
             return redirect()->route('client.appointments.show', $appointment->id)
+
                 ->with('success', '¡Cita reservada amb èxit!');
 
         } catch (\Exception $e) {
@@ -169,6 +199,7 @@ class ClientController extends Controller
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
 
     public function indexAppointments(): Response
     {

@@ -2,45 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Models\Plan;
-
 class CompanyController extends Controller
 {
+
     public function index()
     {
-        $user = Auth::guard('company')->user();
-
-        // Carreguem l'empresa amb els treballadors i serveis associats
-        $company = Company::where('id', $user->id)
-            ->with(['workers', 'services' => function ($query) {
-                $query->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo','custom_name', 'description');
-            }])
-            ->first();
-
         return Inertia::render('Company/Dashboard', [
-            'companyData' => [
-                'user_info' => $user->only('id', 'name', 'email'),
-                'company_details' => [
-                    'info' => $company,
-                    'workers' => $company->workers ?? [],
-                    'services' => $company->services ?? []
-                ]
-            ]
+            'company' => $this->getCompanyFullData(),
         ]);
     }
-
-//    public function index()
-//    {
-//        return Inertia::render('Company/Profile', [
-//            'company' => $this->getCompanyFullData(),
-//        ]);
-//    }
-
 
     public function getCompanyFullData()
     {
@@ -49,7 +28,7 @@ class CompanyController extends Controller
         $companyData = Company::with([
             'workers',
             'services',
-            'plan', // carregar també el pla actiu
+            'plan',
         ])->findOrFail($company->id);
 
         // Preparar serveis
@@ -83,7 +62,10 @@ class CompanyController extends Controller
         $activeServices = $services->where('status', 'active')->count();
 
         $completedProjects = $services->sum('completedProjects');
-        $ongoingProjects = rand(5, 15);
+
+        $ongoingProjects = Appointment::where('company_id', $company->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->count();
 
         $clientsRating = round($services->avg('averageRating'), 1);
         $totalReviews = rand(50, 100);
@@ -93,7 +75,16 @@ class CompanyController extends Controller
         $monthlyIncome = rand(20000, 30000);
         $yearlyGrowth = rand(10, 30);
 
-        $mostRequestedService = $services->sortByDesc('completedProjects')->first()?->name ?? 'Cap';
+        $mostRequestedServiceId = Appointment::where('company_id', $company->id)
+            ->select('service_id', DB::raw('count(*) as total'))
+            ->groupBy('service_id')
+            ->orderByDesc('total')
+            ->first()?->service_id;
+
+        $mostRequestedService = $mostRequestedServiceId
+            ? \App\Models\Service::find($mostRequestedServiceId)?->name
+            : 'Cap';
+
         $averageProjectDuration = rand(30, 60);
         $clientRetentionRate = rand(70, 95);
 
@@ -156,7 +147,6 @@ class CompanyController extends Controller
             ],
         ];
 
-        // 🔁 Carreguem els plans reals de la taula plans
         $plans = Plan::all()->map(function ($plan) use ($companyData) {
             return [
                 'id' => $plan->id,
@@ -166,6 +156,31 @@ class CompanyController extends Controller
                 'isActive' => $companyData->plan_id === $plan->id,
             ];
         });
+
+        $ongoingAppointments = Appointment::with(['service', 'user', 'worker'])
+            ->where('company_id', $company->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->latest('date')
+            ->take(15)
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'date' => $appointment->date,
+                    'time' => $appointment->time,
+                    'price' => $appointment->price,
+                    'status' => $appointment->status,
+                    'notes' => $appointment->notes,
+                    'service' => $appointment->service?->name,
+                    'user' => $appointment->user?->name,
+                    'worker' => $appointment->worker?->name,
+                ];
+            });
+
+        $notifications = \App\Models\Notification::where('company_id', $company->id)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
 
         return [
             'info' => $companyData->only([
@@ -181,8 +196,136 @@ class CompanyController extends Controller
             'monthlyStats' => $monthlyStats,
             'clientReviews' => $clientReviews,
             'plans' => $plans,
+            'appointments' => $ongoingAppointments,
+            'notifications' => $notifications,
+            'notifications_system' => $companyData->notifications_system,
+            'notifications_appointments' => $companyData->notifications_appointments,
+            'notifications_reviews' => $companyData->notifications_reviews,
         ];
     }
+
+
+    public function updateNotifications(Request $request)
+    {
+        $company = auth()->guard('company')->user();
+
+        $validated = $request->validate([
+            'field' => 'required|in:notifications_system,notifications_appointments,notifications_reviews',
+            'value' => 'required|boolean',
+        ]);
+
+        $company->update([
+            $validated['field'] => $validated['value'],
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Preferència de notificació actualitzada correctament.');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $company = auth()->guard('company')->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'vat_number' => 'nullable|string|max:255',
+            'founded_year' => 'nullable|integer',
+            'company_type' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'zip_code' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'required|email|max:255',
+            'website' => 'nullable|string|max:255',
+        ]);
+
+        $company->update($validated);
+        $this->createSystemNotification($company, 'profile_updated', [], "S'ha actualitzat el perfil de l'empresa.");
+
+        return response()->json([
+            'message' => 'Perfil actualitzat correctament.',
+            'company' => $company,
+        ]);
+    }
+
+    public function changePlan(Request $request)
+    {
+        $company = auth()->guard('company')->user();
+
+        $validated = $request->validate([
+            'plan_id' => 'required|exists:plans,id',
+        ]);
+
+        $company->update(['plan_id' => $validated['plan_id']]);
+
+        $company->refresh();
+        $this->createSystemNotification($company, 'plan_changed', [
+            'plan_id' => $validated['plan_id'],
+        ], "S'ha canviat el pla de subscripció.");
+        return response()->json([
+            'message' => 'Subscripció canviada correctament.',
+            'plan_id' => $company->plan_id,
+        ]);
+    }
+
+
+    public function previewClient()
+    {
+        session(['impersonating_client' => true]);
+        return redirect()->route('dashboard');
+    }
+
+    public function exitPreview()
+    {
+        session()->forget('impersonating_client');
+        return redirect()->route('dashboard');
+    }
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required'],
+            'new_password' => ['required', 'min:8', 'confirmed'],
+        ]);
+
+        $company = auth()->guard('company')->user();
+
+        if (!\Hash::check($request->current_password, $company->password)) {
+            return response()->json([
+                'message' => 'La contrasenya actual no és correcta.',
+            ], 422);
+        }
+
+        $company->password = bcrypt($request->new_password);
+        $company->save();
+        $this->createSystemNotification(
+            $company,
+            'password_updated',
+            [], 
+            "La contrasenya s'ha actualitzat correctament."
+        );
+        return response()->json([
+            'message' => 'Contrasenya actualitzada correctament.',
+        ]);
+    }
+
+
+    protected function createSystemNotification($company, $action, $data = [], $message = null)
+    {
+        if (!$company->notifications_system) return;
+
+        $company->notifications()->create([
+            'type' => 'system',
+            'action' => $action,
+            'data' => $data,
+            'message' => $message,
+        ]);
+    }
+
+
+
+
 
     public function show(Company $company, Request $request)
     {
@@ -192,29 +335,6 @@ class CompanyController extends Controller
         ]);
     }
 
-    //Funcio per crear treballadors associats a l'empresa
-//    public function createWorker(Request $request)
-//    {
-//        $request->validate([
-//            'name' => 'required|string|max:255',
-//            'email' => 'required|string|email|max:255|unique:workers',
-//            'phone' => 'required|string|max:20',
-//            'address' => 'required|string|max:255',
-//            'is_admin' => 'nullable|boolean', // El rol admin es pot activar o desactivar
-//        ]);
-//
-//        // Crear el treballador amb el rol is_company desactivat per defecte
-//        $worker = Worker::create([
-//            'company_id' => Auth::guard('company')->user()->id,
-//            'name' => $request->name,
-//            'email' => $request->email,
-//            'phone' => $request->phone,
-//            'address' => $request->address,
-//            'is_admin' => $request->is_admin ?? false, // Només es pot activar si s'indica
-//            'is_company' => false, // Sempre desactivat
-//        ]);
-//
-//        return redirect()->route('company.dashboard')->with('success', 'Treballador creat correctament.');
-//    }
+
 
 }

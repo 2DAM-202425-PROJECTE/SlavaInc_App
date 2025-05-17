@@ -84,6 +84,10 @@ class WorkerController extends Controller
             'is_admin'   => false,
             'status'     => $request->status, // ✅ assignació real
         ]);
+        $this->createSystemNotification($company, 'worker_added', [
+            'workerName' => $request->name,
+        ]);
+
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
     }
@@ -120,6 +124,11 @@ class WorkerController extends Controller
             'address' => $request->address,
         ]);
 
+        $company = Auth::guard('company')->user();
+        $this->createSystemNotification($company, 'worker_updated', [
+            'workerId' => $workerId,
+        ], "S'ha actualitzat el treballador {$request->name}");
+
         return redirect()->route('dashboard')->with('success', 'Treballador actualitzat correctament!');
     }
 
@@ -130,6 +139,10 @@ class WorkerController extends Controller
 
         // Eliminar el treballador
         $worker->delete();
+        $company = Auth::guard('company')->user();
+        $this->createSystemNotification($company, 'worker_deleted', [
+            'workerId' => $worker->id,
+        ], "S'ha eliminat el treballador {$worker->name}");
 
         // Redirigir amb un missatge de confirmació
         return redirect()->route('dashboard')->with('success', 'Treballador eliminat correctament.');
@@ -169,6 +182,17 @@ class WorkerController extends Controller
         ]);
     }
 
+    protected function createSystemNotification($company, $action, $data = [], $message = null)
+    {
+        if (!$company->notifications_system) return;
+
+        $company->notifications()->create([
+            'type' => 'system',
+            'action' => $action,
+            'data' => $data,
+            'message' => $message,
+        ]);
+    }
 
 
 

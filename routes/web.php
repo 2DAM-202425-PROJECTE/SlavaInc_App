@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
@@ -42,24 +43,36 @@ Route::prefix('admin')
 
 // DASHBOARD segons el tipus d’usuari
 Route::get('/dashboard', function () {
+    if (session('impersonating_client')) {
+        $services = Service::all();
+        return Inertia::render('Client/Dashboard', [
+            'services' => $services,
+            'impersonating_client' => true,
+        ]);
+    }
+
     if (Auth::guard('web')->check()) {
         $services = Service::all();
-        return Inertia::render('Client/Dashboard', ['services' => $services]);
+        return Inertia::render('Client/Dashboard', [
+            'services' => $services,
+            'impersonating_client' => false,
+        ]);
     }
 
     if (Auth::guard('worker')->check()) {
         $user = Auth::guard('worker')->user();
         return $user->is_admin
-            ? app(CompanyController::class)->index()
-            : app(WorkerController::class)->index();
+            ? app(\App\Http\Controllers\CompanyController::class)->index()
+            : app(\App\Http\Controllers\WorkerController::class)->index();
     }
 
     if (Auth::guard('company')->check()) {
-        return app(CompanyController::class)->index();
+        return app(\App\Http\Controllers\CompanyController::class)->index();
     }
 
     return redirect()->route('login');
 })->middleware('auth:company,web,worker')->name('dashboard');
+
 
 // RUTES COMUNES AUTENTICATS
 Route::middleware('auth:company,web,worker')->group(function () {
@@ -110,13 +123,27 @@ Route::middleware(['auth:company'])->group(function () {
     Route::delete('/company/services/pivot/{pivotId}', [CompanyServiceController::class, 'destroy'])
         ->name('company.services.destroy');
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
+    Route::patch('/company/appointments/{appointment}/complete', [\App\Http\Controllers\AppointmentController::class, 'markAsCompleted'])->name('appointments.complete');
+    Route::patch('/company/appointments/{appointment}/cancel', [\App\Http\Controllers\AppointmentController::class, 'markAsCancelled'])->name('appointments.cancel');
+    Route::patch('/company/settings/notifications', [CompanyController::class, 'updateNotifications'])
+        ->name('company.notifications.update')
+        ->middleware('auth:company');
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::middleware('auth:company')->put('/company/profile', [CompanyController::class, 'updateProfile'])->name('company.updateProfile');
+    Route::middleware('auth:company')->put('/company/change-plan', [CompanyController::class, 'changePlan'])->name('company.changePlan');
+
+    Route::get('/company/preview-client', [CompanyController::class, 'previewClient'])->name('company.previewClient');
+    Route::get('/company/exit-preview', [CompanyController::class, 'exitPreview'])->name('company.exitPreview');
+
+    Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
 
 });
+
 
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
-    Route::get('/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
     Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show'); // Nova ruta
     Route::get('/companies/{company}', [CompanyController::class, 'show'])
