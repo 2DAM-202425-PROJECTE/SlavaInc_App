@@ -34,12 +34,12 @@ class CompanyController extends Controller
         ]);
     }
 
-    public function index()
-    {
-        return Inertia::render('Company/Profile', [
-            'company' => $this->getCompanyFullData(),
-        ]);
-    }
+//    public function index()
+//    {
+//        return Inertia::render('Company/Profile', [
+//            'company' => $this->getCompanyFullData(),
+//        ]);
+//    }
 
 
     public function getCompanyFullData()

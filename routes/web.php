@@ -3,6 +3,8 @@
 use App\Http\Controllers\Administrator\AdminCompanyController;
 use App\Http\Controllers\Administrator\AdminCompanyServicesController;
 use App\Http\Controllers\Administrator\AdminDashboardController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
@@ -16,8 +18,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// RUTA INICIAL
+Route::get('/', function () {
+    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+});
+
 // RUTES D’ADMINISTRADOR
-Route::prefix('administrator')
+Route::prefix('admin')
     ->middleware('auth:worker')
     ->name('administrator.')
     ->group(function () {
@@ -30,13 +39,6 @@ Route::prefix('administrator')
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);
     });
-
-// RUTA INICIAL
-Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-});
 
 // DASHBOARD segons el tipus d’usuari
 Route::get('/dashboard', function () {
@@ -143,3 +145,41 @@ Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->na
 
 // RUTES D’AUTENTICACIÓ
 require __DIR__.'/auth.php';
+
+// Rutes per restablir la contrasenya
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.email');
+
+Route::get('/reset-password', function () {
+    return redirect()->route('login');
+})->middleware('guest');
+
+
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.store');
+
+// Rutes per tancar la sessió
+Route::post('/logout', function () {
+    if (Auth::guard('web')->check()) {
+        Auth::guard('web')->logout();
+    } elseif (Auth::guard('company')->check()) {
+        Auth::guard('company')->logout();
+    } elseif (Auth::guard('worker')->check()) {
+        Auth::guard('worker')->logout();
+    }
+
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/login');
+})->name('logout');

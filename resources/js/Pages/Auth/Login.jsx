@@ -1,20 +1,13 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Head, Link, useForm } from "@inertiajs/react"
-import { motion, AnimatePresence } from "framer-motion"
-import {
-    BuildingOffice2Icon,
-    UserIcon,
-    EnvelopeIcon,
-    LockClosedIcon,
-    ArrowRightIcon,
-} from "@heroicons/react/24/outline"
+import { motion } from "framer-motion"
+import { EnvelopeIcon, LockClosedIcon, ArrowRightIcon } from "@heroicons/react/24/outline"
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
         email: "",
         password: "",
-        role: "client",
     })
 
     const [focused, setFocused] = useState(null)
@@ -55,9 +48,8 @@ export default function Login() {
         },
     }
 
-    const clientGradient = "from-emerald-400 via-teal-500 to-cyan-600"
-    const companyGradient = "from-rose-500 via-red-600 to-rose-700"
-    const currentGradient = data.role === "client" ? clientGradient : companyGradient
+    // Usamos un gradiente azul neutro que funcione para todos los usuarios
+    const gradient = "from-blue-500 via-indigo-600 to-purple-700"
 
     return (
         <div className="min-h-screen w-full flex items-center justify-center p-4 bg-white">
@@ -66,10 +58,10 @@ export default function Login() {
             {/* Background decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div
-                    className={`absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-br ${currentGradient} opacity-20 blur-3xl transform transition-all duration-700 ease-in-out`}
+                    className={`absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-br ${gradient} opacity-20 blur-3xl transform transition-all duration-700 ease-in-out`}
                 ></div>
                 <div
-                    className={`absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-tr ${currentGradient} opacity-20 blur-3xl transform transition-all duration-700 ease-in-out`}
+                    className={`absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-tr ${gradient} opacity-20 blur-3xl transform transition-all duration-700 ease-in-out`}
                 ></div>
             </div>
 
@@ -80,64 +72,27 @@ export default function Login() {
                 className="w-full max-w-md"
             >
                 <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-                    {/* Role selector */}
+                    {/* Header */}
                     <div className="relative h-20">
-                        <div className={`absolute inset-0 bg-gradient-to-r ${currentGradient} transition-all duration-700`}></div>
-                        <div className="absolute inset-0 flex">
-                            <button
-                                type="button"
-                                onClick={() => setData("role", "client")}
-                                className={`flex-1 flex items-center justify-center transition-all duration-300 ${
-                                    data.role === "client" ? "text-white font-bold" : "text-white/70 hover:text-white/90"
-                                }`}
-                            >
-                                <motion.div
-                                    animate={data.role === "client" ? { scale: 1.05 } : { scale: 1 }}
-                                    className="flex items-center space-x-2"
-                                >
-                                    <UserIcon className="h-5 w-5" />
-                                    <span>Client</span>
-                                </motion.div>
-                            </button>
-
-                            <div className="w-px bg-white/20 self-stretch mx-2"></div>
-
-                            <button
-                                type="button"
-                                onClick={() => setData("role", "company")}
-                                className={`flex-1 flex items-center justify-center transition-all duration-300 ${
-                                    data.role === "company" ? "text-white font-bold" : "text-white/70 hover:text-white/90"
-                                }`}
-                            >
-                                <motion.div
-                                    animate={data.role === "company" ? { scale: 1.05 } : { scale: 1 }}
-                                    className="flex items-center space-x-2"
-                                >
-                                    <BuildingOffice2Icon className="h-5 w-5" />
-                                    <span>Empresa</span>
-                                </motion.div>
-                            </button>
+                        <div className={`absolute inset-0 bg-gradient-to-r ${gradient} transition-all duration-700`}></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <h1 className="text-2xl font-bold text-white">Iniciar Sessió</h1>
                         </div>
                     </div>
 
                     {/* Form content */}
                     <div className="p-8">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={data.role}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <div className="text-center mb-8">
-                                    <h1 className="text-3xl font-bold text-gray-900">
-                                        {data.role === "client" ? "Benvingut de nou!" : "Àrea d'Empresa"}
-                                    </h1>
-                                    <p className="mt-2 text-gray-600">Accedeix al teu compte per continuar</p>
-                                </div>
-                            </motion.div>
-                        </AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <div className="text-center mb-8">
+                                <h2 className="text-2xl font-bold text-gray-900">Benvingut de nou!</h2>
+                                <p className="mt-2 text-gray-600">Accedeix al teu compte per continuar</p>
+                            </div>
+                        </motion.div>
 
                         <motion.form
                             variants={containerVariants}
@@ -150,9 +105,7 @@ export default function Login() {
                             <motion.div variants={itemVariants} className="relative">
                                 <div
                                     className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-all duration-300 ${
-                                        focused === "email" || data.email
-                                            ? `text-${data.role === "client" ? "teal" : "red"}-500 -translate-y-10 text-xs`
-                                            : "text-gray-400"
+                                        focused === "email" || data.email ? `text-indigo-600 -translate-y-10 text-xs` : "text-gray-400"
                                     }`}
                                 >
                                     <EnvelopeIcon className="h-5 w-5 inline mr-2" />
@@ -165,11 +118,7 @@ export default function Login() {
                                     onFocus={() => setFocused("email")}
                                     onBlur={() => setFocused(null)}
                                     className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-4 pt-6 outline-none transition-all duration-300 ${
-                                        focused === "email"
-                                            ? data.role === "client"
-                                                ? "border-teal-500 ring-4 ring-teal-500/20"
-                                                : "border-red-500 ring-4 ring-red-500/20"
-                                            : "border-gray-200"
+                                        focused === "email" ? "border-indigo-500 ring-4 ring-indigo-500/20" : "border-gray-200"
                                     } ${data.email ? "pt-6" : ""}`}
                                     required
                                 />
@@ -189,7 +138,7 @@ export default function Login() {
                                 <div
                                     className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-all duration-300 ${
                                         focused === "password" || data.password
-                                            ? `text-${data.role === "client" ? "teal" : "red"}-500 -translate-y-10 text-xs`
+                                            ? `text-indigo-600 -translate-y-10 text-xs`
                                             : "text-gray-400"
                                     }`}
                                 >
@@ -203,11 +152,7 @@ export default function Login() {
                                     onFocus={() => setFocused("password")}
                                     onBlur={() => setFocused(null)}
                                     className={`w-full bg-gray-50 border-2 rounded-xl px-4 py-4 pt-6 outline-none transition-all duration-300 ${
-                                        focused === "password"
-                                            ? data.role === "client"
-                                                ? "border-teal-500 ring-4 ring-teal-500/20"
-                                                : "border-red-500 ring-4 ring-red-500/20"
-                                            : "border-gray-200"
+                                        focused === "password" ? "border-indigo-500 ring-4 ring-indigo-500/20" : "border-gray-200"
                                     } ${data.password ? "pt-6" : ""}`}
                                     required
                                 />
@@ -234,13 +179,12 @@ export default function Login() {
                                 <label className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        className={`rounded border-gray-300 text-${
-                                            data.role === "client" ? "teal" : "red"
-                                        }-500 focus:ring-${data.role === "client" ? "teal" : "red"}-500`}
+                                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        name="remember"
                                     />
                                     <span>Recorda'm</span>
                                 </label>
-                                <a href="#" className={`text-sm text-${data.role === "client" ? "teal" : "red"}-500 hover:underline`}>
+                                <a href={route("password.request")} className="text-sm text-indigo-600 hover:underline">
                                     Has oblidat la contrasenya?
                                 </a>
                             </motion.div>
@@ -250,7 +194,7 @@ export default function Login() {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className={`w-full py-4 rounded-xl bg-gradient-to-r ${currentGradient} text-white font-bold shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-1 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed`}
+                                    className={`w-full py-4 rounded-xl bg-gradient-to-r ${gradient} text-white font-bold shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-1 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed`}
                                 >
                                     <span>Iniciar Sessió</span>
                                     <ArrowRightIcon className="h-5 w-5" />
@@ -261,10 +205,7 @@ export default function Login() {
                             <motion.div variants={itemVariants} className="text-center mt-6">
                                 <p className="text-gray-600">
                                     No tens compte?{" "}
-                                    <Link
-                                        href={route("register")}
-                                        className={`font-medium text-${data.role === "client" ? "teal" : "red"}-500 hover:underline`}
-                                    >
+                                    <Link href={route("register")} className="font-medium text-indigo-600 hover:underline">
                                         Registra't ara
                                     </Link>
                                 </p>
@@ -272,27 +213,6 @@ export default function Login() {
                         </motion.form>
                     </div>
                 </div>
-
-                {/* Social login options */}
-                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="mt-8 text-center">
-                    <motion.p variants={itemVariants} className="text-gray-600 mb-4">
-                        O continua amb
-                    </motion.p>
-                    <motion.div variants={itemVariants} className="flex justify-center space-x-4">
-                        {["google", "facebook", "apple"].map((provider) => (
-                            <button
-                                key={provider}
-                                className="w-12 h-12 rounded-full bg-white shadow-md hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1 flex items-center justify-center"
-                            >
-                                <img
-                                    src={`/placeholder.svg?height=24&width=24&text=${provider.charAt(0).toUpperCase()}`}
-                                    alt={provider}
-                                    className="w-6 h-6"
-                                />
-                            </button>
-                        ))}
-                    </motion.div>
-                </motion.div>
             </motion.div>
         </div>
     )
