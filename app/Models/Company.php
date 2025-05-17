@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * @property bool $is_admin // 👈 Documenta la propietat
+ * @property bool $is_admin
  */
 class Company extends Authenticatable
 {
@@ -24,8 +23,17 @@ class Company extends Authenticatable
         'state',
         'zip_code',
         'phone',
+        'website',
+        'description',
+        'founded_year',
+        'vat_number',
+        'company_type',
         'plan_id',
+        'notifications_system',
+        'notifications_appointments',
+        'notifications_reviews',
     ];
+
 
 
     protected $hidden = [
@@ -53,7 +61,10 @@ class Company extends Authenticatable
     {
         return $this->belongsTo(Plan::class);
     }
-
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 
 
 
