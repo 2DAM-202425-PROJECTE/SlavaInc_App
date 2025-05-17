@@ -14,14 +14,12 @@ use App\Models\Plan;
 class CompanyController extends Controller
 {
 
-
     public function index()
     {
         return Inertia::render('Company/Dashboard', [
             'company' => $this->getCompanyFullData(),
         ]);
     }
-
 
     public function getCompanyFullData()
     {
