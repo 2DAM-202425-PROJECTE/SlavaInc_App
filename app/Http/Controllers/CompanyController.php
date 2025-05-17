@@ -22,8 +22,6 @@ class CompanyController extends Controller
     }
 
 
-
-
     public function getCompanyFullData()
     {
         $company = Auth::guard('company')->user();
@@ -220,32 +218,64 @@ class CompanyController extends Controller
             $validated['field'] => $validated['value'],
         ]);
 
-        return redirect()->back()->with('success', 'Preferència de notificació actualitzada correctament.');
+        return redirect()->route('dashboard')->with('success', 'Preferència de notificació actualitzada correctament.');
     }
 
-    //Funcio per crear treballadors associats a l'empresa
-//    public function createWorker(Request $request)
-//    {
-//        $request->validate([
-//            'name' => 'required|string|max:255',
-//            'email' => 'required|string|email|max:255|unique:workers',
-//            'phone' => 'required|string|max:20',
-//            'address' => 'required|string|max:255',
-//            'is_admin' => 'nullable|boolean', // El rol admin es pot activar o desactivar
-//        ]);
-//
-//        // Crear el treballador amb el rol is_company desactivat per defecte
-//        $worker = Worker::create([
-//            'company_id' => Auth::guard('company')->user()->id,
-//            'name' => $request->name,
-//            'email' => $request->email,
-//            'phone' => $request->phone,
-//            'address' => $request->address,
-//            'is_admin' => $request->is_admin ?? false, // Només es pot activar si s'indica
-//            'is_company' => false, // Sempre desactivat
-//        ]);
-//
-//        return redirect()->route('company.dashboard')->with('success', 'Treballador creat correctament.');
-//    }
+    public function updateProfile(Request $request)
+    {
+        $company = auth()->guard('company')->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'vat_number' => 'nullable|string|max:255',
+            'founded_year' => 'nullable|integer',
+            'company_type' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'zip_code' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'required|email|max:255',
+            'website' => 'nullable|string|max:255',
+        ]);
+
+        $company->update($validated);
+
+        return response()->json([
+            'message' => 'Perfil actualitzat correctament.',
+            'company' => $company,
+        ]);
+    }
+
+    public function changePlan(Request $request)
+    {
+        $company = auth()->guard('company')->user();
+
+        $validated = $request->validate([
+            'plan_id' => 'required|exists:plans,id',
+        ]);
+
+        // Aquí podries simular una comprovació de pagament
+
+        $company->update(['plan_id' => $validated['plan_id']]);
+
+        return response()->json([
+            'message' => 'Subscripció canviada correctament.',
+            'plan_id' => $company->plan_id,
+        ]);
+    }
+    public function previewClient()
+    {
+        session(['impersonating_client' => true]);
+        return redirect()->route('dashboard');
+    }
+
+    public function exitPreview()
+    {
+        session()->forget('impersonating_client');
+        return redirect()->route('dashboard');
+    }
 
 }

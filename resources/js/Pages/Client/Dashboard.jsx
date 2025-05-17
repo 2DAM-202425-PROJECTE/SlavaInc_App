@@ -5,7 +5,7 @@ import { Link } from '@inertiajs/react';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
 
-const Dashboard = ({ services }) => {
+const Dashboard = ({ services, impersonating_client = false }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilter, setSelectedFilter] = useState("generals");
     const [showFilters, setShowFilters] = useState(false); // Estat per mostrar/ocultar filtres en mòbil
@@ -177,6 +177,17 @@ const Dashboard = ({ services }) => {
                                 </p>
                             </div>
                         )}
+                        {impersonating_client && (
+                            <div className="fixed bottom-6 right-6 z-50">
+                                <button
+                                    onClick={() => window.location.href = route('company.exitPreview')}
+                                    className="px-4 py-2 bg-[#9e2a2f] text-white rounded-lg shadow-lg hover:bg-[#7c1e22] transition"
+                                >
+                                    Tornar com a empresa
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>

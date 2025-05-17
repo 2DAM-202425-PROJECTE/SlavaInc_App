@@ -30,6 +30,7 @@ import { BellIcon } from "@heroicons/react/24/outline"
 export default function CompanyProfileAdmin() {
     const { company, flash } = usePage().props
     const [activeTab, setActiveTab] = useState("dashboard")
+    const [internalFlash, setInternalFlash] = useState({ success: null, error: null })
 
     const [selectedWorker, setSelectedWorker] = useState(null)
     const [workerToDelete, setWorkerToDelete] = useState(null)
@@ -49,9 +50,24 @@ export default function CompanyProfileAdmin() {
     }
 
     useEffect(() => {
-        if (flash?.success) addNotification(flash.success, "success")
-        if (flash?.error) addNotification(flash.error, "error")
+        if (flash.success || flash.error) {
+            setInternalFlash({
+                success: flash.success || null,
+                error: flash.error || null,
+            })
+        }
     }, [flash])
+
+    useEffect(() => {
+        if (internalFlash.success) {
+            addNotification(internalFlash.success, "success")
+            setInternalFlash((prev) => ({ ...prev, success: null }))
+        }
+        if (internalFlash.error) {
+            addNotification(internalFlash.error, "error")
+            setInternalFlash((prev) => ({ ...prev, error: null }))
+        }
+    }, [internalFlash])
 
 
     const tabs = [
@@ -100,9 +116,10 @@ export default function CompanyProfileAdmin() {
             case "ratings":
                 return <RatingsSection company={company} />
             case "profile":
-                return <ProfileSection company={company} />
+                return <ProfileSection company={company} addNotification={addNotification} />
             case "settings":
                 return <SettingsSection company={company} />
+
             default:
                 return <DashboardStats company={company} />
         }

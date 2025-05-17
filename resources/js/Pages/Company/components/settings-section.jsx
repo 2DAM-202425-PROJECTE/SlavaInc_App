@@ -60,6 +60,7 @@ export default function SettingsSection({ company }) {
     const tabs = [
         { id: "notifications", name: "Notificacions", icon: BellIcon },
         { id: "security", name: "Seguretat", icon: LockClosedIcon },
+        { id: "clientView", name: "Vista client", icon: Cog6ToothIcon },
     ]
 
     return (
@@ -180,6 +181,22 @@ export default function SettingsSection({ company }) {
                                 </div>
                             </div>
                         )}
+                        {activeTab === "clientView" && (
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">Vista com a client</h3>
+                                <p className="text-gray-600 mb-6">
+                                    Pots veure com un client visualitza els serveis disponibles. És una simulació segura, sense necessitat de tancar sessió.
+                                </p>
+                                <button
+                                    onClick={() => router.get(route("company.previewClient"))}
+                                    className="px-4 py-2 bg-[#1f7275] text-white rounded-md hover:bg-[#155e61] transition"
+                                >
+                                    Inicia vista com a client
+                                </button>
+                            </div>
+                        )}
+
+
                     </div>
                 </div>
             </div>

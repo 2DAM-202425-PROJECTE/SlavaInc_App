@@ -24,7 +24,7 @@ class ClientController extends Controller
     public function show($serviceTypeOrId)
     {
         // Verificar que el usuario está autenticado como cliente
-        if (!auth()->guard('web')->check()) {
+        if (!auth()->guard('web')->check() && !session('impersonating_client')) {
             abort(403);
         }
 
@@ -45,7 +45,9 @@ class ClientController extends Controller
 
         return Inertia::render('Client/ServiceInfo', [
             'service' => $service,
-            'companies' => $service->companies
+            'companies' => $service->companies,
+            'impersonating_client' => session('impersonating_client', false),
+
         ]);
     }
 

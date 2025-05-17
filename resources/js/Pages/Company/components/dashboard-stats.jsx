@@ -19,12 +19,11 @@ export default function DashboardStats({ company }) {
         setIsLoaded(true)
     }, [])
 
-    // Prepare monthly data for chart
     const chartData = company.monthlyStats.map((stat) => ({
         name: stat.month,
         ingressos: stat.income,
-        projectes: stat.projects * 1000, // Scale for visibility
-        treballadors: stat.workers * 2000, // Scale for visibility
+        projectes: stat.projects * 1000,
+        treballadors: stat.workers * 2000,
     }))
 
     return (

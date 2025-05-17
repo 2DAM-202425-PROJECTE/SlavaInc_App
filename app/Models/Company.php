@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * @property bool $is_admin // 👈 Documenta la propietat
+ * @property bool $is_admin
  */
 class Company extends Authenticatable
 {
@@ -23,12 +23,17 @@ class Company extends Authenticatable
         'state',
         'zip_code',
         'phone',
+        'website',
+        'description',
+        'founded_year',
+        'vat_number',
+        'company_type',
         'plan_id',
         'notifications_system',
         'notifications_appointments',
         'notifications_reviews',
-
     ];
+
 
 
     protected $hidden = [
