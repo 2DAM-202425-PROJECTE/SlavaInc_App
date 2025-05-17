@@ -43,36 +43,46 @@ class WorkerController extends Controller
 
     public function store(Request $request)
     {
-        // Validació de la petició
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:workers,email',
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
-            'password' => 'required|string|min:8', // Afegir validació per a la contrasenya
+            'password' => 'required|string|min:8',
+            'status' => 'required|in:active,inactive', // ✅ validació del camp status
         ]);
 
-        // Obtenim l'empresa autenticada
         $company = Auth::guard('company')->user();
 
         if (!$company) {
-            return redirect()->route('login')->withErrors(['error' => 'No tens permisos per crear treballadors.']);
+            return redirect()->route('login')->withErrors([
+                'error' => 'No tens permisos per crear treballadors.'
+            ]);
         }
 
-        // Crear el treballador vinculat a l'empresa
+        if (
+            $company->plan &&
+            $company->plan->max_workers !== null &&
+            $company->workers()->where('status', 'active')->count() >= $company->plan->max_workers
+        ) {
+            return redirect()->back()->withErrors([
+                'limit' => "Has arribat al límit de treballadors que permet el pla \"{$company->plan->name}\". Per afegir més treballadors, caldrà actualitzar la teva subscripció.",
+            ]);
+        }
+
         Worker::create([
             'company_id' => $company->id,
-            'name' => $request->name,
-            'email' => $request->email,
-            'schedule' => $request->schedule,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state,
-            'zip_code' => $request->zip_code,
-            'phone' => $request->phone,
-            'password' => bcrypt($request->password),
-            'is_admin' => false,
-            'is_company' => false,
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'schedule'   => $request->schedule,
+            'address'    => $request->address,
+            'city'       => $request->city,
+            'state'      => $request->state,
+            'zip_code'   => $request->zip_code,
+            'phone'      => $request->phone,
+            'password'   => bcrypt($request->password),
+            'is_admin'   => false,
+            'status'     => $request->status, // ✅ assignació real
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');

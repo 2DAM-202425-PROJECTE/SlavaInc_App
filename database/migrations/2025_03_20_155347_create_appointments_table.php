@@ -20,6 +20,9 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
+
+            // ✅ Aquí afegim la restricció única
+            $table->unique(['worker_id', 'date', 'time'], 'unique_worker_schedule');
         });
     }
 

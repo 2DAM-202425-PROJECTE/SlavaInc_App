@@ -30,6 +30,7 @@ class Worker extends Authenticatable
         'state',
         'zip_code',
         'is_admin',
+        'status',
     ];
 
     /**

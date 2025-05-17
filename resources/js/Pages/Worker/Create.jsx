@@ -17,12 +17,20 @@ export default function CreateWorker() {
         password: '',
         company_id: '',
         is_admin: false,
+        status: 'active',
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setData('company_id', window.CompanyId);
-        post(route('worker.store'));
+        post(route('worker.store'), {
+            onSuccess: () => {
+                console.log('Worker creat correctament!');
+            },
+            onError: (errors) => {
+                console.error('Errors:', errors);
+            },
+        });
     };
 
     return (
@@ -42,6 +50,13 @@ export default function CreateWorker() {
 
                     <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
                         <h2 className="text-3xl font-bold text-gray-800 mb-8">Afegir Treballador</h2>
+
+                        {errors.limit && (
+                            <div className="bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded mb-6">
+                                {errors.limit}
+                            </div>
+                        )}
+
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
@@ -152,6 +167,19 @@ export default function CreateWorker() {
                                     required
                                 />
                                 {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Estat</label>
+                                <select
+                                    value={data.status}
+                                    onChange={(e) => setData('status', e.target.value)}
+                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
+                                >
+                                    <option value="active">Actiu</option>
+                                    <option value="inactive">Inactiu</option>
+                                </select>
+                                {errors.status && <p className="text-red-600 text-sm mt-1">{errors.status}</p>}
                             </div>
 
                             <div className="pt-4">

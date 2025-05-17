@@ -44,7 +44,7 @@ const Header = ({ theme = 'bg-black text-white' }) => {
         <header className={`${theme} w-full py-4 px-6 shadow-lg`}>
             <div className="max-w-7xl mx-auto flex justify-between items-center">
                 {/* Logo a l'esquerra */}
-                <Link href="/" className="text-2xl font-bold">
+                <Link href="/dashboard" className="text-2xl font-bold">
                     SLAVA Inc.
                 </Link>
 

@@ -61,11 +61,33 @@ Route::get('/dashboard', function () {
 
 // RUTES COMUNES AUTENTICATS
 Route::middleware('auth:company,web,worker')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', function () {
+        if (Auth::guard('web')->check()) {
+            return Inertia::render('Client/Profile');
+        }
+
+        if (Auth::guard('worker')->check()) {
+            $user = Auth::guard('worker')->user();
+            return $user->is_admin
+                ? Inertia::render('Company/Profile')
+                : Inertia::render('Worker/Profile');
+        }
+
+        if (Auth::guard('company')->check()) {
+            return Inertia::render('Company/Profile', [
+                'company' => app(\App\Http\Controllers\CompanyController::class)->getCompanyFullData(),
+            ]);
+        }
+
+
+
+        return redirect()->route('login');
+    })->middleware('auth:company,web,worker')->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
 });
+
 
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
@@ -94,6 +116,10 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show'); // Nova ruta
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])
+        ->name('client.companies.show')
+        ->where('company', '[0-9]+');
 
     // Cites
     Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
@@ -107,6 +133,13 @@ Route::middleware('auth:worker')->group(function () {
     Route::get('/worker/appointments', [AdminWorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
     Route::get('/worker/appointments/{appointment}', [AdminWorkerController::class, 'showAppointment'])->name('worker.appointments.show');
 });
+
+Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots'])
+    ->name('client.get.occupied.slots');
+
+// ALTRES
+Route::get('/privacy', function () {return Inertia::render('Other/Privacy');})->name('privacy');
+Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->name('terms');
 
 // RUTES D’AUTENTICACIÓ
 require __DIR__.'/auth.php';

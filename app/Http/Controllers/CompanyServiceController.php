@@ -54,12 +54,26 @@ class CompanyServiceController extends Controller
             'max_price' => 'nullable|numeric',
             'logo' => 'nullable|string',
             'custom_name' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
+            'custom_description' => 'nullable|string',
         ]);
 
         $selectedService = Service::findOrFail($validated['service_id']);
 
-        // Validació: només evitar duplicats si NO és de tipus 'altres'
+        // ✅ Només aplicar límit si el servei és de tipus 'altres'
+        if (
+            $selectedService->type === 'altres' &&
+            $company->plan &&
+            $company->plan->max_services !== null &&
+            $company->services()
+                ->where('services.type', 'altres')
+                ->count() >= $company->plan->max_services
+        ) {
+            return redirect()->back()->withErrors([
+                'limit' => "El teu pla \"{$company->plan->name}\" només permet afegir fins a {$company->plan->max_services} serveis personalitzats (tipus 'altres'). Considera actualitzar el pla.",
+            ]);
+        }
+
+        // ❗️Evitar duplicats si NO és 'altres'
         if ($selectedService->type !== 'altres') {
             $alreadyAttached = $company->services()
                 ->where('service_id', $validated['service_id'])
@@ -81,9 +95,10 @@ class CompanyServiceController extends Controller
             'max_price' => $request->max_price,
         ]);
 
-
         return redirect()->route('dashboard')->with('success', 'Servei afegit correctament.');
     }
+
+
 
 
     public function edit($serviceId)
