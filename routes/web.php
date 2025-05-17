@@ -129,6 +129,7 @@ Route::middleware(['auth:company'])->group(function () {
     Route::get('/company/preview-client', [CompanyController::class, 'previewClient'])->name('company.previewClient');
     Route::get('/company/exit-preview', [CompanyController::class, 'exitPreview'])->name('company.exitPreview');
 
+    Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
 
 });
 

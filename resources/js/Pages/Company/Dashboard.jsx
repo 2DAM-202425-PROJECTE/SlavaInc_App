@@ -43,6 +43,7 @@ export default function CompanyProfileAdmin() {
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState([])
     const unreadCount = company.notifications?.filter(n => !n.read).length || 0
+    const [planToChange, setPlanToChange] = useState(null)
 
     const addNotification = (message, type = "success", duration = 4000) => {
         const id = Date.now()
@@ -116,9 +117,11 @@ export default function CompanyProfileAdmin() {
             case "ratings":
                 return <RatingsSection company={company} />
             case "profile":
-                return <ProfileSection company={company} addNotification={addNotification} />
+                return <ProfileSection company={company} addNotification={addNotification} requestPlanChange={setPlanToChange} />
+
             case "settings":
-                return <SettingsSection company={company} />
+                return <SettingsSection company={company} addNotification={addNotification} />
+
 
             default:
                 return <DashboardStats company={company} />
@@ -354,21 +357,71 @@ export default function CompanyProfileAdmin() {
                     </div>
                 </div>
             )}
+            {planToChange && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn text-center">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-yellow-100 flex items-center justify-center mb-4">
+                            <CheckCircleIcon className="h-8 w-8 text-green-600" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Canviar de Pla</h3>
+                        <p className="text-gray-600 mb-6">
+                            Estàs segur que vols canviar al pla <strong>{planToChange.name}</strong> per {planToChange.price}€/mes?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => setPlanToChange(null)}
+                                className="px-5 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300"
+                            >
+                                Cancel·lar
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await axios.put('/company/change-plan', { plan_id: planToChange.id })
+                                        setPlanToChange(null)
+                                        addNotification("Subscripció canviada correctament", "success")
+                                        window.location.reload()
+                                    } catch (error) {
+                                        console.error("Error al canviar de pla", error)
+                                        addNotification("Error al canviar de pla", "error")
+                                    }
+                                }}
+                                className="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                            >
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
 
             <style jsx>{`
                 @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
                 }
+
                 @keyframes scaleIn {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
+                    from {
+                        transform: scale(0.95);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
                 }
+
                 .animate-fadeIn {
                     animation: fadeIn 0.3s ease-out forwards;
                 }
+
                 .animate-scaleIn {
                     animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }

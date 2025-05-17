@@ -8,7 +8,7 @@ import {
     LockClosedIcon,
 } from "@heroicons/react/24/outline"
 
-export default function SettingsSection({ company }) {
+export default function SettingsSection({ company, addNotification }) {
     const [isLoaded, setIsLoaded] = useState(false)
     const [activeTab, setActiveTab] = useState("notifications")
 
@@ -17,6 +17,39 @@ export default function SettingsSection({ company }) {
         appointments: Boolean(company.notifications_appointments),
         reviews: Boolean(company.notifications_reviews),
     })
+    const [currentPassword, setCurrentPassword] = useState("")
+    const [newPassword, setNewPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
+    const [errors, setErrors] = useState({})
+
+
+    const handleChangePassword = async () => {
+        setErrors({})
+        try {
+            const response = await axios.put("/company/change-password", {
+                current_password: currentPassword,
+                new_password: newPassword,
+                new_password_confirmation: confirmPassword,
+            })
+
+            setCurrentPassword("")
+            setNewPassword("")
+            setConfirmPassword("")
+
+            addNotification("Contrasenya actualitzada correctament", "success")
+
+        } catch (error) {
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors)
+            } else if (error.response?.data?.message) {
+                setErrors({ general: error.response.data.message })
+            } else {
+                setErrors({ general: "Error desconegut. Torna-ho a intentar." })
+            }
+            addNotification("Error al actualitzar la contrasenya", "error")
+
+        }
+    }
 
 
 
@@ -163,17 +196,51 @@ export default function SettingsSection({ company }) {
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">Contrasenya actual</label>
-                                                <input type="password" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#9e2a2f] focus:border-[#9e2a2f]" />
+                                                <input
+                                                    type="password"
+                                                    value={currentPassword}
+                                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
+                                                />
+                                                {errors.current_password && (
+                                                    <p className="text-sm text-red-600 mt-1">{errors.current_password}</p>
+                                                )}
                                             </div>
+
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nova contrasenya</label>
-                                                <input type="password" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#9e2a2f] focus:border-[#9e2a2f]" />
+                                                <input
+                                                    type="password"
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
+                                                />
+                                                {errors.new_password && (
+                                                    <p className="text-sm text-red-600 mt-1">{errors.new_password}</p>
+                                                )}
                                             </div>
+
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar nova contrasenya</label>
-                                                <input type="password" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#9e2a2f] focus:border-[#9e2a2f]" />
+                                                <input
+                                                    type="password"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
+                                                />
+                                                {errors.confirm_password && (
+                                                    <p className="text-sm text-red-600 mt-1">{errors.confirm_password}</p>
+                                                )}
                                             </div>
-                                            <button className="px-4 py-2 bg-[#9e2a2f] text-white rounded-md hover:bg-[#8a2329] transition-colors duration-300">
+
+                                            {errors.general && (
+                                                <p className="text-sm text-red-600 mt-2">{errors.general}</p>
+                                            )}
+
+                                            <button
+                                                onClick={handleChangePassword}
+                                                className="px-4 py-2 bg-[#9e2a2f] text-white rounded-md hover:bg-[#8a2329] transition-colors duration-300"
+                                            >
                                                 Actualitzar contrasenya
                                             </button>
                                         </div>
@@ -181,6 +248,8 @@ export default function SettingsSection({ company }) {
                                 </div>
                             </div>
                         )}
+
+
                         {activeTab === "clientView" && (
                             <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-4">Vista com a client</h3>

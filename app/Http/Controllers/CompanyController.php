@@ -8,6 +8,7 @@ use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Models\Plan;
 class CompanyController extends Controller
@@ -242,6 +243,7 @@ class CompanyController extends Controller
         ]);
 
         $company->update($validated);
+        $this->createSystemNotification($company, 'profile_updated', [], "S'ha actualitzat el perfil de l'empresa.");
 
         return response()->json([
             'message' => 'Perfil actualitzat correctament.',
@@ -257,15 +259,19 @@ class CompanyController extends Controller
             'plan_id' => 'required|exists:plans,id',
         ]);
 
-        // Aquí podries simular una comprovació de pagament
-
         $company->update(['plan_id' => $validated['plan_id']]);
 
+        $company->refresh();
+        $this->createSystemNotification($company, 'plan_changed', [
+            'plan_id' => $validated['plan_id'],
+        ], "S'ha canviat el pla de subscripció.");
         return response()->json([
             'message' => 'Subscripció canviada correctament.',
             'plan_id' => $company->plan_id,
         ]);
     }
+
+
     public function previewClient()
     {
         session(['impersonating_client' => true]);
@@ -277,5 +283,49 @@ class CompanyController extends Controller
         session()->forget('impersonating_client');
         return redirect()->route('dashboard');
     }
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required'],
+            'new_password' => ['required', 'min:8', 'confirmed'],
+        ]);
+
+        $company = auth()->guard('company')->user();
+
+        if (!\Hash::check($request->current_password, $company->password)) {
+            return response()->json([
+                'message' => 'La contrasenya actual no és correcta.',
+            ], 422);
+        }
+
+        $company->password = bcrypt($request->new_password);
+        $company->save();
+        $this->createSystemNotification(
+            $company,
+            'password_updated',
+            [], 
+            "La contrasenya s'ha actualitzat correctament."
+        );
+        return response()->json([
+            'message' => 'Contrasenya actualitzada correctament.',
+        ]);
+    }
+
+
+    protected function createSystemNotification($company, $action, $data = [], $message = null)
+    {
+        if (!$company->notifications_system) return;
+
+        $company->notifications()->create([
+            'type' => 'system',
+            'action' => $action,
+            'data' => $data,
+            'message' => $message,
+        ]);
+    }
+
+
+
+
 
 }

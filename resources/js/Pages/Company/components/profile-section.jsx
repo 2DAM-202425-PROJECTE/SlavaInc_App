@@ -12,7 +12,7 @@ import {
     PencilSquareIcon,
 } from "@heroicons/react/24/outline"
 
-export default function ProfileSection({ company, addNotification }) {
+export default function ProfileSection({ company, addNotification, requestPlanChange }) {
     const [isLoaded, setIsLoaded] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [companyInfo, setCompanyInfo] = useState({ ...company.info })
@@ -280,10 +280,11 @@ export default function ProfileSection({ company, addNotification }) {
                                     {!plan.isActive && (
                                         <button
                                             className="w-full mt-4 px-4 py-2 rounded-lg bg-[#9e2a2f] text-white font-medium transition-all duration-300 hover:bg-[#8a2329] shadow-md hover:shadow-lg"
-                                            onClick={() => handleChangePlan(plan.id)}
+                                            onClick={() => requestPlanChange(plan)}
                                         >
                                             Canviar a aquest pla
                                         </button>
+
 
                                     )}
                                 </div>
