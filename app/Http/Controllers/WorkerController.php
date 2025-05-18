@@ -24,8 +24,10 @@ class WorkerController extends Controller
         }
 
         // Carregar les cites del treballador amb les relacions necessàries
-        $appointments = $worker->appointments()
-            ->with(['user', 'company', 'service'])
+        $appointments = Appointment::whereHas('workers', function ($query) use ($worker) {
+            $query->where('workers.id', $worker->id);
+        })
+            ->with(['user', 'company', 'service', 'workers']) // <-- AÑADIR "workers"
             ->orderBy('date', 'asc')
             ->orderBy('time', 'asc')
             ->get();
@@ -72,18 +74,22 @@ class WorkerController extends Controller
 
         Worker::create([
             'company_id' => $company->id,
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'schedule'   => $request->schedule,
-            'address'    => $request->address,
-            'city'       => $request->city,
-            'state'      => $request->state,
-            'zip_code'   => $request->zip_code,
-            'phone'      => $request->phone,
-            'password'   => bcrypt($request->password),
-            'is_admin'   => false,
-            'status'     => $request->status, // ✅ assignació real
+            'name' => $request->name,
+            'email' => $request->email,
+            'schedule' => $request->schedule,
+            'address' => $request->address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'zip_code' => $request->zip_code,
+            'phone' => $request->phone,
+            'password' => bcrypt($request->password),
+            'is_admin' => false,
+            'status' => $request->status, // ✅ assignació real
         ]);
+        $this->createSystemNotification($company, 'worker_added', [
+            'workerName' => $request->name,
+        ]);
+
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
     }
@@ -120,6 +126,11 @@ class WorkerController extends Controller
             'address' => $request->address,
         ]);
 
+        $company = Auth::guard('company')->user();
+        $this->createSystemNotification($company, 'worker_updated', [
+            'workerId' => $workerId,
+        ], "S'ha actualitzat el treballador {$request->name}");
+
         return redirect()->route('dashboard')->with('success', 'Treballador actualitzat correctament!');
     }
 
@@ -130,6 +141,10 @@ class WorkerController extends Controller
 
         // Eliminar el treballador
         $worker->delete();
+        $company = Auth::guard('company')->user();
+        $this->createSystemNotification($company, 'worker_deleted', [
+            'workerId' => $worker->id,
+        ], "S'ha eliminat el treballador {$worker->name}");
 
         // Redirigir amb un missatge de confirmació
         return redirect()->route('dashboard')->with('success', 'Treballador eliminat correctament.');
@@ -144,9 +159,10 @@ class WorkerController extends Controller
         }
 
         // Buscar la cita que pertenezca a este worker
-        $appointment = Appointment::where('worker_id', $worker->id)
+        $appointment = Appointment::where('id', $id)
+            ->whereHas('workers', fn ($q) => $q->where('workers.id', $worker->id))
             ->with(['user', 'company', 'service'])
-            ->findOrFail($id);
+            ->firstOrFail();
 
         return Inertia::render('Worker/ServiceDetail', [
             'appointment' => $appointment
@@ -169,8 +185,50 @@ class WorkerController extends Controller
         ]);
     }
 
+    protected function createSystemNotification($company, $action, $data = [], $message = null)
+    {
+        if (!$company->notifications_system) return;
+
+        $company->notifications()->create([
+            'type' => 'system',
+            'action' => $action,
+            'data' => $data,
+            'message' => $message,
+        ]);
+    }
 
 
+    public function markAppointmentCompleted(Appointment $appointment)
+    {
+        $worker = Auth::guard('worker')->user();
 
+        // ✅ Cargar relación workers
+        $appointment->load('workers');
 
+        // Verificar si el trabajador está asociado a la cita
+        if (!$worker || !$appointment->workers->contains($worker->id)) {
+            abort(403, 'No tens permís per modificar aquesta cita.');
+        }
+
+        $appointment->status = 'completed';
+        $appointment->save();
+
+        return redirect()->back()->with('success', 'Cita marcada com a completada.');
+    }
+
+    public function cancelAppointment(Appointment $appointment)
+    {
+        $worker = Auth::guard('worker')->user();
+
+        $appointment->load('workers');
+
+        if (!$worker || !$appointment->workers->contains($worker->id)) {
+            abort(403, 'No tens permís per modificar aquesta cita.');
+        }
+
+        $appointment->status = 'cancelled';
+        $appointment->save();
+
+        return redirect()->back()->with('success', 'Cita cancel·lada correctament.');
+    }
 }

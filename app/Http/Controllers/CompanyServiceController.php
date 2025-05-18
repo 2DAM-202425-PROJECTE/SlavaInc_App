@@ -30,7 +30,7 @@ class CompanyServiceController extends Controller
         $company = Auth::guard('company')->user();
 
         $attachedServiceIds = $company->services()
-            ->where('type', '!=', 'altres') // ✅ Aquí filtrem directament sobre la taula services
+            ->where('type', '!=', 'altres')
             ->pluck('service_id')
             ->toArray();
         $services = Service::whereNotIn('id', $attachedServiceIds)->get();
@@ -59,7 +59,6 @@ class CompanyServiceController extends Controller
 
         $selectedService = Service::findOrFail($validated['service_id']);
 
-        // ✅ Només aplicar límit si el servei és de tipus 'altres'
         if (
             $selectedService->type === 'altres' &&
             $company->plan &&
@@ -73,7 +72,6 @@ class CompanyServiceController extends Controller
             ]);
         }
 
-        // ❗️Evitar duplicats si NO és 'altres'
         if ($selectedService->type !== 'altres') {
             $alreadyAttached = $company->services()
                 ->where('service_id', $validated['service_id'])
@@ -95,9 +93,13 @@ class CompanyServiceController extends Controller
             'max_price' => $request->max_price,
         ]);
 
+        $this->createSystemNotification($company, 'service_added', [
+            'serviceName' => $request->custom_name ?? $selectedService->name,
+        ]);
+
+
         return redirect()->route('dashboard')->with('success', 'Servei afegit correctament.');
     }
-
 
 
 
@@ -117,7 +119,7 @@ class CompanyServiceController extends Controller
 
         return Inertia::render('Service/Edit', [
             'service' => $service,
-            'pivot' => $pivot->pivot, // accés a les dades personalitzades
+            'pivot' => $pivot->pivot,
             'company' => $company,
         ]);
     }
@@ -139,6 +141,9 @@ class CompanyServiceController extends Controller
         }
 
         $company->services()->updateExistingPivot($serviceId, $validated);
+        $this->createSystemNotification($company, 'service_updated', [
+            'serviceId' => $serviceId,
+        ], 'S\'ha actualitzat un servei.');
 
         return redirect()->route('dashboard')->with('success', 'Servei actualitzat correctament.');
     }
@@ -147,7 +152,6 @@ class CompanyServiceController extends Controller
     {
         $company = Auth::guard('company')->user();
 
-        // Comprovem si el pivot realment pertany a aquesta companyia
         $pivot = DB::table('companies_services')
             ->where('id', $pivotId)
             ->where('company_id', $company->id)
@@ -158,8 +162,25 @@ class CompanyServiceController extends Controller
         }
 
         DB::table('companies_services')->where('id', $pivotId)->delete();
+        $this->createSystemNotification($company, 'service_deleted', [
+            'serviceId' => $pivot->service_id ?? null,
+        ], 'S\'ha eliminat un servei.');
 
         return redirect()->route('dashboard')->with('success', 'Servei eliminat correctament.');
     }
+
+    protected function createSystemNotification($company, $action, $data = [], $message = null)
+    {
+        if (!$company->notifications_system) return;
+
+        $company->notifications()->create([
+            'type' => 'system',
+            'action' => $action,
+            'data' => $data,
+            'message' => $message,
+        ]);
+    }
+
+
 
 }

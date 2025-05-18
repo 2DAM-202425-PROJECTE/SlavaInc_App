@@ -61,8 +61,9 @@ class Appointment extends Model
     }
 
     public function worker(): BelongsTo
+
     {
-        return $this->belongsTo(Worker::class);
+        return $this->belongsToMany(Worker::class);
     }
     public function companyService(): BelongsTo
     {

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
+import React, { useState, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCalendarAlt,
@@ -12,7 +12,7 @@ import {
     faFilter,
     faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, setHours, setMinutes } from 'date-fns';
 import { ca } from 'date-fns/locale';
 import Header from '@/Components/Header.jsx';
 import Footer from '@/Components/Footer.jsx';
@@ -22,9 +22,9 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
     const [statusFilter, setStatusFilter] = useState(initialStatusFilter || 'all');
     const { delete: destroy } = useForm();
 
+
     const statusStyles = {
         pending: 'bg-yellow-100 text-yellow-800',
-        confirmed: 'bg-green-100 text-green-800',
         cancelled: 'bg-red-100 text-red-800',
         completed: 'bg-blue-100 text-blue-800',
     };
@@ -35,6 +35,11 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
         cancelled: 'Cancel·lada',
         completed: 'Completada',
     };
+
+
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [sortOrder, setSortOrder] = useState('status');
+
 
     const formatPrice = (price) => {
         const numericPrice = typeof price === 'number' ? price : parseFloat(price);
@@ -55,6 +60,32 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
             },
         });
     };
+
+    const getDateTime = (appointment) => {
+        const baseDate = parseISO(appointment.date);
+        const [hours, minutes] = appointment.time.split(':').map(Number);
+        return setMinutes(setHours(baseDate, hours), minutes);
+    };
+
+    const filteredAndSortedAppointments = useMemo(() => {
+        let result = [...appointments];
+
+        if (filterStatus !== 'all') {
+            result = result.filter(a => a.status === filterStatus);
+        }
+
+        if (sortOrder === 'status') {
+            const priority = { pending: 1, completed: 2, cancelled: 3 };
+            result.sort((a, b) => priority[a.status] - priority[b.status]);
+        } else if (sortOrder === 'newest') {
+            result.sort((a, b) => getDateTime(b) - getDateTime(a));
+        } else if (sortOrder === 'oldest') {
+            result.sort((a, b) => getDateTime(a) - getDateTime(b));
+        }
+
+        return result;
+    }, [appointments, filterStatus, sortOrder]);
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -153,6 +184,7 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
                                                         </p>
                                                     </div>
                                                 )}
+
                                             </div>
                                             <div className="mt-4 md:mt-0 md:text-right space-y-3">
                                                 <div
@@ -169,6 +201,16 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
                                                     {formatPrice(appointment.price)} €
                                                 </div>
                                             </div>
+
+                                        )}
+                                    </div>
+
+                                    <div className="mt-4 md:mt-0 md:text-right space-y-3">
+                                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[appointment.status]} inline-block`}>
+                                            {appointment.status === 'pending' && 'Pendent'}
+                                            {appointment.status === 'completed' && 'Completada'}
+                                            {appointment.status === 'cancelled' && 'Cancel·lada'}
+
                                         </div>
                                     </Link>
 

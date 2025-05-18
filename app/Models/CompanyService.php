@@ -18,6 +18,7 @@ class CompanyService extends Pivot
     // Permet que el pivot tingui id autoincremental
     public $incrementing = true;
     protected $primaryKey = 'id';
+
     protected $table = 'companies_services';
 
     protected $fillable = [
@@ -30,6 +31,8 @@ class CompanyService extends Pivot
         'min_price',
         'max_price',
         'logo',
+        'custom_name',
+        'description',
     ];
 
     protected $casts = [
@@ -65,11 +68,17 @@ class CompanyService extends Pivot
             ->withTimestamps();
     }
 
+
     /**
      * Ressenyes associades
      */
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'company_service_id');
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'service_id');
+
     }
 }

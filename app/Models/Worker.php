@@ -65,9 +65,8 @@ class Worker extends Authenticatable
         return $this->belongsTo(Company::class, 'company_id');
     }
 
-    // Añade esta nueva relación
     public function appointments()
     {
-        return $this->hasMany(Appointment::class);
+        return $this->belongsToMany(Appointment::class);
     }
 }
