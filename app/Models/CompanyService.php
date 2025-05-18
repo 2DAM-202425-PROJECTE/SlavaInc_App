@@ -14,10 +14,11 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class CompanyService extends Pivot
 {
     use HasFactory;
-
     // Permet que el pivot tingui id autoincremental
     public $incrementing = true;
     protected $primaryKey = 'id';
+
+    // Especificar el nombre de la tabla
     protected $table = 'companies_services';
 
     protected $fillable = [
@@ -30,6 +31,8 @@ class CompanyService extends Pivot
         'min_price',
         'max_price',
         'logo',
+        'custom_name',
+        'description',
     ];
 
     protected $casts = [
@@ -65,9 +68,7 @@ class CompanyService extends Pivot
             ->withTimestamps();
     }
 
-    /**
-     * Ressenyes associades
-     */
+    /** Ressenyes associades */
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'company_service_id');

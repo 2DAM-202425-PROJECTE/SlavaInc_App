@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\Notification;
 use App\Models\CompanyService;
-use App\Models\Review;
 use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\Worker;
@@ -16,6 +16,7 @@ use Inertia\Response;
 use Illuminate\Support\Facades\DB;
 use Inertia\Response as InertiaResponse;
 use Illuminate\Http\Response as HttpResponse;
+use App\Models\Review;
 
 class ClientController extends Controller
 {
@@ -32,6 +33,7 @@ class ClientController extends Controller
         $companies = $service->companies->map(function ($company) {
             $averageRating = Review::where('company_service_id', $company->pivot->id)->avg('rate');
             $topReviews = Review::where('company_service_id', $company->pivot->id)
+
                 ->orderBy('rate', 'desc')
                 ->take(3)
                 ->get(['rate', 'comment']);
@@ -68,14 +70,25 @@ class ClientController extends Controller
             abort(404, 'Aquesta empresa no ofereix aquest servei');
         }
 
-        $company->load(['services' => function($query) use ($service) {
-            $query->where('services.id', $service->id)
-                ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
-        }]);
+        $company->load([
+            'services' => function ($query) use ($service) {
+                $query->where('services.id', $service->id)
+                    ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+            },
+            'workers' => function ($query) use ($service) {
+                $query->whereHas('appointments', function ($q) use ($service) {
+                    $q->where('service_id', $service->id);
+                })->orWhereDoesntHave('appointments')
+                    ->whereNotNull('schedule'); // 🔧 evitar workers sin horario
+            }
+        ]);
+
+        $schedules = $company->workers->pluck('schedule')->unique()->values();
 
         return Inertia::render('Client/CitesClients', [
             'service' => $service,
-            'company' => $company
+            'company' => $company,
+            'schedules' => $schedules
         ]);
     }
 
@@ -131,7 +144,9 @@ class ClientController extends Controller
                     }
                 ],
                 'price' => 'required|numeric|min:0.1',
-                'notes' => 'nullable|string|max:500'
+                'notes' => 'nullable|string|max:500',
+                'input_value' => 'nullable|numeric|min:0',
+                'selected_size' => 'nullable|string|in:petit,mitjà,gran'
             ]);
 
             // Trobar el CompanyService corresponent
@@ -147,19 +162,27 @@ class ClientController extends Controller
                 throw new \Exception('No s\'ha trobat el servei per aquesta empresa.');
             }
 
-            // Trobar un treballador disponible
-            $availableWorker = Worker::where('company_id', $validated['company_id'])
+            $inputValue = $request->input('input_value');
+            $selectedSize = $request->input('selected_size');
+
+            $requiredWorkers = 1;
+            if ($inputValue && $inputValue >= 200) {
+                $requiredWorkers = 2;
+            } elseif ($selectedSize === 'gran') {
+                $requiredWorkers = 2;
+            }
+
+            $availableWorkers = Worker::where('company_id', $validated['company_id'])
                 ->get()
                 ->filter(function ($worker) use ($validated) {
                     return !$worker->appointments()
                         ->where('date', $validated['date'])
                         ->where('time', $validated['time'])
                         ->exists();
-                })
-                ->first();
+                });
 
-            if (!$availableWorker) {
-                throw new \Exception('Tots els treballadors estan ocupats en aquest horari. Si us plau, selecciona una altra hora.');
+            if ($availableWorkers->count() < $requiredWorkers) {
+                throw new \Exception("Només hi ha {$availableWorkers->count()} treballadors disponibles. Es requereixen $requiredWorkers.");
             }
 
             DB::beginTransaction();
@@ -169,12 +192,34 @@ class ClientController extends Controller
                 'company_id' => $validated['company_id'],
                 'service_id' => $validated['service_id'],
                 'company_service_id' => $companyService->id,
-                'worker_id' => $availableWorker->id,
                 'date' => $validated['date'],
                 'time' => $validated['time'],
                 'price' => (float)$validated['price'],
                 'notes' => $validated['notes'],
                 'status' => 'pending'
+            ]);
+
+            // Assignació de treballadors
+            $appointment->workers()->attach($availableWorkers->take($requiredWorkers)->pluck('id'));
+
+            // Notificació
+            $user = auth()->user();
+            $service = Service::find($validated['service_id']);
+
+            Notification::create([
+                'company_id' => $validated['company_id'],
+                'type' => 'service',
+                'action' => 'appointment_created',
+                'data' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'date' => $validated['date'],
+                    'time' => $validated['time'],
+                ],
+                'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
+                'read' => false,
             ]);
 
             DB::commit();
@@ -187,7 +232,6 @@ class ClientController extends Controller
 
             return redirect()->route('client.appointments.show', $appointment->id)
                 ->with('success', 'Cita reservada amb èxit!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::channel('appointments')->error('Error en reserva: ' . $e->getMessage(), [
@@ -272,7 +316,7 @@ class ClientController extends Controller
         $appointment->load([
             'company' => fn($query) => $query->select('id', 'name'),
             'service' => fn($query) => $query->select('id', 'name', 'type'),
-            'worker' => fn($query) => $query->select('id', 'name', 'surname'),
+            'workers' => fn($query) => $query->select('workers.id', 'workers.name'),
             'companyService' => fn($query) => $query->select('id', 'company_id', 'service_id'),
             'reviews' => fn($query) => $query->where('client_id', auth()->id())
         ]);
@@ -289,7 +333,7 @@ class ClientController extends Controller
                 'notes'               => $appointment->notes,
                 'company'             => $appointment->company,
                 'service'             => $appointment->service,
-                'worker'              => $appointment->worker,
+                'workers'             => $appointment->workers,
                 'company_service_id'  => $appointment->companyService?->id,
                 'review'              => $firstReview
                     ? [
@@ -458,5 +502,17 @@ class ClientController extends Controller
     {
         $services = Service::all();
         return Inertia::render('Client/Services', ['services' => $services]);
+    }
+
+    public function cancelAppointment(Appointment $appointment)
+    {
+        if ($appointment->user_id !== auth()->id()) {
+            abort(403, 'No tens permís per cancel·lar aquesta cita.');
+        }
+
+        $appointment->status = 'cancelled';
+        $appointment->save();
+
+        return redirect()->back()->with('success', 'Cita cancel·lada correctament.');
     }
 }

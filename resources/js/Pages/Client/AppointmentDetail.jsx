@@ -1,6 +1,5 @@
 import React from 'react';
-import { router } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCalendarAlt,
@@ -12,13 +11,13 @@ import {
     faUser,
     faStar,
     faStarHalfAlt,
-    faTrash
+    faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { format, parseISO } from 'date-fns';
 import { ca } from 'date-fns/locale';
-import Header from "@/Components/Header.jsx";
-import Footer from "@/Components/Footer.jsx";
-import {route} from "ziggy-js";
+import Header from '@/Components/Header.jsx';
+import Footer from '@/Components/Footer.jsx';
+import { route } from 'ziggy-js';
 
 const AppointmentDetail = ({ appointment }) => {
     // Funció per renderitzar estrelles amb mitges estrelles
@@ -61,14 +60,20 @@ const AppointmentDetail = ({ appointment }) => {
         router.delete(route('client.reviews.destroy', reviewId), {
             onSuccess: () => {
                 router.visit(route('client.appointments.index', { filter: 'pending_review' }));
-            }
-        })
+            },
+        });
     };
+
+    // Format de l'hora (de H:i:s a H:mm)
+    const formattedTime = appointment.time
+        ? format(parseISO(`1970-01-01T${appointment.time}`), 'HH:mm')
+        : 'Hora no especificada';
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
 
+            {/* Capçalera */}
             <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex justify-between items-center">
@@ -87,9 +92,11 @@ const AppointmentDetail = ({ appointment }) => {
                 </div>
             </section>
 
+            {/* Contingut principal */}
             <div className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
                 <div className="bg-white rounded-xl shadow-lg p-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Informació de la cita */}
                         <div className="space-y-6">
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 bg-[#1f7275] text-white rounded-lg flex items-center justify-center">
@@ -99,9 +106,7 @@ const AppointmentDetail = ({ appointment }) => {
                                     <h2 className="text-2xl font-bold text-gray-800">
                                         {format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: ca })}
                                     </h2>
-                                    <p className="text-lg text-gray-600">
-                                        {appointment.time}
-                                    </p>
+                                    <p className="text-lg text-gray-600">{formattedTime}</p>
                                 </div>
                             </div>
 
@@ -114,15 +119,21 @@ const AppointmentDetail = ({ appointment }) => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <FontAwesomeIcon icon={faUser} className="text-gray-500" />
+                                <div className="flex items-start gap-3">
+                                    <FontAwesomeIcon icon={faUser} className="text-gray-500 mt-1" />
                                     <div>
-                                        <p className="text-gray-600">Professional:</p>
-                                        <p className="text-lg font-semibold">
-                                            {appointment.worker
-                                                ? `${appointment.worker.name || 'Professional'} ${appointment.worker.surname || ''}`
-                                                : 'Professional per defecte'}
-                                        </p>
+                                        <p className="text-gray-600">Professionals assignats:</p>
+                                        {appointment.workers && appointment.workers.length > 0 ? (
+                                            <ul className="space-y-1 text-lg font-semibold text-gray-800">
+                                                {appointment.workers.map((worker) => (
+                                                    <li key={worker.id}>
+                                                        {worker.name}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-gray-500 italic">Cap treballador assignat</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -133,7 +144,8 @@ const AppointmentDetail = ({ appointment }) => {
                                         <p className="text-lg font-semibold">
                                             {typeof appointment.price === 'number'
                                                 ? appointment.price.toFixed(2)
-                                                : parseFloat(appointment.price || 0).toFixed(2)} €
+                                                : parseFloat(appointment.price || 0).toFixed(2)}{' '}
+                                            €
                                         </p>
                                     </div>
                                 </div>
@@ -150,20 +162,43 @@ const AppointmentDetail = ({ appointment }) => {
                             </div>
                         </div>
 
+                        {/* Informació addicional */}
                         <div className="space-y-6">
                             <div className="bg-gray-50 p-6 rounded-lg">
                                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Estat de la reserva</h3>
-                                <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-                                    appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                            appointment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-red-100 text-red-800'
-                                }`}>
-                                    {appointment.status === 'pending' ? 'Pendent' :
-                                        appointment.status === 'confirmed' ? 'Confirmada' :
-                                            appointment.status === 'completed' ? 'Completada' :
-                                                'Cancel·lada'}
+                                <div
+                                    className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+                                        appointment.status === 'pending'
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : appointment.status === 'confirmed'
+                                                ? 'bg-green-100 text-green-800'
+                                                : appointment.status === 'completed'
+                                                    ? 'bg-blue-100 text-blue-800'
+                                                    : 'bg-red-100 text-red-800'
+                                    }`}
+                                >
+                                    {appointment.status === 'pending'
+                                        ? 'Pendent'
+                                        : appointment.status === 'confirmed'
+                                            ? 'Confirmada'
+                                            : appointment.status === 'completed'
+                                                ? 'Completada'
+                                                : 'Cancel·lada'}
                                 </div>
+
+                                {/* Botó per cancel·lar cita (només si no està cancel·lada ni completada) */}
+                                {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
+                                    <button
+                                        className="mt-4 w-full bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                        onClick={() => {
+                                            if (window.confirm('Estàs segur que vols cancel·lar aquesta cita?')) {
+                                                router.patch(route('client.appointments.cancel', appointment.id));
+                                            }
+                                        }}
+                                    >
+                                        Cancel·lar cita
+                                    </button>
+                                )}
                             </div>
 
                             {appointment.status === 'completed' && appointment.company_service_id ? (
@@ -175,7 +210,9 @@ const AppointmentDetail = ({ appointment }) => {
                                                 <p className="text-gray-600 font-semibold">La teva valoració:</p>
                                                 <div className="flex items-center gap-2">
                                                     {renderStars(appointment.review.rate)}
-                                                    <span className="text-gray-800">{appointment.review.rate.toFixed(1)} / 5</span>
+                                                    <span className="text-gray-800">
+                                                        {appointment.review.rate.toFixed(1)} / 5
+                                                    </span>
                                                 </div>
                                                 <p className="text-gray-600 mt-2">{appointment.review.comment}</p>
                                             </div>
@@ -183,7 +220,7 @@ const AppointmentDetail = ({ appointment }) => {
                                                 <Link
                                                     href={route('client.reviews.create', {
                                                         companyServiceId: appointment.company_service_id,
-                                                        appointmentId: appointment.id
+                                                        appointmentId: appointment.id,
                                                     })}
                                                     className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors inline-flex items-center gap-2"
                                                 >
@@ -203,7 +240,7 @@ const AppointmentDetail = ({ appointment }) => {
                                         <Link
                                             href={route('client.reviews.create', {
                                                 companyServiceId: appointment.company_service_id,
-                                                appointmentId: appointment.id
+                                                appointmentId: appointment.id,
                                             })}
                                             className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors inline-flex items-center gap-2"
                                         >
@@ -215,7 +252,9 @@ const AppointmentDetail = ({ appointment }) => {
                             ) : appointment.status === 'completed' ? (
                                 <div className="bg-gray-50 p-6 rounded-lg">
                                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Ressenya</h3>
-                                    <p className="text-red-600">No es pot afegir una ressenya perquè falta informació del servei.</p>
+                                    <p className="text-red-600">
+                                        No es pot afegir una ressenya perquè falta informació del servei.
+                                    </p>
                                 </div>
                             ) : null}
 

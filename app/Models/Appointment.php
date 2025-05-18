@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property mixed $id
@@ -60,10 +61,11 @@ class Appointment extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function worker(): BelongsTo
+    public function workers(): BelongsToMany
     {
-        return $this->belongsTo(Worker::class);
+        return $this->belongsToMany(Worker::class);
     }
+
     public function companyService(): BelongsTo
     {
         return $this->belongsTo(CompanyService::class, 'company_service_id');

@@ -37,8 +37,11 @@ class RegisteredUserController extends Controller
             ]);
 
             Auth::guard('web')->login($user);
-        }
-        else if ($request->role === 'company') {
+            event(new Registered($user));
+
+            return redirect()->route('profile.edit');
+
+        } else if ($request->role === 'company') {
             $basicPlan = Plan::where('name', 'Bàsic')->first();
 
             $company = Company::create([
@@ -50,10 +53,9 @@ class RegisteredUserController extends Controller
 
             Auth::guard('company')->login($company);
 
+            event(new Registered($company));
+
+            return redirect()->route('dashboard');
         }
-
-        event(new Registered($user ?? $company));
-
-        return redirect()->route('profile.edit');
     }
 }

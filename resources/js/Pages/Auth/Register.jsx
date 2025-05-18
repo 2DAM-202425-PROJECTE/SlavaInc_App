@@ -11,9 +11,10 @@ import {
     CheckCircleIcon,
     XCircleIcon,
 } from "@heroicons/react/24/outline"
+import { router } from "@inertiajs/react"
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, setError } = useForm({
         name: "",
         email: "",
         password: "",
@@ -26,6 +27,7 @@ export default function Register() {
     const [passwordStrength, setPasswordStrength] = useState(0)
     const [step, setStep] = useState(1)
     const [mounted, setMounted] = useState(false)
+    const [formErrors, setFormErrors] = useState({})
 
     useEffect(() => {
         setMounted(true)
@@ -52,12 +54,64 @@ export default function Register() {
         setPasswordStrength(strength)
     }, [data.password])
 
+    // Store errors for the final step
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors)
+
+            // Only show validation errors for the current step
+            if (step === 1) {
+                // Keep only name validation errors in step 1
+                const filteredErrors = {}
+                if (errors.name) filteredErrors.name = errors.name
+                clearErrors()
+                if (Object.keys(filteredErrors).length > 0) {
+                    // Re-add only the relevant errors for this step
+                    for (const [key, value] of Object.entries(filteredErrors)) {
+                        setError(key, value)
+                    }
+                }
+            } else if (step === 2) {
+                // Keep only password validation errors in step 2
+                const filteredErrors = {}
+                if (errors.password) filteredErrors.password = errors.password
+                if (errors.password_confirmation) filteredErrors.password_confirmation = errors.password_confirmation
+                clearErrors()
+                if (Object.keys(filteredErrors).length > 0) {
+                    // Re-add only the relevant errors for this step
+                    for (const [key, value] of Object.entries(filteredErrors)) {
+                        setError(key, value)
+                    }
+                }
+            }
+        }
+    }, [errors, step])
+
     const handleSubmit = (e) => {
         e.preventDefault()
+
         if (step < 3) {
-            setStep(step + 1)
+            // Validate current step before proceeding
+            let canProceed = true;
+
+            if (step === 1) {
+                if (!data.name || !data.email) {
+                    canProceed = false;
+                }
+            } else if (step === 2) {
+                if (!data.password || !data.password_confirmation || data.password !== data.password_confirmation) {
+                    canProceed = false;
+                }
+            }
+
+            if (canProceed) {
+                clearErrors()
+                setStep(step + 1)
+            }
             return
         }
+
+        // On final step, submit the form
         post(route("register"), {
             onFinish: () => reset("password", "password_confirmation"),
         })
@@ -65,6 +119,7 @@ export default function Register() {
 
     const goBack = () => {
         if (step > 1) {
+            clearErrors()
             setStep(step - 1)
         }
     }
@@ -311,7 +366,8 @@ export default function Register() {
                                                 } ${data.email ? "pt-6" : ""}`}
                                                 required
                                             />
-                                            {errors.email && (
+                                            {/* No mostrar errores de email en el paso 1 si son de validación de usuario existente */}
+                                            {errors.email && !errors.email.includes("ja està en uso") && (
                                                 <motion.p
                                                     initial={{ opacity: 0, y: -10 }}
                                                     animate={{ opacity: 1, y: 0 }}
@@ -508,6 +564,27 @@ export default function Register() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Mostrar todos los errores en el paso final */}
+                                        {Object.keys(formErrors).length > 0 && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="bg-red-50 border border-red-200 rounded-lg p-4"
+                                            >
+                                                <h4 className="text-red-800 font-medium mb-2 flex items-center">
+                                                    <XCircleIcon className="h-5 w-5 mr-1" />
+                                                    Hi ha errors que cal corregir:
+                                                </h4>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    {Object.entries(formErrors).map(([key, error]) => (
+                                                        <li key={key} className="text-red-600 text-sm">
+                                                            {error}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </motion.div>
+                                        )}
 
                                         <div className="flex items-center">
                                             <input

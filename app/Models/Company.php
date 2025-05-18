@@ -10,10 +10,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * @property bool $is_admin // 👈 Documenta la propietat
  * @property mixed $services
  * @method static create(array $array)
  * @method static findOrFail(int $companyId)
+ * @property bool $is_admin
  */
 class Company extends Authenticatable
 {
@@ -28,7 +28,15 @@ class Company extends Authenticatable
         'state',
         'zip_code',
         'phone',
+        'website',
+        'description',
+        'founded_year',
+        'vat_number',
+        'company_type',
         'plan_id',
+        'notifications_system',
+        'notifications_appointments',
+        'notifications_reviews',
     ];
 
     protected $hidden = [
@@ -56,6 +64,11 @@ class Company extends Authenticatable
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+    
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 
     public function companyServices(): HasMany
