@@ -1,5 +1,5 @@
 import React from 'react';
-import { router } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCalendarAlt,
@@ -8,14 +8,67 @@ import {
     faEuroSign,
     faArrowLeft,
     faInfoCircle,
-    faUser
+    faUser,
+    faStar,
+    faStarHalfAlt,
+    faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
-import Header from "@/Components/Header.jsx";
-import Footer from "@/Components/Footer.jsx";
+import { ca } from 'date-fns/locale';
+import Header from '@/Components/Header.jsx';
+import Footer from '@/Components/Footer.jsx';
+import { route } from 'ziggy-js';
 
 const AppointmentDetail = ({ appointment }) => {
+    // Funció per renderitzar estrelles amb mitges estrelles
+    const renderStars = (rating) => {
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+        return (
+            <div className="flex items-center gap-1" aria-label={`Valoració: ${rating.toFixed(1)} de 5`}>
+                {[...Array(fullStars)].map((_, i) => (
+                    <FontAwesomeIcon
+                        key={`full-${i}`}
+                        icon={faStar}
+                        className="text-yellow-400"
+                        aria-label="Estrella plena"
+                    />
+                ))}
+                {hasHalfStar && (
+                    <FontAwesomeIcon
+                        icon={faStarHalfAlt}
+                        className="text-yellow-400"
+                        aria-label="Mitja estrella"
+                    />
+                )}
+                {[...Array(emptyStars)].map((_, i) => (
+                    <FontAwesomeIcon
+                        key={`empty-${i}`}
+                        icon={faStar}
+                        className="text-gray-300"
+                        aria-label="Estrella buida"
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    const handleDeleteReview = (reviewId) => {
+        if (!confirm('Segur que vols eliminar la ressenya?')) return;
+        router.delete(route('client.reviews.destroy', reviewId), {
+            onSuccess: () => {
+                router.visit(route('client.appointments.index', { filter: 'pending_review' }));
+            },
+        });
+    };
+
+    // Format de l'hora (de H:i:s a H:mm)
+    const formattedTime = appointment.time
+        ? format(parseISO(`1970-01-01T${appointment.time}`), 'HH:mm')
+        : 'Hora no especificada';
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
@@ -51,11 +104,9 @@ const AppointmentDetail = ({ appointment }) => {
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-800">
-                                        {format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: es })}
+                                        {format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: ca })}
                                     </h2>
-                                    <p className="text-lg text-gray-600">
-                                        {appointment.time}
-                                    </p>
+                                    <p className="text-lg text-gray-600">{formattedTime}</p>
                                 </div>
                             </div>
 
@@ -74,8 +125,10 @@ const AppointmentDetail = ({ appointment }) => {
                                         <p className="text-gray-600">Professionals assignats:</p>
                                         {appointment.workers && appointment.workers.length > 0 ? (
                                             <ul className="space-y-1 text-lg font-semibold text-gray-800">
-                                                {appointment.workers.map(worker => (
-                                                    <li key={worker.id}>{worker.name}</li>
+                                                {appointment.workers.map((worker) => (
+                                                    <li key={worker.id}>
+                                                        {worker.name}
+                                                    </li>
                                                 ))}
                                             </ul>
                                         ) : (
@@ -91,7 +144,8 @@ const AppointmentDetail = ({ appointment }) => {
                                         <p className="text-lg font-semibold">
                                             {typeof appointment.price === 'number'
                                                 ? appointment.price.toFixed(2)
-                                                : parseFloat(appointment.price || 0).toFixed(2)} €
+                                                : parseFloat(appointment.price || 0).toFixed(2)}{' '}
+                                            €
                                         </p>
                                     </div>
                                 </div>
@@ -112,17 +166,28 @@ const AppointmentDetail = ({ appointment }) => {
                         <div className="space-y-6">
                             <div className="bg-gray-50 p-6 rounded-lg">
                                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Estat de la reserva</h3>
-                                <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-                                    appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                            'bg-red-100 text-red-800'
-                                }`}>
-                                    {appointment.status === 'pending' ? 'Pendent' :
-                                        appointment.status === 'confirmed' ? 'Confirmada' : 'Cancel·lada'}
+                                <div
+                                    className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+                                        appointment.status === 'pending'
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : appointment.status === 'confirmed'
+                                                ? 'bg-green-100 text-green-800'
+                                                : appointment.status === 'completed'
+                                                    ? 'bg-blue-100 text-blue-800'
+                                                    : 'bg-red-100 text-red-800'
+                                    }`}
+                                >
+                                    {appointment.status === 'pending'
+                                        ? 'Pendent'
+                                        : appointment.status === 'confirmed'
+                                            ? 'Confirmada'
+                                            : appointment.status === 'completed'
+                                                ? 'Completada'
+                                                : 'Cancel·lada'}
                                 </div>
 
-                                {/* Botón para cancelar cita (solo si no está ya cancelada) */}
-                                {(appointment.status !== 'cancelled' && appointment.status !== 'completed') && (
+                                {/* Botó per cancel·lar cita (només si no està cancel·lada ni completada) */}
+                                {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
                                     <button
                                         className="mt-4 w-full bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                                         onClick={() => {
@@ -135,6 +200,63 @@ const AppointmentDetail = ({ appointment }) => {
                                     </button>
                                 )}
                             </div>
+
+                            {appointment.status === 'completed' && appointment.company_service_id ? (
+                                <div className="bg-gray-50 p-6 rounded-lg">
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Ressenya</h3>
+                                    {appointment.review ? (
+                                        <>
+                                            <div className="mb-4">
+                                                <p className="text-gray-600 font-semibold">La teva valoració:</p>
+                                                <div className="flex items-center gap-2">
+                                                    {renderStars(appointment.review.rate)}
+                                                    <span className="text-gray-800">
+                                                        {appointment.review.rate.toFixed(1)} / 5
+                                                    </span>
+                                                </div>
+                                                <p className="text-gray-600 mt-2">{appointment.review.comment}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Link
+                                                    href={route('client.reviews.create', {
+                                                        companyServiceId: appointment.company_service_id,
+                                                        appointmentId: appointment.id,
+                                                    })}
+                                                    className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors inline-flex items-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faStar} />
+                                                    Editar ressenya
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDeleteReview(appointment.review.id)}
+                                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <Link
+                                            href={route('client.reviews.create', {
+                                                companyServiceId: appointment.company_service_id,
+                                                appointmentId: appointment.id,
+                                            })}
+                                            className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors inline-flex items-center gap-2"
+                                        >
+                                            <FontAwesomeIcon icon={faStar} />
+                                            Afegir ressenya
+                                        </Link>
+                                    )}
+                                </div>
+                            ) : appointment.status === 'completed' ? (
+                                <div className="bg-gray-50 p-6 rounded-lg">
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Ressenya</h3>
+                                    <p className="text-red-600">
+                                        No es pot afegir una ressenya perquè falta informació del servei.
+                                    </p>
+                                </div>
+                            ) : null}
 
                             {appointment.notes && (
                                 <div className="bg-blue-50 p-6 rounded-lg">

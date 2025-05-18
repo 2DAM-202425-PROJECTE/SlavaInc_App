@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Link, useForm } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faCalendarAlt,
@@ -7,52 +7,54 @@ import {
     faBuilding,
     faEuroSign,
     faInfoCircle,
-    faPlus
+    faPlus,
+    faStar,
+    faFilter,
+    faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import { format, parseISO, setHours, setMinutes } from 'date-fns';
-import { es } from 'date-fns/locale';
-import Header from "@/Components/Header.jsx";
-import Footer from "@/Components/Footer.jsx";
+import { format, parseISO } from 'date-fns';
+import { ca } from 'date-fns/locale';
+import Header from '@/Components/Header.jsx';
+import Footer from '@/Components/Footer.jsx';
+import {route} from "ziggy-js";
 
-const CitesIndex = ({ appointments }) => {
+const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
+    const [statusFilter, setStatusFilter] = useState(initialStatusFilter || 'all');
+    const { delete: destroy } = useForm();
+
     const statusStyles = {
         pending: 'bg-yellow-100 text-yellow-800',
+        confirmed: 'bg-green-100 text-green-800',
         cancelled: 'bg-red-100 text-red-800',
-        completed: 'bg-blue-100 text-blue-800'
+        completed: 'bg-blue-100 text-blue-800',
     };
 
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [sortOrder, setSortOrder] = useState('status');
+    const statusLabels = {
+        pending: 'Pendent',
+        confirmed: 'Confirmada',
+        cancelled: 'Cancel·lada',
+        completed: 'Completada',
+    };
 
     const formatPrice = (price) => {
         const numericPrice = typeof price === 'number' ? price : parseFloat(price);
         return isNaN(numericPrice) ? '0.00' : numericPrice.toFixed(2);
     };
 
-    const getDateTime = (appointment) => {
-        const baseDate = parseISO(appointment.date);
-        const [hours, minutes] = appointment.time.split(':').map(Number);
-        return setMinutes(setHours(baseDate, hours), minutes);
+    const handleFilterChange = (newStatus) => {
+        setStatusFilter(newStatus);
+        window.location.href = route('client.appointments.index', { filter: newStatus });
     };
 
-    const filteredAndSortedAppointments = useMemo(() => {
-        let result = [...appointments];
-
-        if (filterStatus !== 'all') {
-            result = result.filter(a => a.status === filterStatus);
-        }
-
-        if (sortOrder === 'status') {
-            const priority = { pending: 1, completed: 2, cancelled: 3 };
-            result.sort((a, b) => priority[a.status] - priority[b.status]);
-        } else if (sortOrder === 'newest') {
-            result.sort((a, b) => getDateTime(b) - getDateTime(a));
-        } else if (sortOrder === 'oldest') {
-            result.sort((a, b) => getDateTime(a) - getDateTime(b));
-        }
-
-        return result;
-    }, [appointments, filterStatus, sortOrder]);
+    const handleDeleteReview = (reviewId) => {
+        if (!confirm('Segur que vols eliminar la ressenya?')) return;
+        destroy(route('client.reviews.destroy', reviewId), {
+            onSuccess: () => {
+                // Refresca la pàgina per actualitzar llista
+                window.location.reload();
+            },
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -62,112 +64,140 @@ const CitesIndex = ({ appointments }) => {
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
                     <h1 className="text-3xl font-bold text-white mb-4 md:mb-0">
                         <FontAwesomeIcon icon={faCalendarAlt} className="mr-3" />
-                        Mis Citas
+                        Les meves cites
                     </h1>
                     <Link
                         href={route('dashboard')}
                         className="bg-white/90 text-[#1f7275] px-6 py-2 rounded-full shadow-md hover:bg-white transition-all flex items-center gap-2"
                     >
                         <FontAwesomeIcon icon={faPlus} />
-                        Nueva Reserva
+                        Nova reserva
                     </Link>
                 </div>
             </section>
 
-            {/* Filtres */}
-            <div className="max-w-7xl mx-auto px-6 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex gap-4 w-full md:w-auto">
+            <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col items-start flex-grow">
+                <div className="mb-6 self-start">
+                    <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">
+                        <FontAwesomeIcon icon={faFilter} className="mr-2" />
+                        Filtrar per estat:
+                    </label>
                     <select
-                        className="border rounded px-4 py-2 text-gray-700 w-full md:w-auto"
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
+                        id="status-filter"
+                        value={statusFilter}
+                        onChange={(e) => handleFilterChange(e.target.value)}
+                        className="w-full md:w-48 p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
                     >
-                        <option value="all">Tots els estats</option>
-                        <option value="pending">Pendent</option>
-                        <option value="completed">Completada</option>
-                        <option value="cancelled">Cancel·lada</option>
-                    </select>
-
-                    <select
-                        className="border rounded px-4 py-2 text-gray-700 w-full md:w-auto"
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value)}
-                    >
-                        <option value="status">Ordenar per estat</option>
-                        <option value="newest">Més recents primer</option>
-                        <option value="oldest">Més antics primer</option>
+                        <option value="all">Totes</option>
+                        <option value="pending">Pendents</option>
+                        <option value="completed">Completades</option>
+                        <option value="pending_review">Pendent Review</option>
                     </select>
                 </div>
-            </div>
 
-            {/* Contingut principal */}
-            <div className="max-w-7xl mx-auto px-6 py-8 flex-grow">
-                <div className="grid grid-cols-1 gap-6">
-                    {filteredAndSortedAppointments.length === 0 ? (
-                        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {appointments.length === 0 ? (
+                        <div className="text-center bg-white p-8 rounded-xl shadow-lg col-span-2">
                             <div className="text-6xl text-gray-300 mb-4">📅</div>
-                            <p className="text-gray-600 text-lg">
-                                No tens cap cita amb aquest filtre
-                            </p>
+                            <p className="text-gray-600 text-lg">No tens cites programades actualment</p>
                         </div>
                     ) : (
-                        filteredAndSortedAppointments.map((appointment) => (
-                            <Link
-                                href={route('client.appointments.show', appointment.id)}
-                                key={appointment.id}
-                                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow block"
-                            >
-                                <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center">
-                                    <div className="space-y-3 flex-1">
-                                        <div className="flex items-center gap-3">
-                                            <FontAwesomeIcon icon={faBuilding} className="text-[#1f7275]" />
-                                            <h2 className="text-xl font-semibold text-gray-800">
-                                                {appointment.company.name}
-                                            </h2>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-4">
-                                            <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
-                                                <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500" />
-                                                <span className="text-gray-700">
-                                                    {format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: es })}
-                                                </span>
+                        appointments.map((appointment) => {
+                            // Filtrat extra per 'completed' només amb review
+                            if (
+                                statusFilter === 'completed' &&
+                                !(appointment.status === 'completed' && appointment.review)
+                            ) {
+                                return null;
+                            }
+                            return (
+                                <div
+                                    key={appointment.id}
+                                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow flex flex-col"
+                                >
+                                    <Link
+                                        href={route('client.appointments.show', appointment.id)}
+                                        className="block p-6 flex-grow"
+                                    >
+                                        {/* --- Encapsulem les dades de la cita --- */}
+                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                            <div className="space-y-3 flex-1">
+                                                <div className="flex items-center gap-3">
+                                                    <FontAwesomeIcon icon={faBuilding} className="text-[#1f7275]" />
+                                                    <h2 className="text-xl font-semibold text-gray-800">
+                                                        {appointment.company?.name || 'Empresa no especificada'}
+                                                    </h2>
+                                                </div>
+                                                <div className="flex flex-wrap gap-4">
+                                                    <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500" />
+                                                        <span>
+                              {appointment.date
+                                  ? format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: ca })
+                                  : 'Data no disponible'}
+                            </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                                        <FontAwesomeIcon icon={faClock} className="text-gray-500" />
+                                                        <span>{appointment.time || 'Hora no disponible'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    {appointment.service?.name || 'Servei no especificat'}
+                                                </div>
+                                                {appointment.notes && (
+                                                    <div className="mt-3 bg-blue-50 p-3 rounded-lg">
+                                                        <p className="text-gray-600 italic">
+                                                            <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
+                                                            {appointment.notes}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
-
-                                            <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
-                                                <FontAwesomeIcon icon={faClock} className="text-gray-500" />
-                                                <span className="text-gray-700">{appointment.time}</span>
+                                            <div className="mt-4 md:mt-0 md:text-right space-y-3">
+                                                <div
+                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                        statusStyles[appointment.status] || 'bg-gray-100 text-gray-800'
+                                                    } inline-block`}
+                                                >
+                                                    {statusLabels[appointment.status] || 'Estat desconegut'}
+                                                </div>
+                                                {appointment.status === 'completed' && !appointment.review && (
+                                                    <div className="text-sm text-red-600 font-medium">Pendent de ressenya</div>
+                                                )}
+                                                <div className="text-2xl font-bold text-[#1f7275]">
+                                                    {formatPrice(appointment.price)} €
+                                                </div>
                                             </div>
                                         </div>
+                                    </Link>
 
-                                        {appointment.notes && (
-                                            <div className="mt-3 bg-blue-50 p-3 rounded-lg">
-                                                <p className="text-gray-600 italic">
-                                                    <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
-                                                    {appointment.notes}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-4 md:mt-0 md:text-right space-y-3">
-                                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[appointment.status]} inline-block`}>
-                                            {appointment.status === 'pending' && 'Pendent'}
-                                            {appointment.status === 'completed' && 'Completada'}
-                                            {appointment.status === 'cancelled' && 'Cancel·lada'}
+                                    {appointment.status === 'completed' && appointment.company_service_id && (
+                                        <div className="p-4 border-t flex items-center gap-2">
+                                            <Link
+                                                href={route('client.reviews.create', {
+                                                    companyServiceId: appointment.company_service_id,
+                                                    appointmentId: appointment.id,
+                                                })}
+                                                className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors flex items-center gap-2"
+                                            >
+                                                <FontAwesomeIcon icon={faStar} />
+                                                {appointment.review ? 'Editar ressenya' : 'Afegir ressenya'}
+                                            </Link>
+                                            {appointment.review && (
+                                                <button
+                                                    onClick={() => handleDeleteReview(appointment.review.id)}
+                                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                    Eliminar
+                                                </button>
+                                            )}
                                         </div>
-
-                                        <div className="text-2xl font-bold text-[#1f7275]">
-                                            {formatPrice(appointment.price)} €
-                                        </div>
-
-                                        <div className="text-sm text-gray-500">
-                                            {appointment.service.name}
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
-                            </Link>
-                        ))
+                            );
+                        })
                     )}
                 </div>
             </div>

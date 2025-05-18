@@ -6,23 +6,27 @@ use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Notification;
 use App\Models\Worker;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Models\Plan;
+use Inertia\Response;
 
 class CompanyController extends Controller
 {
-    public function index()
+
+    public function index(): Response
+
     {
         return Inertia::render('Company/Dashboard', [
             'company' => $this->getCompanyFullData(),
         ]);
     }
 
-    public function getCompanyFullData()
+    public function getCompanyFullData(): array
     {
         // Verificar si el usuario autenticado es una empresa o un trabajador con permisos de administrador
         if (Auth::guard('company')->check()) {
@@ -390,6 +394,7 @@ class CompanyController extends Controller
         } else {
             abort(403, 'No tienes permisos para realizar esta acción');
         }
+
 
         return response()->json([
             'message' => 'Contrasenya actualitzada correctament.',

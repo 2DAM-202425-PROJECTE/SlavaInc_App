@@ -153,6 +153,11 @@ Route::middleware(['auth:web'])->group(function () {
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
     Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])->name('client.appointments.show');
     Route::patch('/client/appointments/{appointment}/cancel', [ClientController::class, 'cancelAppointment'])->name('client.appointments.cancel');
+
+    Route::get('/reviews/create', [ClientController::class, 'createReview'])->name('client.reviews.create');
+    Route::post('/reviews', [ClientController::class, 'storeReview'])->name('client.reviews.store');
+    Route::put('/reviews/{review}', [ClientController::class, 'updateReview'])->name('client.reviews.update');
+    Route::delete('/reviews/{review}', [ClientController::class, 'destroyReview'])->name('client.reviews.destroy');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)
