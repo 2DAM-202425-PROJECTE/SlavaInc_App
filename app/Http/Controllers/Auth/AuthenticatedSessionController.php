@@ -21,7 +21,7 @@ class AuthenticatedSessionController extends Controller
             'password' => 'required|string',
         ]);
 
-        $guards = ['web', 'worker', 'company'];
+        $guards = ['admin', 'web', 'worker', 'company'];
 
         foreach ($guards as $guard) {
             Auth::guard($guard)->logout();
@@ -34,6 +34,10 @@ class AuthenticatedSessionController extends Controller
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->attempt($request->only('email', 'password'))) {
                 $request->session()->regenerate();
+
+                if ($guard == 'admin') {
+                    return redirect()->route('administrator.dashboard');
+                }
                 return redirect()->intended('dashboard');
             }
         }
@@ -46,7 +50,7 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request)
     {
-        $guards = ['web', 'worker', 'company'];
+        $guards = ['admin', 'web', 'worker', 'company'];
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {

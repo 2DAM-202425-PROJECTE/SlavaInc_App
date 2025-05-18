@@ -22,14 +22,14 @@ use Inertia\Inertia;
 
 // RUTA INICIAL
 Route::get('/', function () {
-    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check()
+    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check() || Auth::guard('admin')->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
 
 // RUTES D’ADMINISTRADOR
 Route::prefix('admin')
-    ->middleware('auth:worker')
+        ->middleware('auth:admin')
     ->name('administrator.')
     ->group(function () {
         // Ruta principal del panell d'administració

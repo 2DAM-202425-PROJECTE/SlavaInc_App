@@ -13,42 +13,42 @@ const AdminHeader = ({ theme = "bg-gradient-to-r from-[#1e40af] to-[#3b82f6] tex
                 {/* Navegació ràpida */}
                 <div className="flex flex-wrap justify-center gap-4">
                     <button
-                        onClick={() => router.visit("/administrator/")}
+                        onClick={() => router.visit("/admin/")}
                         className="admin-nav-link bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Home size={18} />
                         <span>Estadístiques</span>
                     </button>
                     <button
-                        onClick={() => router.visit("/administrator/users")}
+                        onClick={() => router.visit("/admin/users")}
                         className="admin-nav-link bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Users size={18} />
                         <span>Usuaris</span>
                     </button>
                     <button
-                        onClick={() => router.visit("/administrator/workers")}
+                        onClick={() => router.visit("/admin/workers")}
                         className="admin-nav-link bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Users size={18} />
                         <span>Treballadors</span>
                     </button>
                     <button
-                        onClick={() => router.visit("/administrator/services")}
+                        onClick={() => router.visit("/admin/services")}
                         className="admin-nav-link bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Briefcase size={18} />
                         <span>Serveis</span>
                     </button>
                     <button
-                        onClick={() => router.visit("/administrator/company-services")}
+                        onClick={() => router.visit("/admin/company-services")}
                         className="admin-nav-link bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Package size={18} />
                         <span>Serveis d'Empreses</span>
                     </button>
                     <button
-                        onClick={() => router.visit("/administrator/companies")}
+                        onClick={() => router.visit("/admin/companies")}
                         className="admin-nav-link bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                     >
                         <Building size={18} />
