@@ -66,6 +66,7 @@ class Worker extends Authenticatable
 
     public function appointments()
     {
-        return $this->belongsToMany(Appointment::class);
+        return $this->belongsToMany(Appointment::class, 'appointment_worker', 'worker_id', 'appointment_id');
     }
+
 }

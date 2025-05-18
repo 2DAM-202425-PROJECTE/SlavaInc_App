@@ -43,6 +43,8 @@ class Appointment extends Model
 
     public function workers()
     {
-        return $this->belongsToMany(Worker::class);
+        return $this->belongsToMany(Worker::class, 'appointment_worker', 'appointment_id', 'worker_id');
     }
+
+
 }
