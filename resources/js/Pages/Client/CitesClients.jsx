@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faBuilding,
@@ -23,6 +23,11 @@ import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
 
 const CitesClients = ({ company, service }) => {
+    const { url } = usePage();
+    const query = new URLSearchParams(url.split('?')[1] || '');
+
+    const [inputValue, setInputValue] = useState(query.get('input_value') ? parseFloat(query.get('input_value')) : '');
+    const [selectedSize, setSelectedSize] = useState(query.get('selected_size') || '');
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState('');
@@ -137,8 +142,10 @@ const CitesClients = ({ company, service }) => {
                 date: format(selectedDate, 'yyyy-MM-dd'),
                 time: selectedTime,
                 price: price,
-                notes: notes
-            }, {
+                notes: notes,
+                input_value: inputValue,
+                selected_size: selectedSize
+            },{
                 onSuccess: () => {
                     // Éxito - la redirección se maneja desde el controlador
                 },

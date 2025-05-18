@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
         User::create([
             'name' => 'Usuari de prova',
             'email' => 'usuari@example.com',
-            'password' => Hash::make('password123'), // Pots canviar la contrasenya
+            'password' => Hash::make('password'), // Pots canviar la contrasenya
         ]);
     }
 }
