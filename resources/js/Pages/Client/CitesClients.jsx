@@ -22,7 +22,7 @@ import { es } from 'date-fns/locale';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
 
-const CitesClients = ({ company, service }) => {
+const CitesClients = ({ company, service, schedules }) => {
     const { url } = usePage();
     const query = new URLSearchParams(url.split('?')[1] || '');
 
@@ -38,7 +38,8 @@ const CitesClients = ({ company, service }) => {
     const isDateDisabled = (day) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return !isSameMonth(day, currentMonth) || isBefore(day, today);
+        day.setHours(0, 0, 0, 0);
+        return !isSameMonth(day, currentMonth) || isBefore(day, today) || isSameDay(day, today);
     };
 
     // Generar días del mes
@@ -48,33 +49,35 @@ const CitesClients = ({ company, service }) => {
 
     // Generar horario con validación de horas pasadas para el día actual
     const generateTimeSlots = () => {
+        if (!schedules || schedules.length === 0 || !selectedDate) return [];
+
         const slots = [];
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        const isTodaySelected = selectedDate && isToday(selectedDate);
+        const isTodaySelected = isToday(selectedDate);
 
-        // Matí: 09:00 - 12:30
-        for (let hour = 9; hour <= 12; hour++) {
-            if (!isTodaySelected || hour > currentHour || (hour === currentHour && 0 > currentMinute)) {
-                slots.push(`${hour.toString().padStart(2, '0')}:00`);
-            }
-            if (hour !== 12 && (!isTodaySelected || hour > currentHour || (hour === currentHour && 30 > currentMinute))) {
-                slots.push(`${hour.toString().padStart(2, '0')}:30`);
-            }
-        }
+        if (isTodaySelected) return [];
 
-        // Tarda: 15:00 - 17:30
-        for (let hour = 15; hour <= 17; hour++) {
-            if (!isTodaySelected || hour > currentHour || (hour === currentHour && 0 > currentMinute)) {
-                slots.push(`${hour.toString().padStart(2, '0')}:00`);
-            }
-            if (!isTodaySelected || hour > currentHour || (hour === currentHour && 30 > currentMinute)) {
-                slots.push(`${hour.toString().padStart(2, '0')}:30`);
-            }
-        }
+        schedules.forEach(schedule => {
+            const [start, end] = schedule.split('-');
+            if (!start || !end) return;
 
-        return slots;
+            let [startHour, startMinute] = start.split(':').map(Number);
+            let [endHour, endMinute] = end.split(':').map(Number);
+
+            let current = new Date(selectedDate);
+            current.setHours(startHour, startMinute, 0, 0);
+
+            let endTime = new Date(selectedDate);
+            endTime.setHours(endHour, endMinute, 0, 0);
+            endTime.setMinutes(endTime.getMinutes() - 60); // 👈 importante
+
+            while (current <= endTime) {
+                const formatted = format(current, 'HH:mm');
+                slots.push(formatted);
+                current.setMinutes(current.getMinutes() + 30);
+            }
+        });
+
+        return Array.from(new Set(slots)).sort();
     };
 
     const timeSlots = generateTimeSlots();
