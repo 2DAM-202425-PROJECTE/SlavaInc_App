@@ -32,7 +32,9 @@ const Dashboard = () => {
 
     useEffect(() => {
         // Filtrar appointments para este worker
-        const workerAppointments = appointments.filter(app => app.worker_id === userId);
+        const workerAppointments = appointments.filter(app =>
+            app.workers?.some(worker => worker.id === userId)
+        );
         setFilteredAppointments(workerAppointments);
 
         // Preparar eventos para el calendario
@@ -105,8 +107,8 @@ const Dashboard = () => {
                         startAccessor="start"
                         endAccessor="end"
                         style={{ height: 600 }}
-                        defaultView="week"
-                        views={['week', 'day', 'agenda']}
+                        defaultView="month"
+                        views={['day', 'week', 'month', 'agenda']}
                         min={new Date(0, 0, 0, 8, 0, 0)} // Hora de inicio 8:00
                         max={new Date(0, 0, 0, 20, 0, 0)} // Hora fin 20:00
                         eventPropGetter={eventStyleGetter}
@@ -148,11 +150,13 @@ const Dashboard = () => {
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                             appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                 appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                    'bg-red-100 text-red-800'
-                                        }`}>
-                                            {appointment.status === 'pending' ? 'Pendent' :
-                                                appointment.status === 'confirmed' ? 'Confirmada' : 'Cancel·lada'}
-                                        </span>
+                                                    appointment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-red-100 text-red-800'}`}>
+                                                {appointment.status === 'pending' ? 'Pendent' :
+                                                    appointment.status === 'confirmed' ? 'Confirmada' :
+                                                        appointment.status === 'completed' ? 'Completada' :
+                                                            'Cancel·lada'}
+                                            </span>
                                     </div>
 
                                     <div className="space-y-2 mb-3">
