@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('company_service_id')->constrained('companies_services')->onDelete('cascade');
-            $table->float('rate');
+            $table->decimal('rate', 3, 1);
             $table->string('comment');
             $table->timestamps();
-            $table->unique(['client_id', 'company_service_id']); // Ensure one review per client per company service
         });
     }
 

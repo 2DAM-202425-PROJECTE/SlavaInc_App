@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @method static findOrFail(array|string|null $query)
+ * @method static find(int|string $serviceTypeOrId)
+ * @method static where(string $string, int|string $serviceTypeOrId)
  * @property mixed $id
  */
 class Service extends Model

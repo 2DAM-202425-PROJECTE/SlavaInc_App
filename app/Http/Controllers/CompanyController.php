@@ -163,7 +163,7 @@ class CompanyController extends Controller
         ];
     }
 
-    public function show(Company $company, Request $request): \Inertia\Response
+    public function show(Company $company, Request $request): Response
     {
         $averageRating = Review::whereHas('companyService', function ($query) use ($company) {
             $query->where('company_id', $company->id);

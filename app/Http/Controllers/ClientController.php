@@ -13,24 +13,25 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Inertia\Response as InertiaResponse;
+use Illuminate\Http\Response as HttpResponse;
 
 class ClientController extends Controller
 {
     /**
      * Mostra la informació del servei i les empreses associades.
      *
-     * @param string|int $serviceTypeOrId
+     * @param int|string $serviceTypeOrId
      * @return Response
      */
-    public function show($serviceTypeOrId): Response
+    public function show(int|string $serviceTypeOrId): Response
     {
         $service = Service::find($serviceTypeOrId) ?? Service::where('type', $serviceTypeOrId)->firstOrFail();
 
         $companies = $service->companies->map(function ($company) {
-            $averageRating = Review::where('company_service_id', $company->pivot->id)->avg('rate');
-            $topReviews = Review::where('company_service_id', $company->pivot->id)
+            $averageRating = Review::where((array)'company_service_id', $company->pivot->id)->avg('rate');
+            $topReviews = Review::where((array)'company_service_id', $company->pivot->id)
                 ->orderBy('rate', 'desc')
                 ->take(3)
                 ->get(['rate', 'comment']);
@@ -91,7 +92,7 @@ class ClientController extends Controller
             'date' => 'required|date'
         ]);
 
-        $occupiedSlots = Appointment::where('company_id', $request->company_id)
+        $occupiedSlots = Appointment::where((array)'company_id', $request->company_id)
             ->where('date', $request->date)
             ->pluck('time')
             ->toArray();
@@ -200,22 +201,19 @@ class ClientController extends Controller
      * Mostra la llista de cites del client.
      *
      * @param Request $request
-     * @return Response
+     * @return InertiaResponse
      */
-    public function indexAppointments(Request $request): Response
+    public function indexAppointments(Request $request): InertiaResponse
     {
-        \Log::info('indexAppointments cridat', [
-            'user_id' => auth()->id(),
-            'filter' => $request->query('filter')
-        ]);
-
         $filter = $request->query('filter', 'all');
 
         $query = Appointment::with([
-            'company' => fn($query) => $query->select('id', 'name'),
-            'service' => fn($query) => $query->select('id', 'name'),
-            'companyService' => fn($query) => $query->select('id', 'company_id', 'service_id'),
-            'reviews' => fn($query) => $query->where('client_id', auth()->id())->select('id', 'appointment_id', 'rate', 'comment')
+            'company'        => fn($q) => $q->select('id', 'name'),
+            'service'        => fn($q) => $q->select('id', 'name'),
+            'companyService' => fn($q) => $q->select('id', 'company_id', 'service_id'),
+            'reviews'        => fn($q) => $q
+                ->where('client_id', auth()->id())
+                ->select('id', 'appointment_id', 'rate', 'comment'),
         ])
             ->where('user_id', auth()->id())
             ->orderBy('date', 'desc')
@@ -224,37 +222,34 @@ class ClientController extends Controller
         if ($filter === 'pending') {
             $query->where('status', 'pending');
         } elseif ($filter === 'completed') {
-            $query->where('status', 'completed');
+            // Només les completades que ja tenen una ressenya
+            $query->where('status', 'completed')
+                ->whereHas('reviews', fn($q) => $q->where('client_id', auth()->id()));
         } elseif ($filter === 'pending_review') {
             $query->where('status', 'completed')
-                ->whereDoesntHave('reviews', function ($q) {
-                    $q->where('client_id', auth()->id());
-                });
+                ->whereDoesntHave('reviews', fn($q) => $q->where('client_id', auth()->id()));
         }
 
         $appointments = $query->get()->map(function ($appointment) {
             return [
-                'id' => $appointment->id,
-                'company' => $appointment->company ? ['name' => $appointment->company->name] : null,
-                'service' => $appointment->service ? ['name' => $appointment->service->name] : null,
-                'date' => $appointment->date,
-                'time' => $appointment->time,
-                'price' => $appointment->price,
-                'status' => $appointment->status,
-                'notes' => $appointment->notes,
+                'id'                 => $appointment->id,
+                'company'            => $appointment->company ? ['name' => $appointment->company->name] : null,
+                'service'            => $appointment->service ? ['name' => $appointment->service->name] : null,
+                'date'               => $appointment->date,
+                'time'               => $appointment->time,
+                'price'              => $appointment->price,
+                'status'             => $appointment->status,
+                'notes'              => $appointment->notes,
                 'company_service_id' => $appointment->companyService?->id,
-                'review' => $appointment->reviews->first() ? [
-                    'id' => $appointment->reviews->first()->id,
-                    'rate' => $appointment->reviews->first()->rate,
-                    'comment' => $appointment->reviews->first()->comment,
-                ] : null,
+                'review'             => $appointment->reviews->first()
+                    ? [
+                        'id'      => $appointment->reviews->first()->id,
+                        'rate'    => $appointment->reviews->first()->rate,
+                        'comment' => $appointment->reviews->first()->comment,
+                    ]
+                    : null,
             ];
         });
-
-        \Log::info('Appointments retornats', [
-            'count' => $appointments->count(),
-            'data' => $appointments->toArray()
-        ]);
 
         return Inertia::render('Client/CitesIndex', [
             'appointments' => $appointments,
@@ -282,22 +277,27 @@ class ClientController extends Controller
             'reviews' => fn($query) => $query->where('client_id', auth()->id())
         ]);
 
+        $firstReview = $appointment->reviews->first();
+
         return Inertia::render('Client/AppointmentDetail', [
             'appointment' => [
-                'id' => $appointment->id,
-                'date' => $appointment->date,
-                'time' => $appointment->time,
-                'price' => (float)$appointment->price,
-                'status' => $appointment->status,
-                'notes' => $appointment->notes,
-                'company' => $appointment->company,
-                'service' => $appointment->service,
-                'worker' => $appointment->worker,
-                'company_service_id' => $appointment->companyService?->id,
-                'review' => $appointment->reviews->first() ? [
-                    'rate' => $appointment->reviews->first()->rate,
-                    'comment' => $appointment->reviews->first()->comment,
-                ] : null,
+                'id'                  => $appointment->id,
+                'date'                => $appointment->date,
+                'time'                => $appointment->time,
+                'price'               => (float)$appointment->price,
+                'status'              => $appointment->status,
+                'notes'               => $appointment->notes,
+                'company'             => $appointment->company,
+                'service'             => $appointment->service,
+                'worker'              => $appointment->worker,
+                'company_service_id'  => $appointment->companyService?->id,
+                'review'              => $firstReview
+                    ? [
+                        'id'      => $firstReview->id,
+                        'rate'    => $firstReview->rate,
+                        'comment' => $firstReview->comment,
+                    ]
+                    : null,
             ]
         ]);
     }
@@ -308,7 +308,7 @@ class ClientController extends Controller
      * @param int $companyId
      * @return Response
      */
-    public function showCompany($companyId): Response
+    public function showCompany(int $companyId): Response
     {
         $company = Company::findOrFail($companyId);
         return Inertia::render('Client/CompanyInfo', ['company' => $company]);
@@ -317,72 +317,44 @@ class ClientController extends Controller
     /**
      * Mostra el formulari per crear o editar una ressenya.
      *
-     * @param Request $request
-     * @return Response|RedirectResponse
+     * @param  Request  $request
+     * @return InertiaResponse|HttpResponse
      */
-    public function createReview(Request $request): Response|RedirectResponse
+    public function createReview(Request $request): InertiaResponse|HttpResponse
     {
         $companyServiceId = $request->query('companyServiceId');
-        $appointmentId = $request->query('appointmentId');
+        $appointmentId    = $request->query('appointmentId');
 
-        if (!$companyServiceId || !$appointmentId) {
-            \Log::error('Falten paràmetres per createReview', [
-                'companyServiceId' => $companyServiceId,
-                'appointmentId' => $appointmentId
-            ]);
-            return redirect()->route('client.appointments.index')->withErrors(['error' => 'Falten paràmetres per accedir al formulari de ressenya.']);
+        if (! $companyServiceId || ! $appointmentId) {
+            return Inertia::location(route('client.appointments.index'));
         }
 
         try {
             $companyService = CompanyService::with([
-                'company' => fn($query) => $query->select('id', 'name'),
-                'service' => fn($query) => $query->select('id', 'name')
+                'company' => fn($q) => $q->select('id', 'name'),
+                'service' => fn($q) => $q->select('id', 'name'),
             ])->findOrFail($companyServiceId);
 
-            $appointment = Appointment::where('id', $appointmentId)
-                ->where('user_id', auth()->id())
-                ->where('status', 'completed')
-                ->firstOrFail();
+            $appointment = Appointment::where([['id', $appointmentId], ['user_id', auth()->id()], ['status', 'completed']])->firstOrFail();
 
-            $existingReview = Review::where('client_id', auth()->id())
-                ->where('appointment_id', $appointmentId)
-                ->first();
-
-            \Log::info('createReview dades', [
-                'companyServiceId' => $companyService->id,
-                'appointmentId' => $appointment->id,
-                'existingReview' => $existingReview ? $existingReview->id : null
-            ]);
+            $existingReview = Review::where([['client_id', auth()->id()], ['appointment_id', $appointmentId]])->first();
 
             return Inertia::render('Client/ReviewForm', [
                 'companyService' => [
-                    'id' => $companyService->id,
-                    'company' => $companyService->company ? ['name' => $companyService->company->name] : null,
-                    'service' => $companyService->service ? ['name' => $companyService->service->name] : null,
+                    'id'      => $companyService->id,
+                    'company' => ['name' => $companyService->company->name],
+                    'service' => ['name' => $companyService->service->name],
                 ],
-                'appointment' => [
-                    'id' => $appointment->id,
-                ],
+                'appointment'    => ['id' => $appointment->id],
                 'existingReview' => $existingReview ? [
-                    'id' => $existingReview->id,
-                    'rate' => $existingReview->rate,
+                    'id'      => $existingReview->id,
+                    'rate'    => $existingReview->rate,
                     'comment' => $existingReview->comment,
                 ] : null,
             ]);
 
-        } catch (ModelNotFoundException $e) {
-            \Log::error('Recurs no trobat a createReview', [
-                'companyServiceId' => $companyServiceId,
-                'appointmentId' => $appointmentId,
-                'error' => $e->getMessage()
-            ]);
-            return redirect()->route('client.appointments.index')->withErrors(['error' => 'No s\'ha trobat la informació necessària per crear la ressenya.']);
-        } catch (\Exception $e) {
-            \Log::error('Error inesperat a createReview: ' . $e->getMessage(), [
-                'companyServiceId' => $companyServiceId,
-                'appointmentId' => $appointmentId
-            ]);
-            return redirect()->route('client.appointments.index')->withErrors(['error' => 'S\'ha produït un error inesperat.']);
+        } catch (ModelNotFoundException|\Exception $e) {
+            return Inertia::location(route('client.appointments.index'));
         }
     }
 
@@ -390,68 +362,42 @@ class ClientController extends Controller
      * Guarda una nova ressenya.
      *
      * @param Request $request
-     * @return RedirectResponse
+     * @return HttpResponse
      */
-    public function storeReview(Request $request): RedirectResponse
+    public function storeReview(Request $request): HttpResponse
     {
-        \Log::info('storeReview cridat', [
-            'user_id' => auth()->id(),
-            'data' => $request->all()
+        $validated = $request->validate([
+            'company_service_id' => 'required|exists:companies_services,id',
+            'appointment_id'     => 'required|exists:appointments,id',
+            'rate'               => 'required|numeric|min:0.5|max:5',
+            'comment'            => 'required|string|max:1000',
         ]);
 
         try {
-            $validated = $request->validate([
-                'company_service_id' => 'required|exists:companies_services,id',
-                'appointment_id' => 'required|exists:appointments,id',
-                'rate' => 'required|integer|min:1|max:5',
-                'comment' => 'required|string|max:1000',
-            ]);
+            Appointment::where([['id', $validated['appointment_id']], ['user_id', auth()->id()], ['status', 'completed']])->firstOrFail();
 
-            $appointment = Appointment::where('id', $validated['appointment_id'])
-                ->where('user_id', auth()->id())
-                ->where('status', 'completed')
-                ->firstOrFail();
-
-            $existingReview = Review::where('client_id', auth()->id())
-                ->where('appointment_id', $validated['appointment_id'])
-                ->first();
-
-            if ($existingReview) {
-                \Log::warning('Intent de crear review duplicada', [
-                    'appointment_id' => $validated['appointment_id'],
-                    'existing_review_id' => $existingReview->id
-                ]);
-                return redirect()->route('client.appointments.index')->withErrors(['error' => 'Ja has deixat una ressenya per aquesta cita.']);
+            if (Review::where([['client_id', auth()->id()], ['appointment_id', $validated['appointment_id']]])->exists()) {
+                session()->flash('error', 'Ja has deixat una ressenya per aquesta cita.');
+                return Inertia::location(route('client.appointments.index'));
             }
 
             Review::create([
-                'client_id' => auth()->id(),
+                'client_id'          => auth()->id(),
                 'company_service_id' => $validated['company_service_id'],
-                'appointment_id' => $validated['appointment_id'],
-                'rate' => $validated['rate'],
-                'comment' => $validated['comment'],
-                'created_at' => now(),
-                'updated_at' => now(),
+                'appointment_id'     => $validated['appointment_id'],
+                'rate'               => $validated['rate'],
+                'comment'            => $validated['comment'],
             ]);
 
-            \Log::info('Ressenya creada', [
-                'appointment_id' => $validated['appointment_id'],
-                'company_service_id' => $validated['company_service_id']
-            ]);
-
-            return redirect()->route('client.appointments.index')->with('success', 'Ressenya creada amb èxit!');
+            session()->flash('success', 'Ressenya creada amb èxit!');
+            return Inertia::location(route('client.appointments.index'));
 
         } catch (ModelNotFoundException $e) {
-            \Log::error('Cita no trobada a storeReview', [
-                'appointment_id' => $request->input('appointment_id'),
-                'error' => $e->getMessage()
-            ]);
-            return back()->withErrors(['error' => 'La cita especificada no existeix o no et pertany.']);
+            session()->flash('error', 'La cita especificada no existeix o no et pertany.');
+            return Inertia::location(route('client.appointments.index'));
         } catch (\Exception $e) {
-            \Log::error('Error a storeReview: ' . $e->getMessage(), [
-                'data' => $request->all()
-            ]);
-            return back()->withErrors(['error' => 'S\'ha produït un error en crear la ressenya.']);
+            session()->flash('error', 'S\'ha produït un error en crear la ressenya.');
+            return Inertia::location(route('client.appointments.index'));
         }
     }
 
@@ -459,49 +405,52 @@ class ClientController extends Controller
      * Actualitza una ressenya existent.
      *
      * @param Request $request
-     * @param Review $review
-     * @return RedirectResponse
+     * @param Review  $review
+     * @return HttpResponse
      */
-    public function updateReview(Request $request, Review $review): RedirectResponse
+    public function updateReview(Request $request, Review $review): HttpResponse
     {
-        \Log::info('updateReview cridat', [
-            'user_id' => auth()->id(),
-            'review_id' => $review->id,
-            'data' => $request->all()
+        if ($review->client_id !== auth()->id()) {
+            abort(403, 'No tens permís per editar aquesta ressenya');
+        }
+
+        $validated = $request->validate([
+            'rate'    => 'required|numeric|min:0.5|max:5',
+            'comment' => 'required|string|max:1000',
         ]);
 
         try {
-            if ($review->client_id !== auth()->id()) {
-                \Log::warning('Accés no autoritzat a updateReview', [
-                    'review_id' => $review->id,
-                    'user_id' => auth()->id()
-                ]);
-                abort(403, 'No tens permís per editar aquesta ressenya');
-            }
-
-            $validated = $request->validate([
-                'rate' => 'required|integer|min:1|max:5',
-                'comment' => 'required|string|max:1000',
-            ]);
-
             $review->update([
-                'rate' => $validated['rate'],
+                'rate'    => $validated['rate'],
                 'comment' => $validated['comment'],
-                'updated_at' => now(),
             ]);
 
-            \Log::info('Ressenya actualitzada', [
-                'review_id' => $review->id
-            ]);
-
-            return redirect()->route('client.appointments.index')->with('success', 'Ressenya actualitzada amb èxit!');
+            session()->flash('success', 'Ressenya actualitzada amb èxit!');
+            return Inertia::location(route('client.appointments.index'));
 
         } catch (\Exception $e) {
-            \Log::error('Error a updateReview: ' . $e->getMessage(), [
-                'review_id' => $review->id,
-                'data' => $request->all()
-            ]);
-            return back()->withErrors(['error' => 'S\'ha produït un error en actualitzar la ressenya.']);
+            session()->flash('error', 'S\'ha produït un error en actualitzar la ressenya.');
+            return Inertia::location(route('client.appointments.index'));
         }
+    }
+
+    /**
+     * Elimina una ressenya i la deixa pendent de review.
+     *
+     * @param Review $review
+     * @return HttpResponse
+     */
+    public function destroyReview(Review $review)
+    {
+        // Autorització
+        if ($review->client_id !== auth()->id()) {
+            abort(403, 'No tens permís per eliminar aquesta ressenya');
+        }
+
+        $review->delete();
+
+        session()->flash('success', 'Ressenya eliminada.');
+        // Torna al filtre pendent_review
+        return Inertia::location(route('client.appointments.index', ['filter' => 'pending_review']));
     }
 }

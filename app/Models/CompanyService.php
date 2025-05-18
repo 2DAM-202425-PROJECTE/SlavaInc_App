@@ -14,7 +14,11 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class CompanyService extends Pivot
 {
     use HasFactory;
-    protected $table = 'companies_services'; // Explicitly set the table name
+
+    // Permet que el pivot tingui id autoincremental
+    public $incrementing = true;
+    protected $primaryKey = 'id';
+    protected $table = 'companies_services';
 
     protected $fillable = [
         'company_id',
@@ -30,31 +34,42 @@ class CompanyService extends Pivot
 
     protected $casts = [
         'price_per_unit' => 'float',
-        'min_price' => 'float',
-        'max_price' => 'float'
+        'min_price'      => 'float',
+        'max_price'      => 'float',
     ];
 
+    /**
+     * Relació amb empresa
+     */
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    /**
+     * Relació amb servei
+     */
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'service_id');
+    }
+
+    /**
+     * Relació many-to-many inversa (si cal)
+     */
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'companies_services')
-            ->using(CompanyService::class) // Añadir esta línea
+            ->using(CompanyService::class)
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo')
             ->withTimestamps();
     }
 
-    public function service(): BelongsTo
-    {
-        return $this->belongsTo(Service::class);
-    }
-
+    /**
+     * Ressenyes associades
+     */
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'company_service_id');
     }
 }
-

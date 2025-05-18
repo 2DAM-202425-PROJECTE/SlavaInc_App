@@ -11,12 +11,14 @@ import {
     faInfoCircle,
     faUser,
     faStar,
-    faStarHalfAlt
+    faStarHalfAlt,
+    faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import { format, parseISO } from 'date-fns';
 import { ca } from 'date-fns/locale';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
+import {route} from "ziggy-js";
 
 const AppointmentDetail = ({ appointment }) => {
     // Funció per renderitzar estrelles amb mitges estrelles
@@ -52,6 +54,15 @@ const AppointmentDetail = ({ appointment }) => {
                 ))}
             </div>
         );
+    };
+
+    const handleDeleteReview = (reviewId) => {
+        if (!confirm('Segur que vols eliminar la ressenya?')) return;
+        router.delete(route('client.reviews.destroy', reviewId), {
+            onSuccess: () => {
+                router.visit(route('client.appointments.index', { filter: 'pending_review' }));
+            }
+        })
     };
 
     return (
@@ -168,16 +179,25 @@ const AppointmentDetail = ({ appointment }) => {
                                                 </div>
                                                 <p className="text-gray-600 mt-2">{appointment.review.comment}</p>
                                             </div>
-                                            <Link
-                                                href={route('client.reviews.create', {
-                                                    companyServiceId: appointment.company_service_id,
-                                                    appointmentId: appointment.id
-                                                })}
-                                                className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors inline-flex items-center gap-2"
-                                            >
-                                                <FontAwesomeIcon icon={faStar} />
-                                                Editar ressenya
-                                            </Link>
+                                            <div className="flex gap-2">
+                                                <Link
+                                                    href={route('client.reviews.create', {
+                                                        companyServiceId: appointment.company_service_id,
+                                                        appointmentId: appointment.id
+                                                    })}
+                                                    className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors inline-flex items-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faStar} />
+                                                    Editar ressenya
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDeleteReview(appointment.review.id)}
+                                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                    Eliminar
+                                                </button>
+                                            </div>
                                         </>
                                     ) : (
                                         <Link

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Inertia } from '@inertiajs/inertia';
 import { Link } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faStarHalfAlt, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
-import {route} from "ziggy-js";
+import { route } from "ziggy-js";
 
 const ReviewForm = ({ companyService, appointment, existingReview }) => {
     const [rating, setRating] = useState(existingReview ? existingReview.rate : 0);
@@ -32,11 +32,12 @@ const ReviewForm = ({ companyService, appointment, existingReview }) => {
         const url = existingReview
             ? route('client.reviews.update', existingReview.id)
             : route('client.reviews.store');
+        const rate = parseFloat(rating);
 
         Inertia[method](url, {
             company_service_id: companyService.id,
             appointment_id: appointment.id,
-            rate: rating,
+            rate: rate,
             comment: comment,
         }, {
             onSuccess: () => {
@@ -49,15 +50,22 @@ const ReviewForm = ({ companyService, appointment, existingReview }) => {
         });
     };
 
+    // Renderitza estrelles amb suport per mitges puntuacions
     const renderStars = () => {
-        return [1, 2, 3, 4, 5].map((star) => (
-            <FontAwesomeIcon
-                key={star}
-                icon={faStar}
-                className={`cursor-pointer text-2xl ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                onClick={() => setRating(star)}
-            />
-        ));
+        return [1, 2, 3, 4, 5].map((star) => {
+            const isFull = rating >= star;
+            const isHalf = rating >= star - 0.5 && rating < star;
+
+            return (
+                <span key={star} className="relative w-6 h-6">
+                    <FontAwesomeIcon
+                        icon={isHalf ? faStarHalfAlt : faStar}
+                        className={`cursor-pointer text-2xl transition-colors ${isFull || isHalf ? 'text-yellow-400' : 'text-gray-300'}`}
+                        onClick={() => setRating(isHalf ? star : star - 0.5)}
+                    />
+                </span>
+            );
+        });
     };
 
     return (
@@ -86,6 +94,7 @@ const ReviewForm = ({ companyService, appointment, existingReview }) => {
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">Puntuació</label>
                             <div className="flex gap-2">{renderStars()}</div>
+                            <p className="text-sm text-gray-600 mt-1">Puntuació: {rating} / 5</p>
                             {errors.rate && <p className="text-red-500 text-sm mt-1">{errors.rate}</p>}
                         </div>
                         <div>

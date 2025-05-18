@@ -7,7 +7,12 @@ import Footer from "@/Components/Footer.jsx";
 import { route } from "ziggy-js";
 
 const CompanyInfo = ({ company, serviceId }) => {
-    // Funció per renderitzar estrelles segons la valoració mitjana
+    // Colors del tema
+    const primaryColor = '#1f7275';
+    const secondaryColor = '#01a0a6';
+    const gradient = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+
+    // Funció per renderitzar estrelles
     const renderStars = (rating) => {
         const fullStars = Math.floor(rating);
         const halfStar = rating % 1 >= 0.5 ? 1 : 0;
@@ -42,25 +47,25 @@ const CompanyInfo = ({ company, serviceId }) => {
         );
     };
 
-    // Obtenir les 3 millors ressenyes ordenades per valoració
+    // Obtenir les 3 millors ressenyes
     const topReviews = company.reviews
         ? company.reviews.sort((a, b) => b.rate - a.rate).slice(0, 3)
         : [];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[#f0fdfa]">
-            <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
+        <div className="min-h-screen bg-white">
+            <Header theme={`bg-gradient-to-r from-[${primaryColor}] to-[${secondaryColor}] text-white`} />
 
-            {/* Secció superior amb navegació dinàmica */}
-            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Capçalera amb gradient */}
+            <section className="w-full py-12 px-6" style={{ background: gradient }}>
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="text-center md:text-left">
-                        <h1 className="text-2xl font-bold text-white">{company.name}</h1>
-                        <p className="text-lg text-white/90 mt-2">Informació detallada de l'empresa</p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{company.name}</h1>
+                        <p className="text-lg text-white/90">Informació detallada de l'empresa</p>
                     </div>
                     <Link
                         href={route('client.services.show', { service: serviceId })}
-                        className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                        className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 hover:shadow-lg"
                     >
                         <FontAwesomeIcon icon={faArrowLeft} />
                         Tornar al servei
@@ -68,40 +73,72 @@ const CompanyInfo = ({ company, serviceId }) => {
                 </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#1f7275] to-[#01a0a6] z-0" />
-
-                    <div className="relative z-10 flex flex-col md:flex-row items-start gap-8">
+            {/* Contingut principal */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div className="flex flex-col lg:flex-row">
                         {/* Secció logo */}
-                        <div className="w-full md:w-1/3">
-                            <div className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] p-1 rounded-2xl shadow-lg">
+                        <div className="lg:w-1/3 p-6 bg-gray-50 flex flex-col items-center">
+                            <div className="w-full max-w-xs">
                                 {company.logo ? (
                                     <img
                                         src={company.logo}
                                         alt={`${company.name} logo`}
-                                        className="w-full h-64 object-cover rounded-xl"
+                                        className="w-full h-auto rounded-lg object-cover shadow-md"
                                     />
                                 ) : (
-                                    <div className="w-full h-64 flex items-center justify-center bg-white rounded-xl">
-                                        <FontAwesomeIcon icon={faBuilding} className="text-6xl text-[#1f7275]" />
+                                    <div className="w-full h-64 flex items-center justify-center bg-white rounded-lg shadow-md">
+                                        <FontAwesomeIcon
+                                            icon={faBuilding}
+                                            className="text-6xl"
+                                            style={{ color: primaryColor }}
+                                        />
                                     </div>
                                 )}
                             </div>
+
+                            {/* Valoració destacada */}
+                            {company.average_rating && (
+                                <div className="mt-6 text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Valoració mitjana</h3>
+                                    <div className="flex justify-center items-center gap-2">
+                                        {renderStars(company.average_rating)}
+                                        <span className="text-xl font-bold ml-2" style={{ color: primaryColor }}>
+                                            {company.average_rating.toFixed(1)}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Secció informació */}
-                        <div className="w-full md:w-2/3 space-y-6">
-                            <div className="space-y-4">
-                                <h2 className="text-3xl font-bold text-white border-l-4 border-[#1f7275] pl-4">
+                        <div className="lg:w-2/3 p-8">
+                            {/* Secció "Sobre nosaltres" */}
+                            {company.description && (
+                                <div className="mb-8">
+                                    <h2 className="text-2xl font-bold mb-4 pb-2 border-b" style={{ borderColor: secondaryColor }}>
+                                        Sobre nosaltres
+                                    </h2>
+                                    <p className="text-gray-700 leading-relaxed">
+                                        {company.description}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Detalls de contacte */}
+                            <div className="mb-8">
+                                <h2 className="text-2xl font-bold mb-4 pb-2 border-b" style={{ borderColor: secondaryColor }}>
                                     Informació de contacte
                                 </h2>
 
-                                {/* Detalls de contacte amb mitja de valoracions */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-gray-50 p-4 rounded-xl">
+                                    <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-300">
                                         <div className="flex items-start gap-3">
-                                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-[#1f7275] mt-1 text-xl" />
+                                            <FontAwesomeIcon
+                                                icon={faMapMarkerAlt}
+                                                className="mt-1 text-xl"
+                                                style={{ color: secondaryColor }}
+                                            />
                                             <div>
                                                 <p className="font-semibold text-gray-800">Adreça</p>
                                                 <p className="text-gray-600">{company.address}</p>
@@ -111,12 +148,19 @@ const CompanyInfo = ({ company, serviceId }) => {
                                     </div>
 
                                     {company.phone && (
-                                        <div className="bg-gray-50 p-4 rounded-xl">
+                                        <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-300">
                                             <div className="flex items-center gap-3">
-                                                <FontAwesomeIcon icon={faPhone} className="text-[#1f7275] text-xl" />
+                                                <FontAwesomeIcon
+                                                    icon={faPhone}
+                                                    className="text-xl"
+                                                    style={{ color: secondaryColor }}
+                                                />
                                                 <div>
                                                     <p className="font-semibold text-gray-800">Telèfon</p>
-                                                    <a href={`tel:${company.phone}`} className="text-gray-600 hover:text-[#01a0a6] transition-colors">
+                                                    <a
+                                                        href={`tel:${company.phone}`}
+                                                        className="text-gray-600 hover:text-[#01a0a6] transition-colors"
+                                                    >
                                                         {company.phone}
                                                     </a>
                                                 </div>
@@ -125,29 +169,21 @@ const CompanyInfo = ({ company, serviceId }) => {
                                     )}
 
                                     {company.email && (
-                                        <div className="bg-gray-50 p-4 rounded-xl">
+                                        <div className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-300">
                                             <div className="flex items-center gap-3">
-                                                <FontAwesomeIcon icon={faEnvelope} className="text-[#1f7275] text-xl" />
+                                                <FontAwesomeIcon
+                                                    icon={faEnvelope}
+                                                    className="text-xl"
+                                                    style={{ color: secondaryColor }}
+                                                />
                                                 <div>
                                                     <p className="font-semibold text-gray-800">Correu electrònic</p>
-                                                    <a href={`mailto:${company.email}`} className="text-gray-600 hover:text-[#01a0a6] transition-colors">
+                                                    <a
+                                                        href={`mailto:${company.email}`}
+                                                        className="text-gray-600 hover:text-[#01a0a6] transition-colors"
+                                                    >
                                                         {company.email}
                                                     </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {company.average_rating && (
-                                        <div className="bg-gray-50 p-4 rounded-xl">
-                                            <div className="flex items-center gap-3">
-                                                <FontAwesomeIcon icon={faStar} className="text-[#1f7275] text-xl" />
-                                                <div>
-                                                    <p className="font-semibold text-gray-800">Valoració mitjana</p>
-                                                    <div className="flex items-center gap-2">
-                                                        {renderStars(company.average_rating)}
-                                                        <span className="text-gray-800 font-semibold">{company.average_rating.toFixed(1)}/5</span>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -155,34 +191,27 @@ const CompanyInfo = ({ company, serviceId }) => {
                                 </div>
                             </div>
 
-                            {/* Secció "Sobre nosaltres" */}
-                            {company.description && (
-                                <div className="space-y-4">
-                                    <h2 className="text-2xl font-bold text-white border-l-4 border-[#1f7275] pl-4">
-                                        Sobre nosaltres
-                                    </h2>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {company.description}
-                                    </p>
-                                </div>
-                            )}
-
                             {/* Secció "Millors ressenyes" */}
-                            <div className="space-y-4">
-                                <h2 className="text-2xl font-bold text-white border-l-4 border-[#1f7275] pl-4">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-4 pb-2 border-b" style={{ borderColor: secondaryColor }}>
                                     Millors Ressenyes
                                 </h2>
                                 {topReviews.length > 0 ? (
                                     <div className="space-y-4">
                                         {topReviews.map((review, index) => (
-                                            <div key={index} className="bg-gray-50 p-4 rounded-xl">
+                                            <div
+                                                key={index}
+                                                className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-300"
+                                            >
                                                 <div className="flex items-center gap-2 mb-2">
                                                     {renderStars(review.rate)}
-                                                    <span className="text-gray-800">{review.rate.toFixed(1)}/5</span>
+                                                    <span className="text-gray-800 font-medium">
+                                                        {review.rate.toFixed(1)}/5
+                                                    </span>
                                                 </div>
-                                                <p className="text-gray-600">{review.comment}</p>
+                                                <p className="text-gray-700 mb-2">{review.comment}</p>
                                                 {review.created_at && (
-                                                    <p className="text-gray-500 text-sm mt-1">
+                                                    <p className="text-gray-500 text-sm">
                                                         {new Date(review.created_at).toLocaleDateString('ca-ES', {
                                                             year: 'numeric',
                                                             month: 'long',
@@ -194,7 +223,9 @@ const CompanyInfo = ({ company, serviceId }) => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-gray-600">Encara no hi ha ressenyes disponibles.</p>
+                                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                                        <p className="text-gray-600">Encara no hi ha ressenyes disponibles.</p>
+                                    </div>
                                 )}
                             </div>
                         </div>

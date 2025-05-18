@@ -10,10 +10,9 @@ return new class extends Migration
     {
         Schema::table('appointments', function (Blueprint $table) {
             $table->foreignId('company_service_id')
-                ->nullable()
+                ->after('service_id')
                 ->constrained('companies_services')
-                ->onDelete('cascade')
-                ->after('service_id');
+                ->onDelete('cascade');
         });
     }
 

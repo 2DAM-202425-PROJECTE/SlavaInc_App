@@ -5,11 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @method static whereHas(string $string, \Closure $param)
+ * @method static where(array[] $array)
+ * @property mixed $client_id
+ */
 class Review extends Model
 {
     protected $fillable = [
         'client_id',
         'company_service_id',
+        'appointment_id',
         'rate',
         'comment',
     ];

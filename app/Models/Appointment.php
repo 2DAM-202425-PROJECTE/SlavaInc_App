@@ -7,6 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property mixed $id
+ * @property mixed $date
+ * @property mixed $time
+ * @property mixed $price
+ * @property mixed $status
+ * @property mixed $notes
+ * @property mixed $company
+ * @property mixed $service
+ * @property mixed $worker
+ * @property mixed $companyService
+ * @property mixed $reviews
+ * @property mixed $user_id
+ * @method static where(array $array)
+ * @method static create(array $array)
+ */
 class Appointment extends Model
 {
     use HasFactory;
@@ -15,7 +31,8 @@ class Appointment extends Model
         'user_id',
         'company_id',
         'service_id',
-        'worker_id', // Añadido
+        'company_service_id',
+        'worker_id',
         'date',
         'time',
         'price',
