@@ -1,6 +1,6 @@
 "use client"
 
-import {useEffect, useState} from "react"
+import React, {useEffect, useState} from "react"
 import { usePage, router } from "@inertiajs/react"
 import { route } from "ziggy-js"
 import {
@@ -26,6 +26,7 @@ import Notification from "./components/Notification"
 import NotificationsPanel from "./components/notifications-panel"
 
 import { BellIcon } from "@heroicons/react/24/outline"
+import Header from "@/Components/Header.jsx";
 
 export default function CompanyProfileAdmin() {
     const { company, flash } = usePage().props
@@ -137,6 +138,7 @@ export default function CompanyProfileAdmin() {
 
     return (
         <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+            <Header theme="bg-gradient-to-r from-[#7f1d1d] to-[#dc2626] text-white" />
             <section className="relative w-full bg-gradient-to-br from-[#9e2a2f] via-[#b83e43] to-[#9e2a2f] py-12 px-6 overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,...')] animate-pulse"></div>
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#9e2a2f]/30"></div>

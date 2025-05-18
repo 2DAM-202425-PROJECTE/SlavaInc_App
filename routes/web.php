@@ -14,6 +14,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkerController;
 use App\Http\Controllers\Administrator\AdminWorkerController;
+use App\Http\Middleware\CompanyOrWorkerAdmin;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -21,14 +22,14 @@ use Inertia\Inertia;
 
 // RUTA INICIAL
 Route::get('/', function () {
-    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check()
+    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check() || Auth::guard('admin')->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
 
 // RUTES D’ADMINISTRADOR
 Route::prefix('admin')
-    ->middleware('auth:worker')
+        ->middleware('auth:admin')
     ->name('administrator.')
     ->group(function () {
         // Ruta principal del panell d'administració
@@ -62,12 +63,12 @@ Route::get('/dashboard', function () {
     if (Auth::guard('worker')->check()) {
         $user = Auth::guard('worker')->user();
         return $user->is_admin
-            ? app(\App\Http\Controllers\CompanyController::class)->index()
-            : app(\App\Http\Controllers\WorkerController::class)->index();
+            ? app(CompanyController::class)->index()
+            : app(WorkerController::class)->index();
     }
 
     if (Auth::guard('company')->check()) {
-        return app(\App\Http\Controllers\CompanyController::class)->index();
+        return app(CompanyController::class)->index();
     }
 
     return redirect()->route('login');
@@ -84,17 +85,17 @@ Route::middleware('auth:company,web,worker')->group(function () {
         if (Auth::guard('worker')->check()) {
             $user = Auth::guard('worker')->user();
             return $user->is_admin
-                ? Inertia::render('Company/Profile')
+                ? Inertia::render('Company/Profile', [
+                    'company' => app(CompanyController::class)->getCompanyFullData(),
+                ])
                 : Inertia::render('Worker/Profile');
         }
 
         if (Auth::guard('company')->check()) {
             return Inertia::render('Company/Profile', [
-                'company' => app(\App\Http\Controllers\CompanyController::class)->getCompanyFullData(),
+                'company' => app(CompanyController::class)->getCompanyFullData(),
             ]);
         }
-
-
 
         return redirect()->route('login');
     })->middleware('auth:company,web,worker')->name('profile.edit');
@@ -105,24 +106,23 @@ Route::middleware('auth:company,web,worker')->group(function () {
 
 
 // RUTES PER A EMPRESES (COMPANY)
-Route::middleware(['auth:company'])->group(function () {
+Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     // CRUD Treballadors
-    Route::get('/worker/create', [AdminWorkerController::class, 'create'])->name('worker.create');
-    Route::post('/worker', [AdminWorkerController::class, 'store'])->name('worker.store');
-    Route::get('/worker/{worker}/edit', [AdminWorkerController::class, 'edit'])->name('worker.edit');
-    Route::put('/worker/{worker}', [AdminWorkerController::class, 'update'])->name('worker.update');
-    Route::delete('/worker/{worker}', [AdminWorkerController::class, 'destroy'])->name('worker.destroy');
-    Route::get('/worker/list', [AdminWorkerController::class, 'list'])->name('worker.list');
+    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
+    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
     // CRUD serveis associats a l'empresa (pivot company_service)
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
     Route::get('/company/services/create', [CompanyServiceController::class, 'create'])->name('company.services.create');
     Route::post('/company/services', [CompanyServiceController::class, 'store'])->name('company.services.store');
-    Route::get('services/{service}/edit', [CompanyServiceController::class, 'edit'])->name('company.services.edit');
+    Route::get('/company/services/{service}/edit', [CompanyServiceController::class, 'edit'])->name('company.services.edit');
     Route::put('/company/services/{service}', [CompanyServiceController::class, 'update'])->name('company.services.update');
     Route::delete('/company/services/pivot/{pivotId}', [CompanyServiceController::class, 'destroy'])
         ->name('company.services.destroy');
-    Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
     Route::patch('/company/appointments/{appointment}/complete', [\App\Http\Controllers\AppointmentController::class, 'markAsCompleted'])->name('appointments.complete');
     Route::patch('/company/appointments/{appointment}/cancel', [\App\Http\Controllers\AppointmentController::class, 'markAsCancelled'])->name('appointments.cancel');
     Route::patch('/company/settings/notifications', [CompanyController::class, 'updateNotifications'])
@@ -135,9 +135,7 @@ Route::middleware(['auth:company'])->group(function () {
 
     Route::get('/company/preview-client', [CompanyController::class, 'previewClient'])->name('company.previewClient');
     Route::get('/company/exit-preview', [CompanyController::class, 'exitPreview'])->name('company.exitPreview');
-
     Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
-
 });
 
 
