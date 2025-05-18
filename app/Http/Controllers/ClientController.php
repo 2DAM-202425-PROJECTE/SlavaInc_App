@@ -64,17 +64,27 @@ class ClientController extends Controller
             abort(404, 'Aquesta empresa no ofereix aquest servei');
         }
 
-        $company->load(['services' => function($query) use ($service) {
-            $query->where('services.id', $service->id)
-                ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
-        }]);
+        $company->load([
+            'services' => function ($query) use ($service) {
+                $query->where('services.id', $service->id)
+                    ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo');
+            },
+            'workers' => function ($query) use ($service) {
+                $query->whereHas('appointments', function ($q) use ($service) {
+                    $q->where('service_id', $service->id);
+                })->orWhereDoesntHave('appointments');
+            }
+        ]);
+
+        // Obtener solo los horarios de trabajadores que ofrecen ese servicio
+        $schedules = $company->workers->pluck('schedule')->unique()->values();
 
         return Inertia::render('Client/CitesClients', [
             'service' => $service,
-            'company' => $company
+            'company' => $company,
+            'schedules' => $schedules
         ]);
     }
-
 
 
     /**
