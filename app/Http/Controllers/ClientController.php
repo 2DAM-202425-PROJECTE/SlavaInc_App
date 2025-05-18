@@ -8,6 +8,7 @@ use App\Models\CompanyService;
 use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\Worker;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,7 +23,7 @@ class ClientController extends Controller
     /**
      * Mostra la informació del servei i les empreses associades.
      *
-     * @param Service $service
+     * @param int|string $serviceTypeOrId
      * @return Response
      */
     public function show(int|string $serviceTypeOrId): Response
@@ -30,8 +31,9 @@ class ClientController extends Controller
         $service = Service::find($serviceTypeOrId) ?? Service::where('type', $serviceTypeOrId)->firstOrFail();
 
         $companies = $service->companies->map(function ($company) {
-            $averageRating = Review::where((array)'company_service_id', $company->pivot->id)->avg('rate');
-            $topReviews = Review::where((array)'company_service_id', $company->pivot->id)
+            $averageRating = Review::where('company_service_id', $company->pivot->id)->avg('rate');
+            $topReviews = Review::where('company_service_id', $company->pivot->id)
+
                 ->orderBy('rate', 'desc')
                 ->take(3)
                 ->get(['rate', 'comment']);
@@ -58,7 +60,8 @@ class ClientController extends Controller
     /**
      * Mostra el formulari de reserva de cita.
      *
-     * @param Request $request
+     * @param Service $service
+     * @param Company $company
      * @return Response
      */
     public function showAppointment(Service $service, Company $company): Response
@@ -88,7 +91,6 @@ class ClientController extends Controller
             'schedules' => $schedules
         ]);
     }
-
 
     /**
      * Obté les hores ocupades per una empresa en una data específica
@@ -222,16 +224,29 @@ class ClientController extends Controller
 
             DB::commit();
 
+            \Log::channel('appointments')->info('Cita creada', [
+                'appointment_id' => $appointment->id,
+                'company_id' => $appointment->company_id,
+                'company_service_id' => $appointment->company_service_id
+            ]);
+
             return redirect()->route('client.appointments.show', $appointment->id)
                 ->with('success', 'Cita reservada amb èxit!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::channel('appointments')->error('Error en reserva: ' . $e->getMessage());
+            \Log::channel('appointments')->error('Error en reserva: ' . $e->getMessage(), [
+                'data' => $request->all()
+            ]);
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
-
+    /**
+     * Mostra la llista de cites del client.
+     *
+     * @param Request $request
+     * @return InertiaResponse
+     */
     public function indexAppointments(Request $request): InertiaResponse
     {
         $filter = $request->query('filter', 'all');
@@ -286,6 +301,12 @@ class ClientController extends Controller
         ]);
     }
 
+    /**
+     * Mostra els detalls d'una cita específica.
+     *
+     * @param Appointment $appointment
+     * @return Response
+     */
     public function showAppointmentDetail(Appointment $appointment): Response
     {
         if ($appointment->user_id !== auth()->id()) {
@@ -325,7 +346,12 @@ class ClientController extends Controller
         ]);
     }
 
-
+    /**
+     * Mostra la informació d'una empresa.
+     *
+     * @param int $companyId
+     * @return Response
+     */
     public function showCompany(int $companyId): Response
     {
         $company = Company::findOrFail($companyId);
@@ -376,6 +402,12 @@ class ClientController extends Controller
         }
     }
 
+    /**
+     * Guarda una nova ressenya.
+     *
+     * @param Request $request
+     * @return HttpResponse
+     */
     public function storeReview(Request $request): HttpResponse
     {
         $validated = $request->validate([
@@ -464,6 +496,12 @@ class ClientController extends Controller
         session()->flash('success', 'Ressenya eliminada.');
         // Torna al filtre pendent_review
         return Inertia::location(route('client.appointments.index', ['filter' => 'pending_review']));
+    }
+
+    public function indexServices(): InertiaResponse
+    {
+        $services = Service::all();
+        return Inertia::render('Client/Services', ['services' => $services]);
     }
 
     public function cancelAppointment(Appointment $appointment)

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @method static findOrFail(array|string|null $query)
+ * @method static find(int|string $serviceTypeOrId)
+ * @method static where(string $string, int|string $serviceTypeOrId)
  * @property mixed $id
  */
 class Service extends Model
@@ -16,7 +18,7 @@ class Service extends Model
 
     protected $fillable = ['name', 'description', 'type'];
 
-    public function companies()
+    public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class, 'companies_services')
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo', 'custom_name', 'description');

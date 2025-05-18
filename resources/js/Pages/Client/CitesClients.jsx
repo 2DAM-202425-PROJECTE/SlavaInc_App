@@ -106,7 +106,6 @@ const CitesClients = ({ company, service, schedules }) => {
                 </div>
                 <Footer />
             </div>
-
         );
     }
 

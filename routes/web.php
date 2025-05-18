@@ -10,6 +10,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkerController;
@@ -29,18 +30,24 @@ Route::get('/', function () {
 
 // RUTES D’ADMINISTRADOR
 Route::prefix('admin')
-        ->middleware('auth:admin')
+    ->middleware('auth:admin')
     ->name('administrator.')
     ->group(function () {
-        // Ruta principal del panell d'administració
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-        // Altres recursos
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
         Route::resource('workers', AdminWorkerController::class)->names('workers');
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);
     });
+
+// RUTA INICIAL
+Route::get('/', function () {
+    if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+});
 
 // DASHBOARD segons el tipus d’usuari
 Route::get('/dashboard', function () {
@@ -98,12 +105,11 @@ Route::middleware('auth:company,web,worker')->group(function () {
         }
 
         return redirect()->route('login');
-    })->middleware('auth:company,web,worker')->name('profile.edit');
+    })->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
 });
-
 
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
@@ -115,7 +121,6 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
     Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
-    // CRUD serveis associats a l'empresa (pivot company_service)
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
     Route::get('/company/services/create', [CompanyServiceController::class, 'create'])->name('company.services.create');
     Route::post('/company/services', [CompanyServiceController::class, 'store'])->name('company.services.store');
@@ -123,6 +128,12 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::put('/company/services/{service}', [CompanyServiceController::class, 'update'])->name('company.services.update');
     Route::delete('/company/services/pivot/{pivotId}', [CompanyServiceController::class, 'destroy'])
         ->name('company.services.destroy');
+});
+
+// RUTES PER A PRESSUPOSTOS (COMPARTIDES ENTRE CLIENTS I EMPRESES)
+Route::middleware(['auth:web,company'])->group(function () {
+    Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
     Route::patch('/company/appointments/{appointment}/complete', [\App\Http\Controllers\AppointmentController::class, 'markAsCompleted'])->name('appointments.complete');
     Route::patch('/company/appointments/{appointment}/cancel', [\App\Http\Controllers\AppointmentController::class, 'markAsCancelled'])->name('appointments.cancel');
     Route::patch('/company/settings/notifications', [CompanyController::class, 'updateNotifications'])
@@ -138,26 +149,37 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
 });
 
-
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show'); // Nova ruta
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
     Route::get('/companies/{company}', [CompanyController::class, 'show'])
         ->name('client.companies.show')
         ->where('company', '[0-9]+');
 
     // Cites
-    Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
+    Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])->name('client.appointments.show');
+
+    // Reviews
     Route::patch('/client/appointments/{appointment}/cancel', [ClientController::class, 'cancelAppointment'])->name('client.appointments.cancel');
 
     Route::get('/reviews/create', [ClientController::class, 'createReview'])->name('client.reviews.create');
     Route::post('/reviews', [ClientController::class, 'storeReview'])->name('client.reviews.store');
     Route::put('/reviews/{review}', [ClientController::class, 'updateReview'])->name('client.reviews.update');
     Route::delete('/reviews/{review}', [ClientController::class, 'destroyReview'])->name('client.reviews.destroy');
+
+    // Pressupostos (només clients poden crear i actualitzar estat)
+    Route::get('/quotes/create/{service}/{company}', [QuoteController::class, 'create'])->name('client.quotes.create');
+    Route::post('/quotes', [QuoteController::class, 'store'])->name('client.quotes.store');
+    Route::put('/quotes/{quote}/status', [QuoteController::class, 'updateStatus'])->name('client.quotes.updateStatus');
+});
+
+// RUTES PER A EMPRESES (NOMÉS RESPOSTA A PRESSUPOSTOS)
+Route::middleware(['auth:company'])->group(function () {
+    Route::post('/quotes/{quote}/respond', [QuoteController::class, 'respond'])->name('company.quotes.respond');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)
@@ -179,7 +201,7 @@ Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots
     ->name('client.get.occupied.slots');
 
 // ALTRES
-Route::get('/privacy', function () {return Inertia::render('Other/Privacy');})->name('privacy');
+Route::get('/privacy', function () { return Inertia::render('Other/Privacy'); })->name('privacy');
 Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->name('terms');
 
 // RUTES D’AUTENTICACIÓ

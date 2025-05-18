@@ -8,6 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property mixed $id
+ * @property mixed $date
+ * @property mixed $time
+ * @property mixed $price
+ * @property mixed $status
+ * @property mixed $notes
+ * @property mixed $company
+ * @property mixed $service
+ * @property mixed $worker
+ * @property mixed $companyService
+ * @property mixed $reviews
+ * @property mixed $user_id
+ * @method static where(array $array)
+ * @method static create(array $array)
+ */
 class Appointment extends Model
 {
     use HasFactory;
