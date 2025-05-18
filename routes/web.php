@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\Administrator\AdminCompanyController;
+use App\Http\Controllers\Administrator\AdminCompanyServicesController;
 use App\Http\Controllers\Administrator\AdminDashboardController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
@@ -9,13 +13,21 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\Administrator\AdminWorkerController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// RUTA INICIAL
+Route::get('/', function () {
+    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+});
+
 // RUTES D’ADMINISTRADOR
-Route::prefix('administrator')
+Route::prefix('admin')
     ->middleware('auth:worker')
     ->name('administrator.')
     ->group(function () {
@@ -24,15 +36,10 @@ Route::prefix('administrator')
         // Altres recursos
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
-        Route::resource('workers', WorkerController::class)->names('workers');
+        Route::resource('workers', AdminWorkerController::class)->names('workers');
+        Route::resource('company-services', AdminCompanyServicesController::class);
+        Route::resource('companies', AdminCompanyController::class);
     });
-
-// RUTA INICIAL
-Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-});
 
 // DASHBOARD segons el tipus d’usuari
 Route::get('/dashboard', function () {
@@ -100,12 +107,12 @@ Route::middleware('auth:company,web,worker')->group(function () {
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
     // CRUD Treballadors
-    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
-    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
-    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
-    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
-    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
-    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
+    Route::get('/worker/create', [AdminWorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [AdminWorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [AdminWorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [AdminWorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [AdminWorkerController::class, 'destroy'])->name('worker.destroy');
+    Route::get('/worker/list', [AdminWorkerController::class, 'list'])->name('worker.list');
 
     // CRUD serveis associats a l'empresa (pivot company_service)
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
@@ -147,13 +154,22 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
     Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])->name('client.appointments.show');
+    Route::patch('/client/appointments/{appointment}/cancel', [ClientController::class, 'cancelAppointment'])->name('client.appointments.cancel');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)
 Route::middleware('auth:worker')->group(function () {
-    Route::get('/worker/dashboard', [WorkerController::class, 'index'])->name('worker.dashboard');
-    Route::get('/worker/appointments', [WorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
+    Route::get('/worker/dashboard', function () {
+        $worker = Auth::guard('worker')->user();
+
+        return $worker->is_admin
+            ? app(AdminWorkerController::class)->index()
+            : app(WorkerController::class)->index();
+    })->name('worker.dashboard');
+    Route::get('/worker/appointments', [AdminWorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
     Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])->name('worker.appointments.show');
+    Route::patch('/worker/appointments/{appointment}/complete', [WorkerController::class, 'markAppointmentCompleted'])->name('worker.appointments.complete');
+    Route::patch('/worker/appointments/{appointment}/cancel', [WorkerController::class, 'cancelAppointment'])->name('worker.appointments.cancel');
 });
 
 Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots'])
@@ -165,3 +181,41 @@ Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->na
 
 // RUTES D’AUTENTICACIÓ
 require __DIR__.'/auth.php';
+
+// Rutes per restablir la contrasenya
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.email');
+
+Route::get('/reset-password', function () {
+    return redirect()->route('login');
+})->middleware('guest');
+
+
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.store');
+
+// Rutes per tancar la sessió
+Route::post('/logout', function () {
+    if (Auth::guard('web')->check()) {
+        Auth::guard('web')->logout();
+    } elseif (Auth::guard('company')->check()) {
+        Auth::guard('company')->logout();
+    } elseif (Auth::guard('worker')->check()) {
+        Auth::guard('worker')->logout();
+    }
+
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/login');
+})->name('logout');

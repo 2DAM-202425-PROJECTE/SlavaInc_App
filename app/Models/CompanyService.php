@@ -10,6 +10,12 @@ class CompanyService extends Pivot
 {
     use HasFactory;
 
+    // Indicar que la tabla tiene un ID autoincremental
+    public $incrementing = true;
+
+    // Especificar el nombre de la tabla
+    protected $table = 'companies_services';
+
     protected $fillable = [
         'company_id',
         'service_id',
@@ -18,6 +24,8 @@ class CompanyService extends Pivot
         'min_price',
         'max_price',
         'logo',
+        'custom_name',
+        'description',
     ];
 
     protected $casts = [
@@ -37,5 +45,10 @@ class CompanyService extends Pivot
             ->using(CompanyService::class) // Añadir esta línea
             ->withPivot('price_per_unit', 'unit', 'min_price', 'max_price', 'logo')
             ->withTimestamps();
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'service_id');
     }
 }
