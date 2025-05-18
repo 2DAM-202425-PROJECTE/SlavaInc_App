@@ -7,8 +7,8 @@ import Footer from "@/Components/Footer.jsx";
 
 const Profile = ({ auth }) => {
     // Colors del tema
-    const primaryColor = '#1f7275';
-    const secondaryColor = '#01a0a6';
+    const primaryColor = '#7f1d1d';
+    const secondaryColor = '#dc2626';
     const gradient = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
 
     // Dades de l'usuari
@@ -140,7 +140,7 @@ const Profile = ({ auth }) => {
                                                     <p className="font-semibold text-gray-800">Correu electrònic</p>
                                                     <a
                                                         href={`mailto:${user.email}`}
-                                                        className="text-gray-600 hover:text-[#01a0a6] transition-colors"
+                                                        className="text-gray-600 hover:text-[#dc2626] transition-colors"
                                                     >
                                                         {user.email}
                                                     </a>
@@ -160,7 +160,7 @@ const Profile = ({ auth }) => {
                                                         <p className="font-semibold text-gray-800">Telèfon</p>
                                                         <a
                                                             href={`tel:${user.phone}`}
-                                                            className="text-gray-600 hover:text-[#01a0a6] transition-colors"
+                                                            className="text-gray-600 hover:text-[#dc2626] transition-colors"
                                                         >
                                                             {user.phone}
                                                         </a>
@@ -197,7 +197,7 @@ const Profile = ({ auth }) => {
                                         {routes.updatePassword && (
                                             <Link
                                                 href={routes.updatePassword}
-                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#01a0a6]"
+                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#dc2626]"
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <FontAwesomeIcon
@@ -220,7 +220,7 @@ const Profile = ({ auth }) => {
                                         {routes.updatePhoto && (
                                             <Link
                                                 href={routes.updatePhoto}
-                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#01a0a6]"
+                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#dc2626]"
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <FontAwesomeIcon
@@ -243,7 +243,7 @@ const Profile = ({ auth }) => {
                                         {user.two_factor_enabled && routes.twoFactor.disable ? (
                                             <Link
                                                 href={routes.twoFactor.disable}
-                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#01a0a6]"
+                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#dc2626]"
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <FontAwesomeIcon
@@ -264,7 +264,7 @@ const Profile = ({ auth }) => {
                                         ) : routes.twoFactor.enable ? (
                                             <Link
                                                 href={routes.twoFactor.enable}
-                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#01a0a6]"
+                                                className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#dc2626]"
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <FontAwesomeIcon

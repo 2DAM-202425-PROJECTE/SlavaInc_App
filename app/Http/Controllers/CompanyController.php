@@ -186,8 +186,9 @@ class CompanyController extends Controller
             ];
         });
 
-        $ongoingAppointments = Appointment::with(['service', 'user', 'worker'])
-            ->where('company_id', $companyId)
+        $ongoingAppointments = Appointment::with(['service', 'user', 'workers'])
+            ->where('company_id', $company->id)
+
             ->whereIn('status', ['pending', 'confirmed'])
             ->latest('date')
             ->take(15)
