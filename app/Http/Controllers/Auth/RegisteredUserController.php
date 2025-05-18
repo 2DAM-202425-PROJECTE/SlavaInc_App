@@ -40,6 +40,7 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
 
             return redirect()->route('profile.edit');
+
         } else if ($request->role === 'company') {
             $basicPlan = Plan::where('name', 'Bàsic')->first();
 

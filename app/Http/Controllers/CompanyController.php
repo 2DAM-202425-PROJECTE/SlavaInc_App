@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Company;
+use App\Models\Notification;
 use App\Models\Worker;
 use App\Models\Review;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class CompanyController extends Controller
 {
 
     public function index(): Response
+
     {
         return Inertia::render('Company/Dashboard', [
             'company' => $this->getCompanyFullData(),
@@ -26,13 +28,37 @@ class CompanyController extends Controller
 
     public function getCompanyFullData(): array
     {
-        $company = Auth::guard('company')->user();
+        // Verificar si el usuario autenticado es una empresa o un trabajador con permisos de administrador
+        if (Auth::guard('company')->check()) {
+            // Es una empresa
+            $company = Auth::guard('company')->user();
+            $companyId = $company->id;
+        } elseif (Auth::guard('worker')->check()) {
+            // Es un trabajador
+            $worker = Auth::guard('worker')->user();
 
+            // Verificar si el trabajador tiene permisos de administrador
+            if (!$worker->is_admin) {
+                abort(403, 'No tienes permisos para acceder a esta página');
+            }
+
+            // Obtener el ID de la empresa asociada al trabajador
+            $companyId = $worker->company_id;
+
+            if (!$companyId) {
+                abort(404, 'No se encontró una empresa asociada a este trabajador');
+            }
+        } else {
+            // No hay usuario autenticado o no es del tipo correcto
+            abort(403, 'No tienes permisos para acceder a esta página');
+        }
+
+        // Obtener los datos completos de la empresa
         $companyData = Company::with([
             'workers',
             'services',
             'plan',
-        ])->findOrFail($company->id);
+        ])->findOrFail($companyId);
 
         // Preparar serveis
         $services = $companyData->services->map(function ($item) {
@@ -66,7 +92,7 @@ class CompanyController extends Controller
 
         $completedProjects = $services->sum('completedProjects');
 
-        $ongoingProjects = Appointment::where('company_id', $company->id)
+        $ongoingProjects = Appointment::where('company_id', $companyId)
             ->whereIn('status', ['pending', 'confirmed'])
             ->count();
 
@@ -78,7 +104,7 @@ class CompanyController extends Controller
         $monthlyIncome = rand(20000, 30000);
         $yearlyGrowth = rand(10, 30);
 
-        $mostRequestedServiceId = Appointment::where('company_id', $company->id)
+        $mostRequestedServiceId = Appointment::where('company_id', $companyId)
             ->select('service_id', DB::raw('count(*) as total'))
             ->groupBy('service_id')
             ->orderByDesc('total')
@@ -161,7 +187,7 @@ class CompanyController extends Controller
         });
 
         $ongoingAppointments = Appointment::with(['service', 'user', 'worker'])
-            ->where('company_id', $company->id)
+            ->where('company_id', $companyId)
             ->whereIn('status', ['pending', 'confirmed'])
             ->latest('date')
             ->take(15)
@@ -180,7 +206,7 @@ class CompanyController extends Controller
                 ];
             });
 
-        $notifications = \App\Models\Notification::where('company_id', $company->id)
+        $notifications = Notification::where('company_id', $companyId)
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
@@ -207,10 +233,20 @@ class CompanyController extends Controller
         ];
     }
 
-
     public function updateNotifications(Request $request)
     {
-        $company = auth()->guard('company')->user();
+        // Determinar si el usuario es una empresa o un trabajador administrador
+        if (Auth::guard('company')->check()) {
+            $company = Auth::guard('company')->user();
+        } elseif (Auth::guard('worker')->check()) {
+            $worker = Auth::guard('worker')->user();
+            if (!$worker->is_admin) {
+                abort(403, 'No tienes permisos para realizar esta acción');
+            }
+            $company = Company::findOrFail($worker->company_id);
+        } else {
+            abort(403, 'No tienes permisos para realizar esta acción');
+        }
 
         $validated = $request->validate([
             'field' => 'required|in:notifications_system,notifications_appointments,notifications_reviews',
@@ -226,7 +262,18 @@ class CompanyController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $company = auth()->guard('company')->user();
+        // Determinar si el usuario es una empresa o un trabajador administrador
+        if (Auth::guard('company')->check()) {
+            $company = Auth::guard('company')->user();
+        } elseif (Auth::guard('worker')->check()) {
+            $worker = Auth::guard('worker')->user();
+            if (!$worker->is_admin) {
+                abort(403, 'No tienes permisos para realizar esta acción');
+            }
+            $company = Company::findOrFail($worker->company_id);
+        } else {
+            abort(403, 'No tienes permisos para realizar esta acción');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -255,7 +302,18 @@ class CompanyController extends Controller
 
     public function changePlan(Request $request)
     {
-        $company = auth()->guard('company')->user();
+        // Determinar si el usuario es una empresa o un trabajador administrador
+        if (Auth::guard('company')->check()) {
+            $company = Auth::guard('company')->user();
+        } elseif (Auth::guard('worker')->check()) {
+            $worker = Auth::guard('worker')->user();
+            if (!$worker->is_admin) {
+                abort(403, 'No tienes permisos para realizar esta acción');
+            }
+            $company = Company::findOrFail($worker->company_id);
+        } else {
+            abort(403, 'No tienes permisos para realizar esta acción');
+        }
 
         $validated = $request->validate([
             'plan_id' => 'required|exists:plans,id',
@@ -284,6 +342,7 @@ class CompanyController extends Controller
         session()->forget('impersonating_client');
         return redirect()->route('dashboard');
     }
+
     public function changePassword(Request $request)
     {
         $request->validate([
@@ -291,22 +350,52 @@ class CompanyController extends Controller
             'new_password' => ['required', 'min:8', 'confirmed'],
         ]);
 
-        $company = auth()->guard('company')->user();
+        // Determinar si el usuario es una empresa o un trabajador administrador
+        if (Auth::guard('company')->check()) {
+            $company = Auth::guard('company')->user();
 
-        if (!\Hash::check($request->current_password, $company->password)) {
-            return response()->json([
-                'message' => 'La contrasenya actual no és correcta.',
-            ], 422);
+            if (!\Hash::check($request->current_password, $company->password)) {
+                return response()->json([
+                    'message' => 'La contrasenya actual no és correcta.',
+                ], 422);
+            }
+
+            $company->password = bcrypt($request->new_password);
+            $company->save();
+            $this->createSystemNotification(
+                $company,
+                'password_updated',
+                [],
+                "La contrasenya s'ha actualitzat correctament."
+            );
+        } elseif (Auth::guard('worker')->check()) {
+            $worker = Auth::guard('worker')->user();
+            if (!$worker->is_admin) {
+                abort(403, 'No tienes permisos para realizar esta acción');
+            }
+
+            if (!\Hash::check($request->current_password, $worker->password)) {
+                return response()->json([
+                    'message' => 'La contrasenya actual no és correcta.',
+                ], 422);
+            }
+
+            $worker->password = bcrypt($request->new_password);
+            $worker->save();
+
+            // Notificar a la empresa asociada
+            $company = Company::findOrFail($worker->company_id);
+            $this->createSystemNotification(
+                $company,
+                'worker_password_updated',
+                ['worker_id' => $worker->id, 'worker_name' => $worker->name],
+                "El treballador {$worker->name} ha actualitzat la seva contrasenya."
+            );
+        } else {
+            abort(403, 'No tienes permisos para realizar esta acción');
         }
 
-        $company->password = bcrypt($request->new_password);
-        $company->save();
-        $this->createSystemNotification(
-            $company,
-            'password_updated',
-            [],
-            "La contrasenya s'ha actualitzat correctament."
-        );
+
         return response()->json([
             'message' => 'Contrasenya actualitzada correctament.',
         ]);
