@@ -226,22 +226,28 @@ return Inertia::render('Client/ServiceInfo', [
             $user = auth()->user();
             $service = Service::find($validated['service_id']);
 
-            Notification::create([
-                'company_id' => $validated['company_id'],
-                'type' => 'service',
-                'action' => 'appointment_created',
-                'data' => [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'service_id' => $service->id,
-                    'service_name' => $service->name,
-                    'date' => $validated['date'],
-                    'time' => $validated['time'],
-                ],
-                'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
-                'read' => false,
-            ]);
-        }
+
+            $company = Company::find($validated['company_id']);
+
+            if ($company && $company->notifications_appointments == 1) {
+                Notification::create([
+                    'company_id' => $validated['company_id'],
+                    'type' => 'service',
+                    'action' => 'appointment_created',
+                    'data' => [
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                        'service_id' => $service->id,
+                        'service_name' => $service->name,
+                        'date' => $validated['date'],
+                        'time' => $validated['time'],
+                    ],
+                    'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
+                    'read' => false,
+                ]);
+            }
+
+
 
         DB::commit();
 

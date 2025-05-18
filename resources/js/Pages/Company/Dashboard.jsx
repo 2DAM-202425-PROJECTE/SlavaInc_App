@@ -1,5 +1,5 @@
 "use client"
-
+import Header from '@/Components/Header.jsx';
 import {useEffect, useState} from "react"
 import { usePage, router } from "@inertiajs/react"
 import { route } from "ziggy-js"
