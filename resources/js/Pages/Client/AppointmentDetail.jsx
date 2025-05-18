@@ -68,15 +68,19 @@ const AppointmentDetail = ({ appointment }) => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <FontAwesomeIcon icon={faUser} className="text-gray-500" />
+                                <div className="flex items-start gap-3">
+                                    <FontAwesomeIcon icon={faUser} className="text-gray-500 mt-1" />
                                     <div>
-                                        <p className="text-gray-600">Professional:</p>
-                                        <p className="text-lg font-semibold">
-                                            {appointment.worker
-                                                ? `${appointment.worker.name || 'Professional'} ${appointment.worker.surname || ''}`
-                                                : 'Professional per defecte'}
-                                        </p>
+                                        <p className="text-gray-600">Professionals assignats:</p>
+                                        {appointment.workers && appointment.workers.length > 0 ? (
+                                            <ul className="space-y-1 text-lg font-semibold text-gray-800">
+                                                {appointment.workers.map(worker => (
+                                                    <li key={worker.id}>{worker.name}</li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-gray-500 italic">Cap treballador assignat</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -116,6 +120,20 @@ const AppointmentDetail = ({ appointment }) => {
                                     {appointment.status === 'pending' ? 'Pendent' :
                                         appointment.status === 'confirmed' ? 'Confirmada' : 'Cancel·lada'}
                                 </div>
+
+                                {/* Botón para cancelar cita (solo si no está ya cancelada) */}
+                                {(appointment.status !== 'cancelled' && appointment.status !== 'completed') && (
+                                    <button
+                                        className="mt-4 w-full bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                        onClick={() => {
+                                            if (window.confirm('Estàs segur que vols cancel·lar aquesta cita?')) {
+                                                router.patch(route('client.appointments.cancel', appointment.id));
+                                            }
+                                        }}
+                                    >
+                                        Cancel·lar cita
+                                    </button>
+                                )}
                             </div>
 
                             {appointment.notes && (

@@ -154,13 +154,22 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
     Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])->name('client.appointments.show');
+    Route::patch('/client/appointments/{appointment}/cancel', [ClientController::class, 'cancelAppointment'])->name('client.appointments.cancel');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)
 Route::middleware('auth:worker')->group(function () {
-    Route::get('/worker/dashboard', [AdminWorkerController::class, 'index'])->name('worker.dashboard');
+    Route::get('/worker/dashboard', function () {
+        $worker = Auth::guard('worker')->user();
+
+        return $worker->is_admin
+            ? app(AdminWorkerController::class)->index()
+            : app(WorkerController::class)->index();
+    })->name('worker.dashboard');
     Route::get('/worker/appointments', [AdminWorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
-    Route::get('/worker/appointments/{appointment}', [AdminWorkerController::class, 'showAppointment'])->name('worker.appointments.show');
+    Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])->name('worker.appointments.show');
+    Route::patch('/worker/appointments/{appointment}/complete', [WorkerController::class, 'markAppointmentCompleted'])->name('worker.appointments.complete');
+    Route::patch('/worker/appointments/{appointment}/cancel', [WorkerController::class, 'cancelAppointment'])->name('worker.appointments.cancel');
 });
 
 Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots'])

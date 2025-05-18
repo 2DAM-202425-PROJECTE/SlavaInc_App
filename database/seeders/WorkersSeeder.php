@@ -18,6 +18,7 @@ class WorkersSeeder extends Seeder
         $companies = Company::all();
 
         foreach ($companies as $company) {
+
             // Treballador 1
             Worker::create([
                 'company_id' => $company->id,
