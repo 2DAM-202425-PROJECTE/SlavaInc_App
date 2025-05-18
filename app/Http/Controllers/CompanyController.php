@@ -5,23 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Company;
 use App\Models\Worker;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Models\Plan;
+use Inertia\Response;
+
 class CompanyController extends Controller
 {
 
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('Company/Dashboard', [
             'company' => $this->getCompanyFullData(),
         ]);
     }
 
-    public function getCompanyFullData()
+    public function getCompanyFullData(): array
     {
         $company = Auth::guard('company')->user();
 
@@ -270,7 +273,6 @@ class CompanyController extends Controller
         ]);
     }
 
-
     public function previewClient()
     {
         session(['impersonating_client' => true]);
@@ -302,14 +304,13 @@ class CompanyController extends Controller
         $this->createSystemNotification(
             $company,
             'password_updated',
-            [], 
+            [],
             "La contrasenya s'ha actualitzat correctament."
         );
         return response()->json([
             'message' => 'Contrasenya actualitzada correctament.',
         ]);
     }
-
 
     protected function createSystemNotification($company, $action, $data = [], $message = null)
     {
@@ -323,10 +324,6 @@ class CompanyController extends Controller
         ]);
     }
 
-
-
-
-
     public function show(Company $company, Request $request)
     {
         return Inertia::render('Client/CompanyInfo', [
@@ -334,7 +331,4 @@ class CompanyController extends Controller
             'serviceId' => $request->input('serviceId') // Passa serviceId a la vista
         ]);
     }
-
-
-
 }

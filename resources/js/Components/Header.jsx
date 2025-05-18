@@ -12,7 +12,8 @@ import {
     faChevronDown,
     faChevronUp,
     faBroom,
-    faBars
+    faBars,
+    faStar
 } from '@fortawesome/free-solid-svg-icons';
 
 const Header = ({ theme = 'bg-black text-white' }) => {
@@ -83,6 +84,14 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                         <Link href={route('client.appointments.index')} className="hover:text-white/80 transition flex items-center gap-1">
                             <FontAwesomeIcon icon={faCalendarAlt} />
                             <span>Les meves cites</span>
+                        </Link>
+
+                        <Link
+                            href={route('client.appointments.index', { filter: 'pending_review' })}
+                            className="hover:text-white/80 transition flex items-center gap-1"
+                        >
+                            <FontAwesomeIcon icon={faStar} />
+                            <span>Reviews pendents</span>
                         </Link>
                     </nav>
                 )}
@@ -169,6 +178,14 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         Les meves cites
+                                    </Link>
+
+                                    <Link
+                                        href={route('client.appointments.index', { filter: 'pending_review' })}
+                                        className="block px-2 py-2 rounded hover:bg-gray-100"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Reviews pendents
                                     </Link>
                                 </>
                             )}
