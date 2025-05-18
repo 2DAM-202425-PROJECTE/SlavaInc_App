@@ -30,8 +30,8 @@ class ClientController extends Controller
         $service = Service::find($serviceTypeOrId) ?? Service::where('type', $serviceTypeOrId)->firstOrFail();
 
         $companies = $service->companies->map(function ($company) {
-            $averageRating = Review::where((array)'company_service_id', $company->pivot->id)->avg('rate');
-            $topReviews = Review::where((array)'company_service_id', $company->pivot->id)
+            $averageRating = Review::where('company_service_id', $company->pivot->id)->avg('rate');
+            $topReviews = Review::where('company_service_id', $company->pivot->id)
                 ->orderBy('rate', 'desc')
                 ->take(3)
                 ->get(['rate', 'comment']);
@@ -92,7 +92,7 @@ class ClientController extends Controller
             'date' => 'required|date'
         ]);
 
-        $occupiedSlots = Appointment::where((array)'company_id', $request->company_id)
+        $occupiedSlots = Appointment::where('company_id', $request->company_id)
             ->where('date', $request->date)
             ->pluck('time')
             ->toArray();

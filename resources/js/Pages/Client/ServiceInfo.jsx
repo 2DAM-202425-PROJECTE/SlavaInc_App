@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faBuilding, faMapMarkerAlt, faFilter, faSort, faEuroSign } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBuilding, faMapMarkerAlt, faFilter, faSort, faEuroSign, faStar } from '@fortawesome/free-solid-svg-icons';
 import { useDebounce } from 'use-debounce';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -33,7 +33,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
         if (['casa', 'garatge', 'altres'].includes(serviceType)) {
             return inputValue ? pivot.price_per_unit * inputValue : 0;
         } else {
-            switch(selectedSize) {
+            switch (selectedSize) {
                 case 'petit': return pivot.min_price;
                 case 'mitjà': return (pivot.min_price + pivot.max_price) / 2;
                 case 'gran': return pivot.max_price;
@@ -59,6 +59,49 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                 company: company.id
             }));
         }
+    };
+
+    const renderRating = () => {
+        if (!company.average_rating || company.average_rating === 0) {
+            return (
+                <p className="text-sm text-gray-600">Encara no hi ha ressenyes disponibles.</p>
+            );
+        }
+
+        const rating = company.average_rating;
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+        const emptyStars = 5 - fullStars - halfStar;
+
+        return (
+            <div className="flex items-center gap-2" aria-label={`Valoració: ${rating.toFixed(1)} de 5`}>
+                {[...Array(fullStars)].map((_, i) => (
+                    <FontAwesomeIcon
+                        key={`full-${i}`}
+                        icon={faStar}
+                        className="text-yellow-400"
+                        aria-label="Estrella plena"
+                    />
+                ))}
+                {halfStar === 1 && (
+                    <FontAwesomeIcon
+                        key="half"
+                        icon={faStar}
+                        className="text-yellow-400 opacity-50"
+                        aria-label="Mitja estrella"
+                    />
+                )}
+                {[...Array(emptyStars)].map((_, i) => (
+                    <FontAwesomeIcon
+                        key={`empty-${i}`}
+                        icon={faStar}
+                        className="text-gray-300"
+                        aria-label="Estrella buida"
+                    />
+                ))}
+                <span className="text-gray-800 font-medium">{rating.toFixed(1)}/5</span>
+            </div>
+        );
     };
 
     return (
@@ -87,6 +130,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                             {company.name}
                         </Link>
                     </h2>
+                    {renderRating()}
                     <div className="text-gray-600 mt-2 flex items-start gap-2">
                         <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400 mt-1" />
                         <div>
@@ -311,7 +355,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
             if (service.type === 'casa' || service.type === 'garatge') {
                 priceEstimate = company.pivot.price_per_unit * (inputValue || 0);
             } else {
-                switch(selectedSize) {
+                switch (selectedSize) {
                     case 'petit': priceEstimate = company.pivot.min_price; break;
                     case 'mitjà': priceEstimate = (company.pivot.min_price + company.pivot.max_price) / 2; break;
                     case 'gran': priceEstimate = company.pivot.max_price; break;
@@ -502,7 +546,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                     </div>
                 </div>
             </div>
-            <Footer/>
+            <Footer />
         </div>
     );
 };
