@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
+use App\Models\Plan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,7 +11,7 @@ class LoginCompaniesSeeder extends Seeder
 {
     public function run(): void
     {
-        $basicPlanId = \App\Models\Plan::where('name', 'Bàsic')->first()?->id;
+        $basicPlanId = Plan::where('name', 'Bàsic')->first()?->id;
 
         Company::create([
             'name'          => 'Neteja Express',

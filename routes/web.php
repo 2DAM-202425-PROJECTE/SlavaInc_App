@@ -90,7 +90,7 @@ Route::middleware('auth:company,web,worker')->group(function () {
 
         if (Auth::guard('company')->check()) {
             return Inertia::render('Company/Profile', [
-                'company' => app(\App\Http\Controllers\CompanyController::class)->getCompanyFullData(),
+                'company' => app(CompanyController::class)->getCompanyFullData(),
             ]);
         }
 
@@ -107,7 +107,6 @@ Route::middleware('auth:company,web,worker')->group(function () {
         ->name('client.companies.show')
         ->where('company', '[0-9]+');
 });
-
 
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
@@ -150,13 +149,24 @@ Route::middleware(['auth:company'])->group(function () {
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])
+        ->name('client.companies.show')
+        ->where('company', '[0-9]+');
 
 
     // Cites
-    Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
+    Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');
     Route::get('/appointments/{appointment}', [ClientController::class, 'showAppointmentDetail'])->name('client.appointments.show');
+
+    // Reviews
+    Route::get('/reviews/create', [ClientController::class, 'createReview'])->name('client.reviews.create');
+    Route::post('/reviews', [ClientController::class, 'storeReview'])->name('client.reviews.store');
+    Route::put('/reviews/{review}', [ClientController::class, 'updateReview'])->name('client.reviews.update');
+    Route::delete('/reviews/{review}', [ClientController::class, 'destroyReview'])->name('client.reviews.destroy');
     Route::patch('/client/appointments/{appointment}/cancel', [ClientController::class, 'cancelAppointment'])->name('client.appointments.cancel');
+
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)

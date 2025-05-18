@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('companies_services', function (Blueprint $table) {
-            $table->id();
+            $table->id();                                         // Clau primària autoincremental
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
             $table->string('custom_name')->nullable();
@@ -25,7 +25,6 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.

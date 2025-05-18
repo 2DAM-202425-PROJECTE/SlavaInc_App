@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-/**
- * @property bool $is_admin
- */
+
 class Company extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -35,7 +37,6 @@ class Company extends Authenticatable
     ];
 
 
-
     protected $hidden = [
         'password',
         'remember_token',
@@ -51,21 +52,27 @@ class Company extends Authenticatable
     {
         return $this->hasMany(Worker::class, 'company_id');
     }
-    public function services()
+
+    public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'companies_services')
             ->withPivot(['id', 'price_per_unit', 'unit', 'min_price', 'max_price', 'logo', 'custom_name', 'description']);
     }
 
-    public function plan()
+    public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
+
+
+    public function companyServices(): HasMany
+    {
+        return $this->hasMany(CompanyService::class);
+    }
+
     public function notifications()
     {
         return $this->hasMany(Notification::class);
     }
-
-
 
 }

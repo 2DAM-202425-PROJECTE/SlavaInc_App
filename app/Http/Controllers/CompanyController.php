@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Company;
+use App\Models\Review;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,17 +12,29 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Models\Plan;
+
+use Inertia\Response;
+
+class CompanyController extends Controller
+{
+
 class CompanyController extends Controller
 {
 
     public function index()
+
     {
         return Inertia::render('Company/Dashboard', [
             'company' => $this->getCompanyFullData(),
         ]);
     }
 
+
+
+    public function getCompanyFullData(): array
+
     public function getCompanyFullData()
+
     {
         $company = Auth::guard('company')->user();
 
@@ -147,6 +160,7 @@ class CompanyController extends Controller
             ],
         ];
 
+
         $plans = Plan::all()->map(function ($plan) use ($companyData) {
             return [
                 'id' => $plan->id,
@@ -203,6 +217,7 @@ class CompanyController extends Controller
             'notifications_reviews' => $companyData->notifications_reviews,
         ];
     }
+
 
 
     public function updateNotifications(Request $request)
@@ -327,11 +342,33 @@ class CompanyController extends Controller
 
 
 
-    public function show(Company $company, Request $request)
+    public function show(Company $company, Request $request): Response
+
     {
+        $averageRating = Review::whereHas('companyService', function ($query) use ($company) {
+            $query->where('company_id', $company->id);
+        })->avg('rate');
+
+        $reviews = Review::whereHas('companyService', function ($query) use ($company) {
+            $query->where('company_id', $company->id);
+        })->select('rate', 'comment', 'created_at')->get();
+
         return Inertia::render('Client/CompanyInfo', [
-            'company' => $company,
-            'serviceId' => $request->input('serviceId') // Passa serviceId a la vista
+            'company' => [
+                'id' => $company->id,
+                'name' => $company->name,
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'address' => $company->address,
+                'city' => $company->city,
+                'state' => $company->state,
+                'zip_code' => $company->zip_code,
+                'logo' => $company->logo,
+                'description' => $company->description,
+                'average_rating' => $averageRating ? round($averageRating, 1) : null,
+                'reviews' => $reviews,
+            ],
+            'serviceId' => $request->input('serviceId')
         ]);
     }
 

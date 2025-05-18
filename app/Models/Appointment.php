@@ -4,7 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property mixed $id
+ * @property mixed $date
+ * @property mixed $time
+ * @property mixed $price
+ * @property mixed $status
+ * @property mixed $notes
+ * @property mixed $company
+ * @property mixed $service
+ * @property mixed $worker
+ * @property mixed $companyService
+ * @property mixed $reviews
+ * @property mixed $user_id
+ * @method static where(array $array)
+ * @method static create(array $array)
+ */
 class Appointment extends Model
 {
     use HasFactory;
@@ -13,7 +31,8 @@ class Appointment extends Model
         'user_id',
         'company_id',
         'service_id',
-        'worker_id', // Añadido
+        'company_service_id',
+        'worker_id',
         'date',
         'time',
         'price',
@@ -26,25 +45,34 @@ class Appointment extends Model
         'price' => 'decimal:2'
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function service()
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }
 
-    public function workers()
+    public function worker(): BelongsTo
+
     {
         return $this->belongsToMany(Worker::class, 'appointment_worker', 'appointment_id', 'worker_id');
     }
+    public function companyService(): BelongsTo
+    {
+        return $this->belongsTo(CompanyService::class, 'company_service_id');
+    }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'appointment_id');
+    }
 
 }
