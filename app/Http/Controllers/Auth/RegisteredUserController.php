@@ -39,8 +39,8 @@ class RegisteredUserController extends Controller
             Auth::guard('web')->login($user);
 
             event(new Registered($user));
-
             return redirect()->route('profile.edit');
+
         } else if ($request->role === 'company') {
             $basicPlan = Plan::where('name', 'Bàsic')->first();
 
@@ -54,9 +54,7 @@ class RegisteredUserController extends Controller
             Auth::guard('company')->login($company);
 
             event(new Registered($company));
-
             return redirect()->route('dashboard');
         }
-    
     }
 }
