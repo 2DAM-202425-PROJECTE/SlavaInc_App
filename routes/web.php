@@ -101,18 +101,23 @@ Route::middleware('auth:company,web,worker')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])
+        ->name('client.companies.show')
+        ->where('company', '[0-9]+');
 });
 
 
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
     // CRUD Treballadors
-    Route::get('/worker/create', [AdminWorkerController::class, 'create'])->name('worker.create');
-    Route::post('/worker', [AdminWorkerController::class, 'store'])->name('worker.store');
-    Route::get('/worker/{worker}/edit', [AdminWorkerController::class, 'edit'])->name('worker.edit');
-    Route::put('/worker/{worker}', [AdminWorkerController::class, 'update'])->name('worker.update');
-    Route::delete('/worker/{worker}', [AdminWorkerController::class, 'destroy'])->name('worker.destroy');
-    Route::get('/worker/list', [AdminWorkerController::class, 'list'])->name('worker.list');
+    Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
+    Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
+    Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
+    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
     // CRUD serveis associats a l'empresa (pivot company_service)
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
@@ -145,10 +150,7 @@ Route::middleware(['auth:company'])->group(function () {
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show'); // Nova ruta
-    Route::get('/companies/{company}', [CompanyController::class, 'show'])
-        ->name('client.companies.show')
-        ->where('company', '[0-9]+');
+
 
     // Cites
     Route::post('/appointments', [ClientController::class, 'storeAppointment'])->name('client.appointments.store');

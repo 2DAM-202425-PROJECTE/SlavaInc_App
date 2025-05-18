@@ -103,7 +103,6 @@ class CompanyServiceController extends Controller
 
 
 
-
     public function edit($serviceId)
     {
         $company = Auth::guard('company')->user();
@@ -120,7 +119,7 @@ class CompanyServiceController extends Controller
 
         return Inertia::render('Service/Edit', [
             'service' => $service,
-            'pivot' => $pivot->pivot, // accés a les dades personalitzades
+            'pivot' => $pivot->pivot,
             'company' => $company,
         ]);
     }
