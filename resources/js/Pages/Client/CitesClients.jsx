@@ -98,7 +98,6 @@ const CitesClients = ({ company, service }) => {
                 </div>
                 <Footer />
             </div>
-
         );
     }
 

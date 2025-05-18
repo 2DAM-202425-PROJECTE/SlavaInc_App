@@ -5,6 +5,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkerController;
@@ -74,8 +75,6 @@ Route::middleware('auth:company,web,worker')->group(function () {
             ]);
         }
 
-
-
         return redirect()->route('login');
     })->middleware('auth:company,web,worker')->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -103,6 +102,13 @@ Route::middleware(['auth:company'])->group(function () {
         ->name('company.services.destroy');
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
 
+    // Pressupostos per a l’empresa
+    Route::get('/company/quotes', [QuoteController::class, 'index'])
+        ->name('company.quotes.index');
+    Route::get('/company/quotes/{quote}', [QuoteController::class, 'show'])
+        ->name('company.quotes.show');
+    Route::post('/company/quotes/{quote}/respond', [QuoteController::class, 'respond'])
+        ->name('company.quotes.respond');
 });
 
 // RUTES PER A CLIENTS (WEB USERS)
@@ -125,6 +131,12 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('/reviews', [ClientController::class, 'storeReview'])->name('client.reviews.store');
     Route::put('/reviews/{review}', [ClientController::class, 'updateReview'])->name('client.reviews.update');
     Route::delete('/reviews/{review}', [ClientController::class, 'destroyReview'])->name('client.reviews.destroy');
+
+    // Pressupostos
+    Route::get('/quotes/create/{service}/{company}', [QuoteController::class, 'create'])
+        ->name('client.quotes.create');
+    Route::post('/quotes', [QuoteController::class, 'store'])
+        ->name('client.quotes.store');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)

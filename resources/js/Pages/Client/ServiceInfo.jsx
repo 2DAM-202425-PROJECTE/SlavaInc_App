@@ -8,7 +8,7 @@ import 'rc-slider/assets/index.css';
 import { router } from '@inertiajs/react';
 import Header from "@/Components/Header.jsx";
 import Footer from "@/Components/Footer.jsx";
-import {route} from "ziggy-js";
+import { route } from "ziggy-js";
 
 const backgroundImages = {
     casa: '/images/casa.jpg',
@@ -18,15 +18,13 @@ const backgroundImages = {
     altres: '/images/altres.jpg'
 };
 
-// ServiceInfo.jsx - CompanyCard corregit
 const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }) => {
-    // Accés universal al pivot (funciona per a tots els casos)
     const pivot = company.pivot || (company.services?.[0]?.pivot);
 
     if (!pivot) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6">
-                Error: Dades de la companyia no disponibles
+                Error: Company data not available
             </div>
         );
     }
@@ -49,14 +47,19 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
         ? inputValue !== '' && inputValue > 0
         : !!selectedSize;
 
-    // Funció handleReserve corregida
     const handleReserve = () => {
-        router.get(route('client.cita.show', {
-            service: service.id,
-            company: company.id
-        }));
+        if (service.id === 5) {
+            router.get(route('client.quotes.create', {
+                service: service.id,
+                company: company.id
+            }));
+        } else {
+            router.get(route('client.cita.show', {
+                service: service.id,
+                company: company.id
+            }));
+        }
     };
-
 
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
@@ -78,7 +81,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                         <Link
                             href={route('client.companies.show', {
                                 company: company.id,
-                                serviceId: service.id // Afegeix serviceId com a paràmetre
+                                serviceId: service.id
                             })}
                         >
                             {company.name}
@@ -98,7 +101,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                         onClick={handleReserve}
                         className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-2 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-md"
                     >
-                        Reserva
+                        {service.id === 5 ? "Solicitar pressupost" : "Reserve"}
                     </button>
                 </div>
             </div>
@@ -109,127 +112,141 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                         onClick={handleReserve}
                         className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-2 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-md"
                     >
-                        Reserva
+                        {service.id === 5 ? "Solicitar pressupost" : "Reserve"}
                     </button>
                 </div>
-                <p className="text-gray-700">
-                    Preu estimat: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Selecciona opció'}
-                </p>
+                {service.id !== 5 && (
+                    <p className="text-gray-700">
+                        Estimated price: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Select an option'}
+                    </p>
+                )}
             </div>
 
             <div className="hidden md:block text-right">
-                {(serviceType === 'casa' || serviceType === 'garatge' || serviceType === 'altres') ? (
-                    <p className="text-gray-700">
-                        <FontAwesomeIcon icon={faEuroSign} className="mr-2" />
-                        {serviceType === 'altres' ?
-                            `Preu per ${company.pivot.unit}: ${company.pivot.price_per_unit} €` :
-                            `Preu per m²: ${company.pivot.price_per_unit} €`
-                        }
-                    </p>
-                ) : (
-                    <p className="text-gray-700">
-                        <FontAwesomeIcon icon={faEuroSign} className="mr-2" />
-                        Rang: {company.pivot.min_price} € - {company.pivot.max_price} €
-                    </p>
+                {service.id !== 5 && (
+                    <>
+                        {(serviceType === 'casa' || serviceType === 'garatge' || serviceType === 'altres') ? (
+                            <p className="text-gray-700">
+                                <FontAwesomeIcon icon={faEuroSign} className="mr-2" />
+                                {serviceType === 'altres' ?
+                                    `Price per ${company.pivot.unit}: ${company.pivot.price_per_unit} €` :
+                                    `Price per m²: ${company.pivot.price_per_unit} €`
+                                }
+                            </p>
+                        ) : (
+                            <p className="text-gray-700">
+                                <FontAwesomeIcon icon={faEuroSign} className="mr-2" />
+                                Range: {company.pivot.min_price} € - {company.pivot.max_price} €
+                            </p>
+                        )}
+                        <p className="text-gray-700">
+                            Estimated price: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Select an option'}
+                        </p>
+                    </>
                 )}
-                <p className="text-gray-700">
-                    Preu estimat: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Selecciona opció'}
-                </p>
             </div>
         </div>
     );
 };
 
-const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSortChange, onPriceRangeChange }) => (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <FontAwesomeIcon icon={faFilter} className="text-[#1f7275]" />
-            Filtres
-        </h3>
+const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSortChange, onPriceRangeChange, serviceType }) => {
+    const isAltres = serviceType === 'altres';
 
-        <div className="space-y-4">
-            <div>
-                <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                    Cerca empresa
-                </label>
-                <input
-                    id="search"
-                    type="text"
-                    placeholder="Cerca per nom o adreça..."
-                    value={filters.search}
-                    onChange={(e) => onFilterChange('search', e.target.value)}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                />
-            </div>
+    return (
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <FontAwesomeIcon icon={faFilter} className="text-[#1f7275]" />
+                Filters
+            </h3>
 
-            <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">Ciutat</label>
-                <select
-                    id="city"
-                    value={filters.city}
-                    onChange={(e) => onFilterChange('city', e.target.value)}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                >
-                    <option value="">Totes les ciutats</option>
-                    {cities.map(city => (
-                        <option key={city} value={city}>{city}</option>
-                    ))}
-                </select>
-            </div>
-
-            <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">Comunitat</label>
-                <select
-                    id="state"
-                    value={filters.state}
-                    onChange={(e) => onFilterChange('state', e.target.value)}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                >
-                    <option value="">Totes les regions</option>
-                    {states.map(state => (
-                        <option key={state} value={state}>{state}</option>
-                    ))}
-                </select>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar per preu</label>
-                <select
-                    value={filters.sort}
-                    onChange={(e) => onSortChange(e.target.value)}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                >
-                    <option value="">Sense ordenar</option>
-                    <option value="asc">Més barat</option>
-                    <option value="desc">Més car</option>
-                </select>
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rang de preu</label>
-                <Slider
-                    range
-                    min={0}
-                    max={5000}
-                    defaultValue={[filters.minPrice, filters.maxPrice]}
-                    onChange={(value) => onPriceRangeChange(value)}
-                    trackStyle={{ backgroundColor: '#1f7275' }}
-                    handleStyle={{ borderColor: '#1f7275' }}
-                />
-                <div className="text-sm text-gray-600 mt-2">
-                    {filters.minPrice} € - {filters.maxPrice} €
+            <div className="space-y-4">
+                <div>
+                    <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+                        Search company
+                    </label>
+                    <input
+                        id="search"
+                        type="text"
+                        placeholder="Search by name or address..."
+                        value={filters.search}
+                        onChange={(e) => onFilterChange('search', e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
+                    />
                 </div>
-            </div>
 
-            <button
-                onClick={onClear}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors duration-200"
-            >
-                Netejar filtres
-            </button>
+                <div>
+                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <select
+                        id="city"
+                        value={filters.city}
+                        onChange={(e) => onFilterChange('city', e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
+                    >
+                        <option value="">All cities</option>
+                        {cities.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                    <select
+                        id="state"
+                        value={filters.state}
+                        onChange={(e) => onFilterChange('state', e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
+                    >
+                        <option value="">All regions</option>
+                        {states.map(state => (
+                            <option key={state} value={state}>{state}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {!isAltres && (
+                    <>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Sort by price</label>
+                            <select
+                                value={filters.sort}
+                                onChange={(e) => onSortChange(e.target.value)}
+                                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
+                            >
+                                <option value="">No sorting</option>
+                                <option value="asc">Cheapest</option>
+                                <option value="desc">Most expensive</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Price range</label>
+                            <Slider
+                                range
+                                min={0}
+                                max={5000}
+                                defaultValue={[filters.minPrice, filters.maxPrice]}
+                                onChange={(value) => onPriceRangeChange(value)}
+                                trackStyle={{ backgroundColor: '#1f7275' }}
+                                handleStyle={{ borderColor: '#1f7275' }}
+                            />
+                            <div className="text-sm text-gray-600 mt-2">
+                                {filters.minPrice} € - {filters.maxPrice} €
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                <button
+                    onClick={onClear}
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                    Clear filters
+                </button>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const useFilters = () => {
     const [filters, setFilters] = useState({
@@ -290,7 +307,6 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
             const matchesCity = filters.city ? company.city === filters.city : true;
             const matchesState = filters.state ? company.state === filters.state : true;
 
-            // Calculate price based on service type
             let priceEstimate;
             if (service.type === 'casa' || service.type === 'garatge') {
                 priceEstimate = company.pivot.price_per_unit * (inputValue || 0);
@@ -364,21 +380,21 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{service.name}</h1>
-                        <p className="text-lg text-white/90">Empreses disponibles per aquest servei</p>
+                        <p className="text-lg text-white/90">Companies available for this service</p>
                     </div>
                     <Link href="/dashboard" className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors">
                         <FontAwesomeIcon icon={faArrowLeft} />
-                        Tornar als serveis
+                        Back to services
                     </Link>
                 </div>
             </section>
 
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="mb-6 flex items-center gap-4 bg-white/90 p-4 rounded-lg shadow-md">
-                    {['casa', 'garatge', 'altres'].includes(service.type) ? (
+                    {service.id !== 5 && ['casa', 'garatge', 'altres'].includes(service.type) ? (
                         <>
                             <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                Metres quadrats (m²)
+                                Square meters (m²)
                             </p>
                             <div className="w-32">
                                 <input
@@ -396,10 +412,10 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                 />
                             </div>
                         </>
-                    ) : (
+                    ) : (service.type === 'piscina' || service.type === 'cotxe') ? (
                         <>
                             <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                Mida
+                                Size
                             </p>
                             <div className="w-32">
                                 <select
@@ -407,22 +423,20 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                     onChange={(e) => setSelectedSize(e.target.value)}
                                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
                                 >
-                                    <option value="">Selecciona</option>
-                                    <option value="petit">Petit</option>
-                                    <option value="mitjà">Mitjà</option>
-                                    <option value="gran">Gran</option>
+                                    <option value="">Select</option>
+                                    <option value="petit">Small</option>
+                                    <option value="mitjà">Medium</option>
+                                    <option value="gran">Large</option>
                                 </select>
                             </div>
                         </>
-                    )}
+                    ) : null}
 
-                    {/* Separador visual */}
                     <div className="h-8 w-px bg-gray-300"></div>
 
-                    {/* Text "Mostrant X de X resultats" */}
                     <div className="flex-1 text-right">
                         <p className="text-gray-700">
-                            Mostrant {Math.min(visibleItems, filteredCompanies.length)} de {filteredCompanies.length} resultats
+                            Showing {Math.min(visibleItems, filteredCompanies.length)} of {filteredCompanies.length} results
                         </p>
                     </div>
                 </div>
@@ -432,7 +446,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                     className="md:hidden bg-white text-[#1f7275] px-4 py-2 rounded-lg mb-4 shadow-md"
                 >
                     <FontAwesomeIcon icon={faFilter} className="mr-2" />
-                    {showFilters ? 'Amagar filtres' : 'Mostrar filtres'}
+                    {showFilters ? 'Hide filters' : 'Show filters'}
                 </button>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -445,6 +459,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                             onClear={resetFilters}
                             onSortChange={handleSort}
                             onPriceRangeChange={handlePriceRangeChange}
+                            serviceType={service.type}
                         />
                     </div>
 
@@ -468,7 +483,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                     onClick={loadMore}
                                     className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-3 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-lg"
                                 >
-                                    Carregar més
+                                    Load more
                                 </button>
                             </div>
                         )}
@@ -477,10 +492,10 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                             <div className="text-center py-12 bg-white/90 p-6 rounded-lg shadow-md">
                                 <div className="text-4xl mb-4 text-gray-400">🏢</div>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                    Cap empresa coincideix amb els filtres
+                                    No companies match the filters
                                 </h3>
                                 <p className="text-gray-600">
-                                    Prova amb altres criteris de cerca
+                                    Try with different search criteria
                                 </p>
                             </div>
                         )}

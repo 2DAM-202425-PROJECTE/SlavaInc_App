@@ -453,4 +453,10 @@ class ClientController extends Controller
         // Torna al filtre pendent_review
         return Inertia::location(route('client.appointments.index', ['filter' => 'pending_review']));
     }
+
+    public function indexServices(): InertiaResponse
+    {
+        $services = Service::all();
+        return Inertia::render('Client/Services', ['services' => $services]);
+    }
 }

@@ -39,15 +39,6 @@ const Profile = ({ auth }) => {
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">El meu perfil</h1>
                         <p className="text-lg text-white/90">Gestiona la teva informació personal</p>
                     </div>
-                    {routes.editProfile && (
-                        <Link
-                            href={routes.editProfile}
-                            className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 hover:shadow-lg"
-                        >
-                            <FontAwesomeIcon icon={faEdit} />
-                            Editar perfil
-                        </Link>
-                    )}
                 </div>
             </section>
 
