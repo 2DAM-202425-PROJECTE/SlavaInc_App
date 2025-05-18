@@ -19,9 +19,7 @@ Route::prefix('administrator')
     ->middleware('auth:worker')
     ->name('administrator.')
     ->group(function () {
-        // Ruta principal del panell d'administració
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-        // Altres recursos
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
         Route::resource('workers', WorkerController::class)->names('workers');
@@ -29,9 +27,10 @@ Route::prefix('administrator')
 
 // RUTA INICIAL
 Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
+    if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
 });
 
 // DASHBOARD segons el tipus d’usuari
@@ -76,7 +75,7 @@ Route::middleware('auth:company,web,worker')->group(function () {
         }
 
         return redirect()->route('login');
-    })->middleware('auth:company,web,worker')->name('profile.edit');
+    })->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
@@ -84,7 +83,6 @@ Route::middleware('auth:company,web,worker')->group(function () {
 
 // RUTES PER A EMPRESES (COMPANY)
 Route::middleware(['auth:company'])->group(function () {
-    // CRUD Treballadors
     Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
     Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
@@ -92,7 +90,6 @@ Route::middleware(['auth:company'])->group(function () {
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
     Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
-    // CRUD serveis associats a l'empresa (pivot company_service)
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
     Route::get('/company/services/create', [CompanyServiceController::class, 'create'])->name('company.services.create');
     Route::post('/company/services', [CompanyServiceController::class, 'store'])->name('company.services.store');
@@ -100,15 +97,12 @@ Route::middleware(['auth:company'])->group(function () {
     Route::put('/company/services/{service}', [CompanyServiceController::class, 'update'])->name('company.services.update');
     Route::delete('/company/services/pivot/{pivotId}', [CompanyServiceController::class, 'destroy'])
         ->name('company.services.destroy');
-    Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
+});
 
-    // Pressupostos per a l’empresa
-    Route::get('/company/quotes', [QuoteController::class, 'index'])
-        ->name('company.quotes.index');
-    Route::get('/company/quotes/{quote}', [QuoteController::class, 'show'])
-        ->name('company.quotes.show');
-    Route::post('/company/quotes/{quote}/respond', [QuoteController::class, 'respond'])
-        ->name('company.quotes.respond');
+// RUTES PER A PRESSUPOSTOS (COMPARTIDES ENTRE CLIENTS I EMPRESES)
+Route::middleware(['auth:web,company'])->group(function () {
+    Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
 });
 
 // RUTES PER A CLIENTS (WEB USERS)
@@ -132,11 +126,15 @@ Route::middleware(['auth:web'])->group(function () {
     Route::put('/reviews/{review}', [ClientController::class, 'updateReview'])->name('client.reviews.update');
     Route::delete('/reviews/{review}', [ClientController::class, 'destroyReview'])->name('client.reviews.destroy');
 
-    // Pressupostos
-    Route::get('/quotes/create/{service}/{company}', [QuoteController::class, 'create'])
-        ->name('client.quotes.create');
-    Route::post('/quotes', [QuoteController::class, 'store'])
-        ->name('client.quotes.store');
+    // Pressupostos (només clients poden crear i actualitzar estat)
+    Route::get('/quotes/create/{service}/{company}', [QuoteController::class, 'create'])->name('client.quotes.create');
+    Route::post('/quotes', [QuoteController::class, 'store'])->name('client.quotes.store');
+    Route::put('/quotes/{quote}/status', [QuoteController::class, 'updateStatus'])->name('client.quotes.updateStatus');
+});
+
+// RUTES PER A EMPRESES (NOMÉS RESPOSTA A PRESSUPOSTOS)
+Route::middleware(['auth:company'])->group(function () {
+    Route::post('/quotes/{quote}/respond', [QuoteController::class, 'respond'])->name('company.quotes.respond');
 });
 
 // RUTES PER A TREBALLADORS (WORKERS)
@@ -150,7 +148,7 @@ Route::get('/appointments/occupied', [ClientController::class, 'getOccupiedSlots
     ->name('client.get.occupied.slots');
 
 // ALTRES
-Route::get('/privacy', function () {return Inertia::render('Other/Privacy');})->name('privacy');
+Route::get('/privacy', function () { return Inertia::render('Other/Privacy'); })->name('privacy');
 Route::get('/terms', function () { return Inertia::render('Other/Terms'); })->name('terms');
 
 // RUTES D’AUTENTICACIÓ

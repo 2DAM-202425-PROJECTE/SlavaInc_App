@@ -14,6 +14,11 @@ class QuoteController extends Controller
     // Form de sol·licitud per al client
     public function create($serviceId, $companyId): Response
     {
+        // Només els clients (guard 'web') poden crear pressupostos
+        if (!Auth::guard('web')->check()) {
+            return redirect()->route('login');
+        }
+
         return Inertia::render('Client/QuoteRequest', [
             'serviceId' => $serviceId,
             'companyId' => $companyId,
@@ -23,55 +28,110 @@ class QuoteController extends Controller
     // Desa la sol·licitud
     public function store(Request $request)
     {
-        // Validem les dades rebudes
+        if (!Auth::guard('web')->check()) {
+            return redirect()->route('login');
+        }
+
         $attrs = $request->validate([
             'service_id' => 'required|exists:services,id',
             'company_id' => 'required|exists:companies,id',
             'description' => 'required|string',
+            'preferred_date' => 'nullable|date',
+            'preferred_time' => 'nullable|date_format:H:i',
         ]);
 
-        // Afegim l'ID de l'usuari autenticat
         $attrs['user_id'] = Auth::id();
-
-        // Creem la sol·licitud a la base de dades
         Quote::create($attrs);
 
-        // Redirigim amb Inertia::location
-        return Inertia::location('/services/5');
+        return Inertia::location('/quotes');
     }
 
-    // Llista de pressupostos per a l’empresa
+    // Llista de pressupostos
     public function index(): Response
     {
-        $quotes = Quote::with(['user', 'service'])
-            ->where('company_id', Auth::id())
-            ->latest()
-            ->get();
+        if (Auth::guard('web')->check()) {
+            $userType = 'client';
+            $quotes = Quote::with(['company', 'service'])
+                ->where('user_id', Auth::id())
+                ->latest()
+                ->get();
+        } elseif (Auth::guard('company')->check()) {
+            $userType = 'company';
+            $quotes = Quote::with(['user', 'service'])
+                ->where('company_id', Auth::id())
+                ->latest()
+                ->get();
+        } else {
+            return redirect()->route('login');
+        }
 
-        return Inertia::render('Company/QuotesList', [
+        return Inertia::render('Client/QuotesList', [
             'quotes' => $quotes,
+            'userType' => $userType,
         ]);
     }
 
-    // Detall i resposta
+    // Detall del pressupost
     public function show(Quote $quote): Response
     {
-        return Inertia::render('Company/QuoteDetail', [
+        if (Auth::guard('web')->check()) {
+            $userType = 'client';
+            if ($quote->user_id !== Auth::id()) {
+                abort(403, 'No tens permís per veure aquest pressupost.');
+            }
+            $quote->load(['company', 'service']);
+        } elseif (Auth::guard('company')->check()) {
+            $userType = 'company';
+            if ($quote->company_id !== Auth::id()) {
+                abort(403, 'No tens permís per veure aquest pressupost.');
+            }
+            $quote->load(['user', 'service']);
+        } else {
+            return redirect()->route('login');
+        }
+
+        return Inertia::render('Client/QuoteDetail', [
             'quote' => $quote,
+            'userType' => $userType,
         ]);
     }
 
-    // L’empresa respon al pressupost
+    // L'empresa respon al pressupost
     public function respond(Request $request, Quote $quote): RedirectResponse
     {
+        if (!Auth::guard('company')->check() || $quote->company_id !== Auth::id()) {
+            abort(403);
+        }
+
         $data = $request->validate([
-            'amount'  => 'required|numeric',
+            'amount' => 'required|numeric',
             'message' => 'nullable|string',
-            'status'  => 'required|in:quoted,accepted,declined',
         ]);
 
-        $quote->update($data);
+        $quote->update([
+            'amount' => $data['amount'],
+            'message' => $data['message'],
+            'status' => 'quoted',
+        ]);
 
         return redirect()->back()->with('success', 'Resposta enviada!');
+    }
+
+    // El client accepta o rebutja el pressupost
+    public function updateStatus(Request $request, Quote $quote): RedirectResponse
+    {
+        if (!Auth::guard('web')->check() || $quote->user_id !== Auth::id() || $quote->status !== 'quoted') {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'status' => 'required|in:accepted,declined',
+        ]);
+
+        $quote->update([
+            'status' => $data['status'],
+        ]);
+
+        return redirect()->back()->with('success', 'Estat actualitzat!');
     }
 }

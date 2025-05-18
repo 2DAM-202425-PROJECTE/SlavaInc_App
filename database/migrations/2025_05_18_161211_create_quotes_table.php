@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateQuotesTable extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('quotes', function (Blueprint $table) {
             $table->id();
@@ -14,6 +14,8 @@ class CreateQuotesTable extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
             $table->text('description');
+            $table->date('preferred_date')->nullable();
+            $table->time('preferred_time')->nullable();
             $table->decimal('amount', 10, 2)->nullable();
             $table->text('message')->nullable();
             $table->enum('status', ['pending', 'quoted', 'accepted', 'declined'])
@@ -22,7 +24,7 @@ class CreateQuotesTable extends Migration
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('quotes');
     }

@@ -5,9 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * @method static create(array $attrs)
- */
 class Quote extends Model
 {
     protected $table = 'quotes';
@@ -17,6 +14,8 @@ class Quote extends Model
         'company_id',
         'service_id',
         'description',
+        'preferred_date',
+        'preferred_time',
         'amount',
         'message',
         'status',
