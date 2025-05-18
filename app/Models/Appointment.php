@@ -60,10 +60,9 @@ class Appointment extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function worker(): BelongsTo
-
+    public function workers(): BelongsToMany
     {
-        return $this->belongsToMany(Worker::class, 'appointment_worker', 'appointment_id', 'worker_id');
+        return $this->belongsToMany(Worker::class);
     }
     public function companyService(): BelongsTo
     {
@@ -74,5 +73,4 @@ class Appointment extends Model
     {
         return $this->hasMany(Review::class, 'appointment_id');
     }
-
 }

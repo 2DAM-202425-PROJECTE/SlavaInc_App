@@ -16,12 +16,11 @@ import { format, parseISO, setHours, setMinutes } from 'date-fns';
 import { ca } from 'date-fns/locale';
 import Header from '@/Components/Header.jsx';
 import Footer from '@/Components/Footer.jsx';
-import {route} from "ziggy-js";
+import { route } from 'ziggy-js';
 
 const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
     const [statusFilter, setStatusFilter] = useState(initialStatusFilter || 'all');
     const { delete: destroy } = useForm();
-
 
     const statusStyles = {
         pending: 'bg-yellow-100 text-yellow-800',
@@ -36,11 +35,6 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
         completed: 'Completada',
     };
 
-
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [sortOrder, setSortOrder] = useState('status');
-
-
     const formatPrice = (price) => {
         const numericPrice = typeof price === 'number' ? price : parseFloat(price);
         return isNaN(numericPrice) ? '0.00' : numericPrice.toFixed(2);
@@ -54,10 +48,7 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
     const handleDeleteReview = (reviewId) => {
         if (!confirm('Segur que vols eliminar la ressenya?')) return;
         destroy(route('client.reviews.destroy', reviewId), {
-            onSuccess: () => {
-                // Refresca la pàgina per actualitzar llista
-                window.location.reload();
-            },
+            onSuccess: () => window.location.reload(),
         });
     };
 
@@ -67,25 +58,13 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
         return setMinutes(setHours(baseDate, hours), minutes);
     };
 
-    const filteredAndSortedAppointments = useMemo(() => {
-        let result = [...appointments];
-
-        if (filterStatus !== 'all') {
-            result = result.filter(a => a.status === filterStatus);
-        }
-
-        if (sortOrder === 'status') {
-            const priority = { pending: 1, completed: 2, cancelled: 3 };
-            result.sort((a, b) => priority[a.status] - priority[b.status]);
-        } else if (sortOrder === 'newest') {
-            result.sort((a, b) => getDateTime(b) - getDateTime(a));
-        } else if (sortOrder === 'oldest') {
-            result.sort((a, b) => getDateTime(a) - getDateTime(b));
-        }
-
-        return result;
-    }, [appointments, filterStatus, sortOrder]);
-
+    const filteredAppointments = useMemo(() => {
+        return appointments.filter((appointment) => {
+            if (statusFilter === 'all') return true;
+            if (statusFilter === 'completed' && !appointment.review) return false;
+            return appointment.status === statusFilter;
+        });
+    }, [appointments, statusFilter]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -126,120 +105,95 @@ const CitesIndex = ({ appointments, statusFilter: initialStatusFilter }) => {
                     </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {appointments.length === 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    {filteredAppointments.length === 0 ? (
                         <div className="text-center bg-white p-8 rounded-xl shadow-lg col-span-2">
                             <div className="text-6xl text-gray-300 mb-4">📅</div>
                             <p className="text-gray-600 text-lg">No tens cites programades actualment</p>
                         </div>
                     ) : (
-                        appointments.map((appointment) => {
-                            // Filtrat extra per 'completed' només amb review
-                            if (
-                                statusFilter === 'completed' &&
-                                !(appointment.status === 'completed' && appointment.review)
-                            ) {
-                                return null;
-                            }
-                            return (
-                                <div
-                                    key={appointment.id}
-                                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow flex flex-col"
+                        filteredAppointments.map((appointment) => (
+                            <div
+                                key={appointment.id}
+                                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow flex flex-col"
+                            >
+                                <Link
+                                    href={route('client.appointments.show', appointment.id)}
+                                    className="block p-6 flex-grow"
                                 >
-                                    <Link
-                                        href={route('client.appointments.show', appointment.id)}
-                                        className="block p-6 flex-grow"
-                                    >
-                                        {/* --- Encapsulem les dades de la cita --- */}
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                            <div className="space-y-3 flex-1">
-                                                <div className="flex items-center gap-3">
-                                                    <FontAwesomeIcon icon={faBuilding} className="text-[#1f7275]" />
-                                                    <h2 className="text-xl font-semibold text-gray-800">
-                                                        {appointment.company?.name || 'Empresa no especificada'}
-                                                    </h2>
-                                                </div>
-                                                <div className="flex flex-wrap gap-4">
-                                                    <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
-                                                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500" />
-                                                        <span>
-                              {appointment.date
-                                  ? format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: ca })
-                                  : 'Data no disponible'}
-                            </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
-                                                        <FontAwesomeIcon icon={faClock} className="text-gray-500" />
-                                                        <span>{appointment.time || 'Hora no disponible'}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-sm text-gray-600">
-                                                    {appointment.service?.name || 'Servei no especificat'}
-                                                </div>
-                                                {appointment.notes && (
-                                                    <div className="mt-3 bg-blue-50 p-3 rounded-lg">
-                                                        <p className="text-gray-600 italic">
-                                                            <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
-                                                            {appointment.notes}
-                                                        </p>
-                                                    </div>
-                                                )}
-
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                        <div className="space-y-3 flex-1">
+                                            <div className="flex items-center gap-3">
+                                                <FontAwesomeIcon icon={faBuilding} className="text-[#1f7275]" />
+                                                <h2 className="text-xl font-semibold text-gray-800">
+                                                    {appointment.company?.name || 'Empresa no especificada'}
+                                                </h2>
                                             </div>
-                                            <div className="mt-4 md:mt-0 md:text-right space-y-3">
-                                                <div
-                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                                        statusStyles[appointment.status] || 'bg-gray-100 text-gray-800'
-                                                    } inline-block`}
-                                                >
-                                                    {statusLabels[appointment.status] || 'Estat desconegut'}
+                                            <div className="flex flex-wrap gap-4">
+                                                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                                    <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-500" />
+                                                    <span>
+                                                        {appointment.date
+                                                            ? format(parseISO(appointment.date), 'EEEE d MMMM yyyy', { locale: ca })
+                                                            : 'Data no disponible'}
+                                                    </span>
                                                 </div>
-                                                {appointment.status === 'completed' && !appointment.review && (
-                                                    <div className="text-sm text-red-600 font-medium">Pendent de ressenya</div>
-                                                )}
-                                                <div className="text-2xl font-bold text-[#1f7275]">
-                                                    {formatPrice(appointment.price)} €
+                                                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full text-sm">
+                                                    <FontAwesomeIcon icon={faClock} className="text-gray-500" />
+                                                    <span>{appointment.time || 'Hora no disponible'}</span>
                                                 </div>
                                             </div>
-
-                                        )}
-                                    </div>
-
-                                    <div className="mt-4 md:mt-0 md:text-right space-y-3">
-                                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[appointment.status]} inline-block`}>
-                                            {appointment.status === 'pending' && 'Pendent'}
-                                            {appointment.status === 'completed' && 'Completada'}
-                                            {appointment.status === 'cancelled' && 'Cancel·lada'}
-
-                                        </div>
-                                    </Link>
-
-                                    {appointment.status === 'completed' && appointment.company_service_id && (
-                                        <div className="p-4 border-t flex items-center gap-2">
-                                            <Link
-                                                href={route('client.reviews.create', {
-                                                    companyServiceId: appointment.company_service_id,
-                                                    appointmentId: appointment.id,
-                                                })}
-                                                className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors flex items-center gap-2"
-                                            >
-                                                <FontAwesomeIcon icon={faStar} />
-                                                {appointment.review ? 'Editar ressenya' : 'Afegir ressenya'}
-                                            </Link>
-                                            {appointment.review && (
-                                                <button
-                                                    onClick={() => handleDeleteReview(appointment.review.id)}
-                                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                    Eliminar
-                                                </button>
+                                            <div className="text-sm text-gray-600">
+                                                {appointment.service?.name || 'Servei no especificat'}
+                                            </div>
+                                            {appointment.notes && (
+                                                <div className="mt-3 bg-blue-50 p-3 rounded-lg">
+                                                    <p className="text-gray-600 italic">
+                                                        <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
+                                                        {appointment.notes}
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                            );
-                        })
+                                        <div className="mt-4 md:mt-0 md:text-right space-y-3">
+                                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[appointment.status] || 'bg-gray-100 text-gray-800'} inline-block`}>
+                                                {statusLabels[appointment.status] || 'Estat desconegut'}
+                                            </div>
+                                            {appointment.status === 'completed' && !appointment.review && (
+                                                <div className="text-sm text-red-600 font-medium">Pendent de ressenya</div>
+                                            )}
+                                            <div className="text-2xl font-bold text-[#1f7275]">
+                                                {formatPrice(appointment.price)} €
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+
+                                {appointment.status === 'completed' && appointment.company_service_id && (
+                                    <div className="p-4 border-t flex items-center gap-2">
+                                        <Link
+                                            href={route('client.reviews.create', {
+                                                companyServiceId: appointment.company_service_id,
+                                                appointmentId: appointment.id,
+                                            })}
+                                            className="bg-[#1f7275] text-white px-4 py-2 rounded-lg hover:bg-[#01a0a6] transition-colors flex items-center gap-2"
+                                        >
+                                            <FontAwesomeIcon icon={faStar} />
+                                            {appointment.review ? 'Editar ressenya' : 'Afegir ressenya'}
+                                        </Link>
+                                        {appointment.review && (
+                                            <button
+                                                onClick={() => handleDeleteReview(appointment.review.id)}
+                                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                                Eliminar
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))
                     )}
                 </div>
             </div>

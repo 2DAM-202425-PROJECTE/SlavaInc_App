@@ -15,8 +15,7 @@ use App\Models\Plan;
 
 use Inertia\Response;
 
-class CompanyController extends Controller
-{
+
 
 class CompanyController extends Controller
 {
@@ -33,7 +32,6 @@ class CompanyController extends Controller
 
     public function getCompanyFullData(): array
 
-    public function getCompanyFullData()
 
     {
         $company = Auth::guard('company')->user();
@@ -317,7 +315,7 @@ class CompanyController extends Controller
         $this->createSystemNotification(
             $company,
             'password_updated',
-            [], 
+            [],
             "La contrasenya s'ha actualitzat correctament."
         );
         return response()->json([
