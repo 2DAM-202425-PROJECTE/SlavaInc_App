@@ -74,19 +74,14 @@ class AdminController extends Controller
      */
     public function profile()
     {
-        // Obtener el administrador autenticado
         $admin = Auth::guard('admin')->user();
 
-        // Si no hay administrador autenticado, redirigir al login
         if (!$admin) {
             return redirect()->route('admin.login');
         }
 
-        // Pasar los datos a la vista de perfil usando Inertia
-        return Inertia::render('company/profile', [
-            'auth' => [
-                'user' => $admin,
-            ],
+        return Inertia::render('Administrator/Profile', [
+            'admin' => $admin // Només passem admin directament
         ]);
     }
 

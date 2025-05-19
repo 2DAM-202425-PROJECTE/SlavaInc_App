@@ -45,6 +45,8 @@ Route::prefix('admin')
 Route::get('/', function () {
     if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
         return redirect()->route('dashboard');
+    } elseif (Auth::guard('admin')->check()) {
+        return redirect()->route('administrator.dashboard');
     }
     return redirect()->route('login');
 });
@@ -83,7 +85,11 @@ Route::get('/dashboard', function () {
 
 
 // RUTES COMUNES AUTENTICATS
-Route::middleware('web')->get('/profile', function () {
+Route::middleware(['auth:admin,web,worker,company'])->get('/profile', function () {
+    if (Auth::guard('admin')->check()) {
+        return app(AdminController::class)->profile();
+    }
+
     if (Auth::guard('web')->check()) {
         return Inertia::render('Client/Profile');
     }
@@ -103,17 +109,11 @@ Route::middleware('web')->get('/profile', function () {
         ]);
     }
 
-    if (Auth::guard('admin')->check()) {
-        return Inertia::render('Administrator/Profile', [
-            'admin' => Auth::guard('admin')->user(),
-        ]);
-    }
-
     abort(403);
 })->name('profile');
 
+// Ruta per canviar la contrasenya de admin
 Route::middleware(['auth:admin'])->group(function () {
-    Route::get('/admin/profile', [AdminController::class, 'profile'])->name('admin.profile');
     Route::post('/admin/change-password', [AdminController::class, 'changePassword'])->name('admin.change-password');
 });
 
