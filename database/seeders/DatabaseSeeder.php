@@ -15,8 +15,10 @@ class DatabaseSeeder extends Seeder
             ServicesSeeder::class,
             WorkersSeeder::class,
             UserSeeder::class,
+            AppointmentSeeder::class,
             AppointmentCompanyServiceSeeder::class,
             AdminsSeeder::class,
+            ReviewSeeder::class,
         ]);
     }
 }

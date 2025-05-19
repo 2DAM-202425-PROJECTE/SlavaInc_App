@@ -29,4 +29,8 @@ class Review extends Model
     {
         return $this->belongsTo(CompanyService::class, 'company_service_id', 'id');
     }
+    public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
+    }
 }
