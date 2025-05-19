@@ -209,11 +209,11 @@ require __DIR__.'/auth.php';
 
 // Rutes per restablir la contrasenya
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
-    ->middleware('guest')
+    ->middleware('web')
     ->name('password.request');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-    ->middleware('guest')
+    ->middleware('web')
     ->name('password.email');
 
 Route::get('/reset-password', function () {
