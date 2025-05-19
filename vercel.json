@@ -5,7 +5,7 @@
             "src": "build.sh",
             "use": "@vercel/static-build",
             "config": {
-                "distDir": "public"
+                "distDir": "public/build"
             }
         }
     ],
@@ -16,7 +16,8 @@
         },
         {
             "src": "/(.*)",
-            "dest": "/public/index.html"
+            "dest": "/public/index.html",
+            "status": 200
         }
     ]
 }
