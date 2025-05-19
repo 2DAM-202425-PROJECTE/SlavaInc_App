@@ -99,12 +99,27 @@ const ServiceDetail = () => {
                             </div>
                         </div>
 
+
                         {/* Notes */}
                         {appointment.notes && (
                             <div>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-3">Notes addicionals</h3>
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <p className="text-gray-600 italic">{appointment.notes}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {appointment.reviews && appointment.reviews.length > 0 && (
+                            <div>
+                                <h3 className="text-xl font-semibold text-gray-800 mb-3">Ressenya del client</h3>
+                                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg space-y-2">
+                                    <p className="text-yellow-800 font-semibold">
+                                        Valoració: {appointment.reviews[0].rate.toFixed(1)} / 5
+                                    </p>
+                                    <p className="text-gray-700 italic">
+                                        "{appointment.reviews[0].comment}"
+                                    </p>
                                 </div>
                             </div>
                         )}

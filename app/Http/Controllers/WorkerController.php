@@ -161,7 +161,7 @@ class WorkerController extends Controller
         // Buscar la cita que pertenezca a este worker
         $appointment = Appointment::where('id', $id)
             ->whereHas('workers', fn ($q) => $q->where('workers.id', $worker->id))
-            ->with(['user', 'company', 'service'])
+            ->with(['user', 'company', 'service', 'reviews'])
             ->firstOrFail();
 
         return Inertia::render('Worker/ServiceDetail', [
