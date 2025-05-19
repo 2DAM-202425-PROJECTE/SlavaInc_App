@@ -10,6 +10,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyServiceController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
@@ -86,32 +87,39 @@ Route::get('/dashboard', function () {
 
 
 // RUTES COMUNES AUTENTICATS
-Route::middleware(['auth:admin,web,worker,company'])->get('/profile', function () {
-    if (Auth::guard('admin')->check()) {
-        return app(AdminController::class)->profile();
-    }
+Route::middleware(['auth:admin,web,worker,company'])->group(function () {
+    Route::get('/profile', function () {
+        if (Auth::guard('admin')->check()) {
+            return app(AdminController::class)->profile();
+        }
 
-    if (Auth::guard('web')->check()) {
-        return Inertia::render('Client/Profile');
-    }
+        if (Auth::guard('web')->check()) {
+            return Inertia::render('Client/Profile');
+        }
 
-    if (Auth::guard('worker')->check()) {
-        $user = Auth::guard('worker')->user();
-        return $user->is_admin
-            ? Inertia::render('Company/Profile', [
+        if (Auth::guard('worker')->check()) {
+            $user = Auth::guard('worker')->user();
+            return $user->is_admin
+                ? Inertia::render('Company/Profile', [
+                    'company' => app(CompanyController::class)->getCompanyFullData(),
+                ])
+                : Inertia::render('Worker/Profile');
+        }
+
+        if (Auth::guard('company')->check()) {
+            return Inertia::render('Company/Profile', [
                 'company' => app(CompanyController::class)->getCompanyFullData(),
-            ])
-            : Inertia::render('Worker/Profile');
-    }
+            ]);
+        }
 
-    if (Auth::guard('company')->check()) {
-        return Inertia::render('Company/Profile', [
-            'company' => app(CompanyController::class)->getCompanyFullData(),
-        ]);
-    }
+        abort(403);
+    })->name('profile');
 
-    abort(403);
-})->name('profile');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
+});
+
 
 // Ruta per canviar la contrasenya de admin
 Route::middleware(['auth:admin'])->group(function () {

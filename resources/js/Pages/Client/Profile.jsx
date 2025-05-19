@@ -8,7 +8,7 @@ import Footer from "@/Components/Footer.jsx";
 const Profile = ({ auth }) => {
     const primaryColor = '#1f7275';
     const secondaryColor = '#01a0a6';
-    const gradient = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+    const gradient = `linear-gradient(90deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
 
     // Estats per a edició
     const [editingName, setEditingName] = useState(false);
