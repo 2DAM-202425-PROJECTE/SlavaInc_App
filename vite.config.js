@@ -12,4 +12,12 @@ export default defineConfig({
             jsxImportSource: 'react', // Important per a React 17+
         }),
     ],
+    build: {
+        outDir: 'public/build', // Assegura't que coincideix
+        manifest: true,
+        emptyOutDir: true,
+        rollupOptions: {
+            input: 'resources/js/app.js'
+        }
+    }
 });
