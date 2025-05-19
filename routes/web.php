@@ -148,15 +148,18 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::get('/company/exit-preview', [CompanyController::class, 'exitPreview'])->name('company.exitPreview');
     Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
 });
+//Ruta per a que funcione la vista com a client sent empresa
+Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
+Route::get('/companies/{company}', [CompanyController::class, 'show'])
+    ->name('client.companies.show')
+    ->where('company', '[0-9]+');
+
 
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
-    Route::get('/companies/{company}', [CompanyController::class, 'show'])
-        ->name('client.companies.show')
-        ->where('company', '[0-9]+');
+
 
     // Cites
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');

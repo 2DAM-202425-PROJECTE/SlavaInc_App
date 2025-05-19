@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class Worker extends Authenticatable
 {
-    use HasFactory, Notifiable; // Afegir Notifiable
+    use HasFactory, Notifiable;
 
     /**
      * Atributs que es poden assignar massivament.
