@@ -65,7 +65,7 @@ class Company extends Authenticatable
     {
         return $this->belongsTo(Plan::class);
     }
-    
+
     public function notifications()
     {
         return $this->hasMany(Notification::class);
@@ -74,5 +74,16 @@ class Company extends Authenticatable
     public function companyServices(): HasMany
     {
         return $this->hasMany(CompanyService::class);
+    }
+    public function reviews()
+    {
+        return $this->hasManyThrough(
+            \App\Models\Review::class,
+            \App\Models\CompanyService::class,
+            'company_id',
+            'company_service_id',
+            'id',
+            'id'
+        );
     }
 }

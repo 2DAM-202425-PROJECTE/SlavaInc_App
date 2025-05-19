@@ -149,7 +149,7 @@ class ClientController extends Controller
                 'price' => 'required|numeric|min:0.1',
                 'notes' => 'nullable|string|max:500',
                 'input_value' => 'nullable|numeric|min:0',
-                'selected_size' => 'nullable|string|in:petit,mitjà,gran'
+                'selected_size' => 'nullable|string|in:small,mitjà,gran'
             ]);
 
             // Trobar el CompanyService corresponent

@@ -56,7 +56,9 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
         } else {
             router.get(route('client.cita.show', {
                 service: service.id,
-                company: company.id
+                company: company.id,
+                input_value: inputValue || '',
+                selected_size: selectedSize || ''
             }));
         }
     };
