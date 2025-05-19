@@ -9,37 +9,36 @@ use Carbon\Carbon;
 
 class ReviewSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $faker = Faker::create();
-
-        $appointments = DB::table('appointments')->get();
-
-        if ($appointments->isEmpty()) {
-            return;
-        }
-
-        foreach (range(1, 50) as $i) {
-            $appointment = $appointments->random();
-
-            if (
-                !$appointment->user_id ||
-                !$appointment->company_service_id ||
-                !$appointment->id
-            ) {
-                continue;
-            }
-
-            DB::table('reviews')->insert([
-                'client_id' => $appointment->user_id,
-                'company_service_id' => $appointment->company_service_id,
-                'appointment_id' => $appointment->id,
-                'rate' => $faker->numberBetween(1, 5),
-                'comment' => $faker->sentence(),
-                'created_at' => Carbon::now()->subDays(rand(1, 180)),
+        DB::table('reviews')->insert([
+            [
+                'client_id' => 1,
+                'company_service_id' => 1,
+                'appointment_id' => 1,
+                'rate' => 4.5,
+                'comment' => 'Great service, very professional!',
+                'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
-            ]);
-        }
-
+            ],
+            [
+                'client_id' => 2,
+                'company_service_id' => 2,
+                'appointment_id' => 2,
+                'rate' => 3.8,
+                'comment' => 'Good experience, but a bit rushed.',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+            [
+                'client_id' => 1,
+                'company_service_id' => 3,
+                'appointment_id' => 3,
+                'rate' => 5.0,
+                'comment' => 'Excellent, will come back!',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ],
+        ]);
     }
 }
