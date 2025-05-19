@@ -26,7 +26,7 @@ class QuoteController extends Controller
     }
 
     // Desa la sol·licitud
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse|\Symfony\Component\HttpFoundation\Response
     {
         if (!Auth::guard('web')->check()) {
             return redirect()->route('login');
@@ -97,7 +97,7 @@ class QuoteController extends Controller
     }
 
     // L'empresa respon al pressupost
-    public function respond(Request $request, Quote $quote): RedirectResponse
+    public function respond(Request $request, Quote $quote): \Symfony\Component\HttpFoundation\Response
     {
         if (!Auth::guard('company')->check() || $quote->company_id !== Auth::id()) {
             abort(403);
@@ -114,11 +114,11 @@ class QuoteController extends Controller
             'status' => 'quoted',
         ]);
 
-        return redirect()->back()->with('success', 'Resposta enviada!');
+        return Inertia::location('/quotes');
     }
 
     // El client accepta o rebutja el pressupost
-    public function updateStatus(Request $request, Quote $quote): RedirectResponse
+    public function updateStatus(Request $request, Quote $quote): \Symfony\Component\HttpFoundation\Response
     {
         if (!Auth::guard('web')->check() || $quote->user_id !== Auth::id() || $quote->status !== 'quoted') {
             abort(403);
@@ -132,6 +132,6 @@ class QuoteController extends Controller
             'status' => $data['status'],
         ]);
 
-        return redirect()->back()->with('success', 'Estat actualitzat!');
+        return Inertia::location('/quotes');
     }
 }
