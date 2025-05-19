@@ -94,10 +94,28 @@ class CompanyController extends Controller
             ->whereIn('status', ['pending', 'confirmed'])
             ->count();
 
-        $clientsRating = round($services->avg('averageRating'), 1);
-        $totalReviews = rand(50, 100);
-        $positiveReviews = rand(45, $totalReviews);
-        $negativeReviews = $totalReviews - $positiveReviews;
+        $clientReviews = Review::with(['client', 'companyService.service'])
+            ->whereHas('companyService', function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($review) {
+                return [
+                    'id' => $review->id,
+                    'clientName' => $review->client->name ?? 'Anònim',
+                    'rating' => $review->rate,
+                    'comment' => $review->comment,
+                    'date' => $review->created_at->format('Y-m-d'),
+                    'service' => $review->companyService->service->name ?? 'Servei desconegut',
+                ];
+            });
+        $totalReviews = $clientReviews->count();
+        $clientsRating = $totalReviews > 0 ? round($clientReviews->avg('rating'), 1) : 0;
+        $positiveReviews = $clientReviews->where('rating', '>=', 2.5)->count();
+        $negativeReviews = $clientReviews->where('rating', '<', 2.5)->count();
+
 
         $monthlyIncome = rand(20000, 30000);
         $yearlyGrowth = rand(10, 30);
@@ -147,32 +165,7 @@ class CompanyController extends Controller
             ];
         });
 
-        $clientReviews = [
-            [
-                'id' => 1,
-                'clientName' => 'Empresa ABC',
-                'rating' => 5,
-                'comment' => 'Excel·lent servei, molt professionals i eficients.',
-                'date' => '2023-10-15',
-                'service' => 'Neteja d\'Oficines',
-            ],
-            [
-                'id' => 2,
-                'clientName' => 'Botiga XYZ',
-                'rating' => 4,
-                'comment' => 'Bona experiència en general, recomanable.',
-                'date' => '2023-09-22',
-                'service' => 'Neteja de Locals',
-            ],
-            [
-                'id' => 3,
-                'clientName' => 'Restaurant 123',
-                'rating' => 5,
-                'comment' => 'Resultats impressionants, han superat les nostres expectatives.',
-                'date' => '2023-11-05',
-                'service' => 'Neteja de Vidres',
-            ],
-        ];
+
 
         $plans = Plan::all()->map(function ($plan) use ($companyData) {
             return [

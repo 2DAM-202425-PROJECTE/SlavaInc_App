@@ -19,7 +19,7 @@ class PlanSeeder extends Seeder
             ],
             'max_workers' => 5,
             'max_services' => 3,
-            'api_access' => false,
+            'extra_stats' => false,
             'can_view_stats' => false,
         ]);
 
@@ -33,7 +33,7 @@ class PlanSeeder extends Seeder
             ],
             'max_workers' => 15,
             'max_services' => 10,
-            'api_access' => false,
+            'extra_stats' => false,
             'can_view_stats' => true,
         ]);
 
@@ -44,11 +44,10 @@ class PlanSeeder extends Seeder
                 'Treballadors il·limitats',
                 'Serveis il·limitats',
                 'Estadístiques avançades',
-                'Accés complet a API',
             ],
             'max_workers' => null,
             'max_services' => null,
-            'api_access' => true,
+            'extra_stats' => true,
             'can_view_stats' => true,
         ]);
     }

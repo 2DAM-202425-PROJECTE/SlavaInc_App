@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedInteger('max_services')->nullable();
 
             // Accessos extra
-            $table->boolean('api_access')->default(false);
+            $table->boolean('extra_stats')->default(false);
             $table->boolean('can_view_stats')->default(false);
 
             $table->timestamps();
