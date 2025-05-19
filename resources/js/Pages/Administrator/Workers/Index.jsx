@@ -1,21 +1,27 @@
 "use client"
 
-import {useState, useEffect} from "react"
-import {Link, useForm, usePage, router} from "@inertiajs/react"
+import { useState, useEffect } from "react"
+import { Link, useForm, usePage, router } from "@inertiajs/react"
 import Header from "@/Components/Header"
 import Footer from "@/Components/Footer.jsx"
 import AdminHeader from "@/Pages/Administrator/Components/Header.jsx"
-import {Search, Filter, Plus, Eye, Edit, Trash2, X, ChevronDown} from "lucide-react"
+import { Search, Filter, Plus, Eye, Edit, Trash2, X, ChevronDown } from "lucide-react"
+import Pagination from "@/Pages/Administrator/Components/Pagination"
 
-const WorkersIndex = ({workers, companies}) => {
-    const {delete: destroy} = useForm()
+const WorkersIndex = ({ workers, companies }) => {
+    const { delete: destroy } = useForm()
     const [showDialog, setShowDialog] = useState(false)
     const [selectedWorkerId, setSelectedWorkerId] = useState(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedCompany, setSelectedCompany] = useState("")
     const [filteredWorkers, setFilteredWorkers] = useState(workers)
     const [showCompanyFilter, setShowCompanyFilter] = useState(false)
-    const {route} = usePage().props
+    const { route } = usePage().props
+
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [paginatedWorkers, setPaginatedWorkers] = useState([])
 
     // Apply filters whenever search term or selected company changes
     useEffect(() => {
@@ -32,7 +38,16 @@ const WorkersIndex = ({workers, companies}) => {
         }
 
         setFilteredWorkers(results)
+        // Resetear a la primera página cuando cambian los filtros
+        setCurrentPage(1)
     }, [searchTerm, selectedCompany, workers])
+
+    // Aplicar paginación a los trabajadores filtrados
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        setPaginatedWorkers(filteredWorkers.slice(startIndex, endIndex))
+    }, [filteredWorkers, currentPage, itemsPerPage])
 
     const handleDelete = (id) => {
         setSelectedWorkerId(id)
@@ -41,10 +56,10 @@ const WorkersIndex = ({workers, companies}) => {
 
     const confirmDelete = () => {
         if (selectedWorkerId) {
-            router.delete(`/administrator/workers/${selectedWorkerId}`);
+            router.delete(`/admin/workers/${selectedWorkerId}`)
         }
-        setShowDialog(false);
-    };
+        setShowDialog(false)
+    }
 
     const cancelDelete = () => {
         setShowDialog(false)
@@ -55,23 +70,35 @@ const WorkersIndex = ({workers, companies}) => {
         setSelectedCompany("")
     }
 
+    // Manejar cambio de página
+    const handlePageChange = (page) => {
+        setCurrentPage(page)
+        // Scroll al inicio de la lista
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    // Manejar cambio de elementos por página
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage)
+        setCurrentPage(1) // Resetear a la primera página
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white"/>
-            <AdminHeader theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white"/>
+            <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
+            <AdminHeader theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
 
             {/* Contingut principal */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     {/* Header amb títol i botó de crear */}
-                    <div
-                        className="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h1 className="text-2xl font-bold text-gray-800">Gestió de Treballadors</h1>
                         <button
-                            onClick={() => router.visit("/administrator/workers/create")}
+                            onClick={() => router.visit("/admin/workers/create")}
                             className="bg-[#1e40af] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2"
                         >
-                            <Plus size={18}/>
+                            <Plus size={18} />
                             <span>Nou Treballador</span>
                         </button>
                     </div>
@@ -82,7 +109,7 @@ const WorkersIndex = ({workers, companies}) => {
                             {/* Cercador */}
                             <div className="relative flex-grow">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Search size={18} className="text-gray-400"/>
+                                    <Search size={18} className="text-gray-400" />
                                 </div>
                                 <input
                                     type="text"
@@ -96,7 +123,7 @@ const WorkersIndex = ({workers, companies}) => {
                                         onClick={() => setSearchTerm("")}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                                     >
-                                        <X size={16} className="text-gray-400 hover:text-gray-600"/>
+                                        <X size={16} className="text-gray-400 hover:text-gray-600" />
                                     </button>
                                 )}
                             </div>
@@ -108,19 +135,18 @@ const WorkersIndex = ({workers, companies}) => {
                                     className="w-full md:w-auto flex items-center justify-between gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Filter size={18} className="text-gray-500"/>
+                                        <Filter size={18} className="text-gray-500" />
                                         <span>
                       {selectedCompany
                           ? `Companyia: ${companies.find((c) => c.id === Number.parseInt(selectedCompany))?.name || ""}`
                           : "Filtrar per companyia"}
                     </span>
                                     </div>
-                                    <ChevronDown size={16} className="text-gray-500"/>
+                                    <ChevronDown size={16} className="text-gray-500" />
                                 </button>
 
                                 {showCompanyFilter && (
-                                    <div
-                                        className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
                                         <div className="p-2 max-h-60 overflow-y-auto">
                                             <button
                                                 onClick={() => {
@@ -167,8 +193,8 @@ const WorkersIndex = ({workers, companies}) => {
 
                     {/* Llista de workers */}
                     <div className="divide-y divide-gray-200">
-                        {filteredWorkers.length > 0 ? (
-                            filteredWorkers.map((worker) => (
+                        {paginatedWorkers.length > 0 ? (
+                            paginatedWorkers.map((worker) => (
                                 <div key={worker.id} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex-grow">
@@ -176,8 +202,7 @@ const WorkersIndex = ({workers, companies}) => {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
                                                 <p className="text-gray-600 flex items-center gap-1">
                                                     <span className="font-medium">Companyia:</span>
-                                                    <span
-                                                        className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
+                                                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
                             {companies.find((c) => c.id === worker.company_id)?.name || "N/A"}
                           </span>
                                                 </p>
@@ -185,8 +210,7 @@ const WorkersIndex = ({workers, companies}) => {
                                                     <span className="font-medium">Horari:</span> {worker.schedule}
                                                 </p>
                                                 <p className="text-gray-600">
-                                                    <span
-                                                        className="font-medium">Adreça:</span> {worker.address}, {worker.city}
+                                                    <span className="font-medium">Adreça:</span> {worker.address}, {worker.city}
                                                 </p>
                                                 <p className="text-gray-600">
                                                     <span className="font-medium">Telèfon:</span> {worker.phone}
@@ -195,24 +219,24 @@ const WorkersIndex = ({workers, companies}) => {
                                         </div>
                                         <div className="flex items-center gap-2 mt-4 md:mt-0">
                                             <Link
-                                                onClick={() => router.visit("/administrator/show")}
+                                                onClick={() => router.visit(`/admin/workers/${worker.id}`)}
                                                 className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                                             >
-                                                <Eye size={16}/>
+                                                <Eye size={16} />
                                                 <span className="hidden sm:inline">Veure</span>
                                             </Link>
                                             <Link
-                                                onClick={() => router.visit("/administrator/edit")}
+                                                onClick={() => router.visit(`/admin/workers/${worker.id}/edit`)}
                                                 className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                                             >
-                                                <Edit size={16}/>
+                                                <Edit size={16} />
                                                 <span className="hidden sm:inline">Editar</span>
                                             </Link>
                                             <button
                                                 onClick={() => handleDelete(worker.id)}
                                                 className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg transition-colors"
                                             >
-                                                <Trash2 size={16}/>
+                                                <Trash2 size={16} />
                                                 <span className="hidden sm:inline">Eliminar</span>
                                             </button>
                                         </div>
@@ -221,16 +245,28 @@ const WorkersIndex = ({workers, companies}) => {
                             ))
                         ) : (
                             <div className="p-12 text-center">
-                                <div
-                                    className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                                    <Search size={24} className="text-gray-400"/>
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                                    <Search size={24} className="text-gray-400" />
                                 </div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-1">No s'han trobat treballadors</h3>
-                                <p className="text-gray-500">Prova amb uns altres filtres o afegeix nous
-                                    treballadors.</p>
+                                <p className="text-gray-500">Prova amb uns altres filtres o afegeix nous treballadors.</p>
                             </div>
                         )}
                     </div>
+
+                    {/* Paginación */}
+                    {filteredWorkers.length > 0 && (
+                        <div className="px-6 border-t border-gray-200">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={Math.ceil(filteredWorkers.length / itemsPerPage)}
+                                onPageChange={handlePageChange}
+                                itemsPerPage={itemsPerPage}
+                                totalItems={filteredWorkers.length}
+                                onItemsPerPageChange={handleItemsPerPageChange}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -259,7 +295,7 @@ const WorkersIndex = ({workers, companies}) => {
                     </div>
                 </div>
             )}
-            <Footer/>
+            <Footer />
         </div>
     )
 }

@@ -39,6 +39,7 @@ Route::prefix('admin')
         Route::resource('workers', AdminWorkerController::class)->names('workers');
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);
+        Route::put('profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
 
 // RUTA INICIAL

@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useForm, router } from "@inertiajs/react"
+import { router } from "@inertiajs/react"
 import Header from "@/Components/Header"
 import Footer from "@/Components/Footer.jsx"
 import AdminHeader from "@/Pages/Administrator/Components/Header.jsx"
-import { Search, Plus, Eye, Edit, Trash2, X, UserCircle, Shield, User, Mail, Calendar, AlertCircle } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Trash2, X, UserCircle, Shield, User, Mail, Calendar, AlertCircle } from "lucide-react"
+import Pagination from "@/Pages/Administrator/Components/Pagination"
 
 const UsersIndex = ({ users, auth }) => {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -14,20 +15,34 @@ const UsersIndex = ({ users, auth }) => {
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredUsers, setFilteredUsers] = useState(users)
 
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [paginatedUsers, setPaginatedUsers] = useState([])
+
     // Apply search filter
     useEffect(() => {
         if (searchTerm) {
             const results = users.filter(
-                user =>
+                (user) =>
                     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
+                    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase())),
             )
             setFilteredUsers(results)
         } else {
             setFilteredUsers(users)
         }
+        // Resetear a la primera página cuando cambian los filtros
+        setCurrentPage(1)
     }, [searchTerm, users])
+
+    // Aplicar paginación a los usuarios filtrados
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        setPaginatedUsers(filteredUsers.slice(startIndex, endIndex))
+    }, [filteredUsers, currentPage, itemsPerPage])
 
     const handleDelete = (user) => {
         setSelectedUserId(user.id)
@@ -37,7 +52,7 @@ const UsersIndex = ({ users, auth }) => {
 
     const confirmDelete = () => {
         if (selectedUserId) {
-            router.delete(`/administrator/users/${selectedUserId}`)
+            router.delete(`/admin/users/${selectedUserId}`)
         }
         setShowDeleteDialog(false)
     }
@@ -50,29 +65,42 @@ const UsersIndex = ({ users, auth }) => {
     // Function to get role badge styling
     const getRoleBadge = (role) => {
         const roles = {
-            'admin': {
+            admin: {
                 icon: <Shield size={14} />,
-                class: 'bg-purple-100 text-purple-800 border-purple-200'
+                class: "bg-purple-100 text-purple-800 border-purple-200",
             },
-            'manager': {
+            manager: {
                 icon: <Shield size={14} />,
-                class: 'bg-blue-100 text-blue-800 border-blue-200'
+                class: "bg-blue-100 text-blue-800 border-blue-200",
             },
-            'user': {
+            user: {
                 icon: <User size={14} />,
-                class: 'bg-green-100 text-green-800 border-green-200'
-            }
+                class: "bg-green-100 text-green-800 border-green-200",
+            },
         }
 
         // Default styling if role is not in our mapping
         const defaultStyle = {
             icon: <User size={14} />,
-            class: 'bg-gray-100 text-gray-800 border-gray-200'
+            class: "bg-gray-100 text-gray-800 border-gray-200",
         }
 
         // Convert role to lowercase for case-insensitive matching
-        const roleLower = role ? role.toLowerCase() : ''
+        const roleLower = role ? role.toLowerCase() : ""
         return roles[roleLower] || defaultStyle
+    }
+
+    // Manejar cambio de página
+    const handlePageChange = (page) => {
+        setCurrentPage(page)
+        // Scroll al inicio de la lista
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    // Manejar cambio de elementos por página
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage)
+        setCurrentPage(1) // Resetear a la primera página
     }
 
     return (
@@ -90,7 +118,7 @@ const UsersIndex = ({ users, auth }) => {
                             <p className="text-gray-500 mt-1">Administra els usuaris del sistema</p>
                         </div>
                         <button
-                            onClick={() => router.visit("/administrator/users/create")}
+                            onClick={() => router.visit("/admin/users/create")}
                             className="bg-[#1e40af] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2"
                         >
                             <Plus size={18} />
@@ -112,10 +140,7 @@ const UsersIndex = ({ users, auth }) => {
                                 className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                             />
                             {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm("")}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                >
+                                <button onClick={() => setSearchTerm("")} className="absolute inset-y-0 right-0 pr-3 flex items-center">
                                     <X size={16} className="text-gray-400 hover:text-gray-600" />
                                 </button>
                             )}
@@ -129,8 +154,8 @@ const UsersIndex = ({ users, auth }) => {
 
                     {/* Llista d'usuaris */}
                     <div className="divide-y divide-gray-200">
-                        {filteredUsers.length > 0 ? (
-                            filteredUsers.map((user) => {
+                        {paginatedUsers.length > 0 ? (
+                            paginatedUsers.map((user) => {
                                 const roleBadge = getRoleBadge(user.role)
                                 const isCurrentUser = user.id === auth.user.id
 
@@ -149,7 +174,9 @@ const UsersIndex = ({ users, auth }) => {
                                 Tu
                               </span>
                                                         )}
-                                                        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${roleBadge.class}`}>
+                                                        <span
+                                                            className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${roleBadge.class}`}
+                                                        >
                               {roleBadge.icon}
                                                             {user.role || "Usuari"}
                             </span>
@@ -170,14 +197,14 @@ const UsersIndex = ({ users, auth }) => {
                                             </div>
                                             <div className="flex items-center gap-2 mt-4 sm:mt-0">
                                                 <button
-                                                    onClick={() => router.visit(`/administrator/users/${user.id}`)}
+                                                    onClick={() => router.visit(`/admin/users/${user.id}`)}
                                                     className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                                                 >
                                                     <Eye size={16} />
                                                     <span className="hidden sm:inline">Veure</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => router.visit(`/administrator/users/${user.id}/edit`)}
+                                                    onClick={() => router.visit(`/admin/users/${user.id}/edit`)}
                                                     className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                                                 >
                                                     <Edit size={16} />
@@ -210,6 +237,20 @@ const UsersIndex = ({ users, auth }) => {
                             </div>
                         )}
                     </div>
+
+                    {/* Paginación */}
+                    {filteredUsers.length > 0 && (
+                        <div className="px-6 border-t border-gray-200">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={Math.ceil(filteredUsers.length / itemsPerPage)}
+                                onPageChange={handlePageChange}
+                                itemsPerPage={itemsPerPage}
+                                totalItems={filteredUsers.length}
+                                onItemsPerPageChange={handleItemsPerPageChange}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -230,7 +271,8 @@ const UsersIndex = ({ users, auth }) => {
                         )}
 
                         <p className="text-gray-600 mb-6">
-                            Estàs segur que vols eliminar aquest usuari? Aquesta acció no es pot desfer i s'eliminaran totes les dades associades.
+                            Estàs segur que vols eliminar aquest usuari? Aquesta acció no es pot desfer i s'eliminaran totes les dades
+                            associades.
                         </p>
                         <div className="flex justify-end gap-4">
                             <button

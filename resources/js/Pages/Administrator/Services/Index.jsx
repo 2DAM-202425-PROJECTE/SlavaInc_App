@@ -50,7 +50,7 @@ const ServicesIndex = ({ services }) => {
 
     const confirmDelete = () => {
         if (selectedServiceId) {
-            router.delete(`/administrator/services/${selectedServiceId}`)
+            router.delete(`/admin/services/${selectedServiceId}`)
         }
         setShowDialog(false)
     }
@@ -113,7 +113,7 @@ const ServicesIndex = ({ services }) => {
                             <p className="text-gray-500 mt-1">Administra els serveis disponibles</p>
                         </div>
                         <button
-                            onClick={() => router.visit("/administrator/services/create")}
+                            onClick={() => router.visit("/admin/services/create")}
                             className="bg-[#1e40af] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2"
                         >
                             <Plus size={18} />
@@ -203,14 +203,14 @@ const ServicesIndex = ({ services }) => {
                                         <div className="border-t border-gray-200 p-3 bg-gray-50 flex justify-between">
                                             <div className="flex gap-2">
                                                 <button
-                                                    onClick={() => router.visit(`/administrator/services/${service.id}`)}
+                                                    onClick={() => router.visit(`/admin/services/${service.id}`)}
                                                     className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-md transition-colors text-xs"
                                                 >
                                                     <Eye size={14} />
                                                     <span>Veure</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => router.visit(`/administrator/services/${service.id}/edit`)}
+                                                    onClick={() => router.visit(`/admin/services/${service.id}/edit`)}
                                                     className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded-md transition-colors text-xs"
                                                 >
                                                     <Edit size={14} />

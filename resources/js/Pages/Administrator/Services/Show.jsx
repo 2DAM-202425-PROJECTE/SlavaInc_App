@@ -81,7 +81,7 @@ const ServicesShow = ({ service }) => {
                 {/* Breadcrumbs i accions */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <button
-                        onClick={() => router.visit("/administrator/services")}
+                        onClick={() => router.visit("/admin/services")}
                         className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
                     >
                         <ArrowLeft size={16} />
@@ -90,7 +90,7 @@ const ServicesShow = ({ service }) => {
 
                     <div className="flex gap-2">
                         <button
-                            onClick={() => router.visit(`/administrator/services/${service.id}/edit`)}
+                            onClick={() => router.visit(`/admin/services/${service.id}/edit`)}
                             className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                         >
                             <Edit size={16} />
@@ -99,7 +99,7 @@ const ServicesShow = ({ service }) => {
                         <button
                             onClick={() => {
                                 if (confirm("Estàs segur que vols eliminar aquest servei? Aquesta acció no es pot desfer.")) {
-                                    router.delete(`/administrator/services/${service.id}`)
+                                    router.delete(`/admin/services/${service.id}`)
                                 }
                             }}
                             className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg transition-colors"

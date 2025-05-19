@@ -8,7 +8,7 @@ import Footer from "@/Components/Footer.jsx";
 const Dashboard = ({ services, impersonating_client = false }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilter, setSelectedFilter] = useState("generals");
-    const [showFilters, setShowFilters] = useState(false); // Estat per mostrar/ocultar filtres en mòbil
+    const [showFilters, setShowFilters] = useState(false);
 
     // Tipus principals del seeder
     const mainServiceTypes = ['casa', 'cotxe', 'garatge', 'piscina'];

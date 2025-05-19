@@ -20,7 +20,7 @@ import {
 import Header from "@/Components/Header.jsx"
 import Footer from "@/Components/Footer.jsx"
 
-const Profile = ({admin}) => {
+const Profile = ({auth}) => {
     // Estados para los modales
     const [showPasswordModal, setShowPasswordModal] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -40,17 +40,12 @@ const Profile = ({admin}) => {
 
     // Cargar datos del administrador
     useEffect(() => {
-        console.log('Dades rebudes:', admin); // Depuració
-
-        if (!admin || !admin.id) {
-            setError('No s\'han trobat dades vàlides d\'administrador');
-            setLoading(false);
-            return;
+        // Verificar que auth y auth.user existen
+        if (auth && auth.user) {
+            setAdminData(auth.user)
         }
-
-        setAdminData(admin);
-        setLoading(false);
-    }, [admin]);
+        setLoading(false)
+    }, [auth])
 
     // Manejar el envío del formulario de cambio de contraseña
     const handlePasswordSubmit = (e) => {
@@ -84,7 +79,7 @@ const Profile = ({admin}) => {
     if (!adminData) {
         return (
             <div className="flex flex-col min-h-screen bg-white">
-                <Header theme={`bg-gradient-to-r from-[${primaryColor}] to-[${secondaryColor}] text-white`}/>
+                <Header theme={`bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white`}/>
 
                 <div className="flex-grow flex items-center justify-center">
                     <div className="text-center p-8 max-w-md">
@@ -112,6 +107,70 @@ const Profile = ({admin}) => {
 
                 <Footer/>
             </div>
+        )
+    }
+
+    // Componente para el formulario de edición
+    const EditForm = ({admin, onClose}) => {
+        const {data, setData, put, processing, errors} = useForm({
+            name: admin.name,
+            email: admin.email,
+        })
+
+        const handleSubmit = (e) => {
+            e.preventDefault()
+            put("/admin/profile", {
+                onSuccess: () => {
+                    onClose()
+                },
+            })
+        }
+
+        return (
+            <form onSubmit={handleSubmit} className="p-6">
+                <div className="space-y-4 mb-6">
+                    <div>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Nom</label>
+                        <input
+                            type="text"
+                            value={data.name}
+                            onChange={(e) => setData("name", e.target.value)}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            required
+                        />
+                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                    </div>
+
+                    <div>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Correu electrònic</label>
+                        <input
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData("email", e.target.value)}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            required
+                        />
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
+                    >
+                        Cancel·lar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Guardar canvis
+                    </button>
+                </div>
+            </form>
         )
     }
 
@@ -238,7 +297,6 @@ const Profile = ({admin}) => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <button
                                             onClick={() => setShowPasswordModal(true)}
                                             className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-[#3b82f6] text-left"
@@ -256,8 +314,9 @@ const Profile = ({admin}) => {
                                                 </div>
                                             </div>
                                         </button>
+
                                         <Link
-                                            href="/logout"
+                                            href="/admin/logout"
                                             method="post"
                                             as="button"
                                             className="bg-gray-50 p-5 rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-red-400 text-left"
@@ -364,36 +423,7 @@ const Profile = ({admin}) => {
                         <h3 className="text-xl font-bold text-white">Editar informació de l'administrador</h3>
                     </div>
 
-                    <form method="dialog" className="p-6">
-                        <div className="space-y-4 mb-6">
-                            <div>
-                                <label className="block text-gray-700 text-sm font-bold mb-2">Nom</label>
-                                <input
-                                    type="text"
-                                    defaultValue={adminData.name}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-gray-700 text-sm font-bold mb-2">Correu electrònic</label>
-                                <input
-                                    type="email"
-                                    defaultValue={adminData.email}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                            <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
-                                Cancel·lar
-                            </button>
-                            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                Guardar canvis
-                            </button>
-                        </div>
-                    </form>
+                    <EditForm admin={adminData} onClose={() => document.getElementById("editAdminModal").close()}/>
                 </div>
             </dialog>
             <Footer/>

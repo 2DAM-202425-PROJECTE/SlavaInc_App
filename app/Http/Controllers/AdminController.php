@@ -86,6 +86,29 @@ class AdminController extends Controller
     }
 
     /**
+     * Actualizar el perfil del administrador autenticado
+     */
+    public function updateProfile(Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if (!$admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:admins,email,' . $admin->id,
+        ]);
+
+        $admin->name = $request->name;
+        $admin->email = $request->email;
+        $admin->save();
+
+        return back()->with('success', 'Perfil actualitzat correctament.');
+    }
+
+    /**
      * Actualizar la contraseña del administrador autenticado
      */
     public function changePassword(Request $request)
