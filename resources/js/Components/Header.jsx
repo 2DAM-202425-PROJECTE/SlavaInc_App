@@ -114,15 +114,15 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                                     className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 text-gray-800"
                                     onMouseLeave={() => setIsServicesOpen(false)}
                                 >
-                                    phalange_types.map((service) => (
-                                    <Link
-                                        key={service.value}
-                                        href={route('client.services.show', service.value)}
-                                        className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
-                                    >
-                                        <FontAwesomeIcon icon={service.icon} />
-                                        <span>Neteja de {service.name}</span>
-                                    </Link>
+                                    {serviceTypes.map((service) => (
+                                        <Link
+                                            key={service.value}
+                                            href={route('client.services.show', service.value)}
+                                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100"
+                                        >
+                                            <FontAwesomeIcon icon={service.icon} />
+                                            <span>Neteja de {service.name}</span>
+                                        </Link>
                                     ))}
                                 </div>
                             )}
