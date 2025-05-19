@@ -24,7 +24,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
     if (!pivot) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6">
-                Error: Company data not available
+                Error: Dades de l'empresa no disponibles
             </div>
         );
     }
@@ -113,7 +113,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                     {pivot.logo ? (
                         <img
                             src={pivot.logo}
-                            alt={`${company.name} logo`}
+                            alt={`Logotip de ${company.name}`}
                             className="w-12 h-12 rounded-full object-cover"
                         />
                     ) : (
@@ -147,7 +147,7 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                         onClick={handleReserve}
                         className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-2 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-md"
                     >
-                        {service.id === 5 ? "Solicitar pressupost" : "Reserve"}
+                        {service.id === 5 ? "Sol·licitar pressupost" : "Reservar"}
                     </button>
                 </div>
             </div>
@@ -158,12 +158,12 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                         onClick={handleReserve}
                         className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-2 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-md"
                     >
-                        {service.id === 5 ? "Solicitar pressupost" : "Reserve"}
+                        {service.id === 5 ? "Sol·licitar pressupost" : "Reservar"}
                     </button>
                 </div>
                 {service.id !== 5 && (
                     <p className="text-gray-700">
-                        Estimated price: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Select an option'}
+                        Preu estimat: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Selecciona una opció'}
                     </p>
                 )}
             </div>
@@ -175,18 +175,18 @@ const CompanyCard = ({ company, service, serviceType, inputValue, selectedSize }
                             <p className="text-gray-700">
                                 <FontAwesomeIcon icon={faEuroSign} className="mr-2" />
                                 {serviceType === 'altres' ?
-                                    `Price per ${company.pivot.unit}: ${company.pivot.price_per_unit} €` :
-                                    `Price per m²: ${company.pivot.price_per_unit} €`
+                                    `Preu per ${company.pivot.unit}: ${company.pivot.price_per_unit} €` :
+                                    `Preu per m²: ${company.pivot.price_per_unit} €`
                                 }
                             </p>
                         ) : (
                             <p className="text-gray-700">
                                 <FontAwesomeIcon icon={faEuroSign} className="mr-2" />
-                                Range: {company.pivot.min_price} € - {company.pivot.max_price} €
+                                Rang: {company.pivot.min_price} € - {company.pivot.max_price} €
                             </p>
                         )}
                         <p className="text-gray-700">
-                            Estimated price: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Select an option'}
+                            Preu estimat: {isValid ? `${priceEstimate.toFixed(2)} €` : 'Selecciona una opció'}
                         </p>
                     </>
                 )}
@@ -202,18 +202,18 @@ const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSo
         <div className="bg-white p-6 rounded-xl shadow-lg">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <FontAwesomeIcon icon={faFilter} className="text-[#1f7275]" />
-                Filters
+                Filtres
             </h3>
 
             <div className="space-y-4">
                 <div>
                     <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                        Search company
+                        Cerca empresa
                     </label>
                     <input
                         id="search"
                         type="text"
-                        placeholder="Search by name or address..."
+                        placeholder="Cerca per nom o adreça..."
                         value={filters.search}
                         onChange={(e) => onFilterChange('search', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
@@ -221,14 +221,14 @@ const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSo
                 </div>
 
                 <div>
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">Ciutat</label>
                     <select
                         id="city"
                         value={filters.city}
                         onChange={(e) => onFilterChange('city', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
                     >
-                        <option value="">All cities</option>
+                        <option value="">Totes les ciutats</option>
                         {cities.map(city => (
                             <option key={city} value={city}>{city}</option>
                         ))}
@@ -236,14 +236,14 @@ const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSo
                 </div>
 
                 <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">Regió</label>
                     <select
                         id="state"
                         value={filters.state}
                         onChange={(e) => onFilterChange('state', e.target.value)}
                         className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
                     >
-                        <option value="">All regions</option>
+                        <option value="">Totes les regions</option>
                         {states.map(state => (
                             <option key={state} value={state}>{state}</option>
                         ))}
@@ -253,20 +253,20 @@ const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSo
                 {!isAltres && (
                     <>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Sort by price</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar per preu</label>
                             <select
                                 value={filters.sort}
                                 onChange={(e) => onSortChange(e.target.value)}
                                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
                             >
-                                <option value="">No sorting</option>
-                                <option value="asc">Cheapest</option>
-                                <option value="desc">Most expensive</option>
+                                <option value="">Sense ordenació</option>
+                                <option value="asc">Més barat</option>
+                                <option value="desc">Més car</option>
                             </select>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Price range</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Rang de preus</label>
                             <Slider
                                 range
                                 min={0}
@@ -287,17 +287,17 @@ const FiltersSection = ({ cities, states, filters, onFilterChange, onClear, onSo
                     onClick={onClear}
                     className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors duration-200"
                 >
-                    Clear filters
+                    Netejar filtres
                 </button>
             </div>
         </div>
     );
 };
 
-const useFilters = () => {
+const useFilters = (userCity) => {
     const [filters, setFilters] = useState({
         search: '',
-        city: '',
+        city: userCity || '',
         state: '',
         sort: '',
         minPrice: 0,
@@ -311,7 +311,7 @@ const useFilters = () => {
     const resetFilters = () => {
         setFilters({
             search: '',
-            city: '',
+            city: userCity || '',
             state: '',
             sort: '',
             minPrice: 0,
@@ -322,17 +322,18 @@ const useFilters = () => {
     return { filters, updateFilter, resetFilters };
 };
 
-const ServiceInfo = ({ service, companies, priceEstimate }) => {
+const ServiceInfo = ({ service, companies, auth }) => {
     const initialInput = {
         casa: 100,
         garatge: 20,
         piscina: '',
-        cotxe: ''
+        cotxe: '',
+        altres: ''
     };
 
     const [inputValue, setInputValue] = useState(initialInput[service.type]);
     const [selectedSize, setSelectedSize] = useState('');
-    const { filters, updateFilter, resetFilters } = useFilters();
+    const { filters, updateFilter, resetFilters } = useFilters(auth.user.city);
     const [debouncedSearch] = useDebounce(filters.search, 300);
     const [visibleItems, setVisibleItems] = useState(10);
     const [showFilters, setShowFilters] = useState(false);
@@ -342,19 +343,27 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
         setSelectedSize('');
     }, [service.type]);
 
-    const cities = useMemo(() => [...new Set(companies.map(c => c.city))], [companies]);
-    const states = useMemo(() => [...new Set(companies.map(c => c.state))], [companies]);
+    // Compute average rating for each company
+    const companiesWithRatings = useMemo(() => {
+        return companies.map(company => {
+            const reviews = company.reviews || [];
+            const avg = reviews.length ? reviews.reduce((sum, r) => sum + r.rate, 0) / reviews.length : 0;
+            return { ...company, average_rating: avg };
+        });
+    }, [companies]);
+
+    const cities = useMemo(() => [...new Set(companiesWithRatings.map(c => c.city))], [companiesWithRatings]);
+    const states = useMemo(() => [...new Set(companiesWithRatings.map(c => c.state))], [companiesWithRatings]);
 
     const filteredCompanies = useMemo(() => {
-        let result = companies.filter(company => {
+        let result = companiesWithRatings.filter(company => {
             const matchesSearch = company.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
                 company.address.toLowerCase().includes(debouncedSearch.toLowerCase());
-
             const matchesCity = filters.city ? company.city === filters.city : true;
             const matchesState = filters.state ? company.state === filters.state : true;
 
             let priceEstimate;
-            if (service.type === 'casa' || service.type === 'garatge') {
+            if (['casa', 'garatge', 'altres'].includes(service.type)) {
                 priceEstimate = company.pivot.price_per_unit * (inputValue || 0);
             } else {
                 switch (selectedSize) {
@@ -366,34 +375,30 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
             }
 
             const matchesPrice = priceEstimate >= filters.minPrice && priceEstimate <= filters.maxPrice;
-
             return matchesSearch && matchesCity && matchesState && matchesPrice;
         });
 
         if (filters.sort) {
             result = result.sort((a, b) => {
-                const priceA = service.type === 'casa' || service.type === 'garatge'
-                    ? a.pivot.price_per_unit * (inputValue || 0)
-                    : selectedSize === 'petit'
-                        ? a.pivot.min_price
-                        : selectedSize === 'mitjà'
-                            ? (a.pivot.min_price + a.pivot.max_price) / 2
-                            : a.pivot.max_price;
-
-                const priceB = service.type === 'casa' || service.type === 'garatge'
-                    ? b.pivot.price_per_unit * (inputValue || 0)
-                    : selectedSize === 'petit'
-                        ? b.pivot.min_price
-                        : selectedSize === 'mitjà'
-                            ? (b.pivot.min_price + b.pivot.max_price) / 2
-                            : b.pivot.max_price;
-
+                let priceA;
+                let priceB;
+                if (['casa', 'garatge', 'altres'].includes(service.type)) {
+                    priceA = a.pivot.price_per_unit * (inputValue || 0);
+                    priceB = b.pivot.price_per_unit * (inputValue || 0);
+                } else {
+                    priceA = selectedSize === 'petit' ? a.pivot.min_price :
+                        selectedSize === 'mitjà' ? (a.pivot.min_price + a.pivot.max_price) / 2 :
+                            selectedSize === 'gran' ? a.pivot.max_price : 0;
+                    priceB = selectedSize === 'petit' ? b.pivot.min_price :
+                        selectedSize === 'mitjà' ? (b.pivot.min_price + b.pivot.max_price) / 2 :
+                            selectedSize === 'gran' ? b.pivot.max_price : 0;
+                }
                 return filters.sort === 'asc' ? priceA - priceB : priceB - priceA;
             });
         }
 
         return result;
-    }, [companies, debouncedSearch, filters, inputValue, selectedSize, service.type]);
+    }, [companiesWithRatings, debouncedSearch, filters, inputValue, selectedSize, service.type]);
 
     const handleSort = (value) => {
         updateFilter('sort', value);
@@ -422,15 +427,15 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
             role="main"
         >
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
-            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-50">
+            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{service.name}</h1>
-                        <p className="text-lg text-white/90">Companies available for this service</p>
+                        <p className="text-lg text-white/90">Empreses disponibles per aquest servei</p>
                     </div>
                     <Link href="/dashboard" className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors">
                         <FontAwesomeIcon icon={faArrowLeft} />
-                        Back to services
+                        Tornar als serveis
                     </Link>
                 </div>
             </section>
@@ -440,7 +445,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                     {service.id !== 5 && ['casa', 'garatge', 'altres'].includes(service.type) ? (
                         <>
                             <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                Square meters (m²)
+                                {service.type === 'altres' ? 'Unitats' : 'Metres quadrats (m²)'}
                             </p>
                             <div className="w-32">
                                 <input
@@ -454,14 +459,14 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                     }}
                                     min="0"
                                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                                    placeholder="Xm²"
+                                    placeholder={service.type === 'altres' ? 'Unitats' : 'm²'}
                                 />
                             </div>
                         </>
                     ) : (service.type === 'piscina' || service.type === 'cotxe') ? (
                         <>
                             <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                Size
+                                Mida
                             </p>
                             <div className="w-32">
                                 <select
@@ -469,10 +474,10 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                     onChange={(e) => setSelectedSize(e.target.value)}
                                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
                                 >
-                                    <option value="">Select</option>
-                                    <option value="petit">Small</option>
-                                    <option value="mitjà">Medium</option>
-                                    <option value="gran">Large</option>
+                                    <option value="">Selecciona</option>
+                                    <option value="petit">Petita</option>
+                                    <option value="mitjà">Mitjana</option>
+                                    <option value="gran">Gran</option>
                                 </select>
                             </div>
                         </>
@@ -482,7 +487,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
 
                     <div className="flex-1 text-right">
                         <p className="text-gray-700">
-                            Showing {Math.min(visibleItems, filteredCompanies.length)} of {filteredCompanies.length} results
+                            Mostrant {Math.min(visibleItems, filteredCompanies.length)} de {filteredCompanies.length} resultats
                         </p>
                     </div>
                 </div>
@@ -492,7 +497,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                     className="md:hidden bg-white text-[#1f7275] px-4 py-2 rounded-lg mb-4 shadow-md"
                 >
                     <FontAwesomeIcon icon={faFilter} className="mr-2" />
-                    {showFilters ? 'Hide filters' : 'Show filters'}
+                    {showFilters ? 'Amagar filtres' : 'Mostrar filtres'}
                 </button>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -529,7 +534,7 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                                     onClick={loadMore}
                                     className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-3 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-lg"
                                 >
-                                    Load more
+                                    Carregar més
                                 </button>
                             </div>
                         )}
@@ -538,10 +543,10 @@ const ServiceInfo = ({ service, companies, priceEstimate }) => {
                             <div className="text-center py-12 bg-white/90 p-6 rounded-lg shadow-md">
                                 <div className="text-4xl mb-4 text-gray-400">🏢</div>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                    No companies match the filters
+                                    Cap empresa coincideix amb els filtres
                                 </h3>
                                 <p className="text-gray-600">
-                                    Try with different search criteria
+                                    Prova amb diferents criteris de cerca
                                 </p>
                             </div>
                         )}
