@@ -40,6 +40,8 @@ class CompanyStatsService
             'notifications_reviews' => $this->company->notifications_reviews,
             'charts' => $this->getCharts(),
             'advancedStats' => $this->getAdvancedStats(),
+            'monthlyAdvancedStats' => $this->getMonthlyAdvancedStats(),
+
         ];
     }
 
@@ -92,6 +94,20 @@ class CompanyStatsService
             ->orderByDesc('total')
             ->first();
 
+        $currentYearIncome = Appointment::where('company_id', $this->companyId)
+            ->where('status', 'completed')
+            ->whereYear('date', now()->year)
+            ->sum('price');
+
+        $previousYearIncome = Appointment::where('company_id', $this->companyId)
+            ->where('status', 'completed')
+            ->whereYear('date', now()->subYear()->year)
+            ->sum('price');
+
+        $yearlyGrowth = $previousYearIncome > 0
+            ? round((($currentYearIncome - $previousYearIncome) / $previousYearIncome) * 100, 1)
+            : 0;
+
         return [
             'totalWorkers' => $totalWorkers,
             'activeWorkers' => $activeWorkers,
@@ -104,8 +120,12 @@ class CompanyStatsService
             'totalReviews' => Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))->count(),
             'positiveReviews' => Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))->where('rate', '>=', 2.5)->count(),
             'negativeReviews' => Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))->where('rate', '<', 2.5)->count(),
-            'monthlyIncome' => rand(20000, 30000),
-            'yearlyGrowth' => rand(10, 30),
+            'monthlyIncome' => Appointment::where('company_id', $this->companyId)
+                ->where('status', 'completed')
+                ->whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->sum('price'),
+            'yearlyGrowth' => $yearlyGrowth,
             'mostRequestedService' => optional($mostRequested?->service)->name ?? 'Cap',
             'averageProjectDuration' => rand(30, 60),
             'clientRetentionRate' => rand(70, 95),
@@ -232,12 +252,17 @@ class CompanyStatsService
         $total = $appointments->count();
         $cancelled = $appointments->where('status', 'cancelled')->count();
         $completed = $appointments->where('status', 'completed')->count();
+        $cancelRate = $total ? round(($cancelled / $total) * 100, 1) : 0;
+        $completionRate = $total ? round(($completed / $total) * 100, 1) : 0;
 
+        $timeDiffs = $appointments->filter(fn($a) => $a->created_at && $a->date)
+            ->map(fn($a) => $a->date->diffInDays($a->created_at));
         return [
-            'cancelRate' => $total ? round(($cancelled / $total) * 100, 1) : 0,
-            'completionRate' => $total ? round(($completed / $total) * 100, 1) : 0,
-            'avgTimeToAppointment' => $appointments->filter(fn($a) => $a->created_at && $a->date)
-                    ->map(fn($a) => $a->date->diffInDays($a->created_at))->avg() ?? null,
+            'cancelRate' => $cancelRate,
+            'completionRate' => $completionRate,
+            'avgTimeToAppointment' => $timeDiffs->isNotEmpty()
+                ? round($timeDiffs->avg(), 1)
+                : null,
             'uniqueClients' => $appointments->pluck('user_id')->unique()->count(),
             'repeatClients' => $total - $appointments->pluck('user_id')->unique()->count(),
             'appointmentsByStatus' => $appointments->groupBy('status')->map(fn($g) => $g->count()),
@@ -256,4 +281,31 @@ class CompanyStatsService
                 ]),
         ];
     }
+
+    private function getMonthlyAdvancedStats(): Collection
+    {
+        return collect(range(1, 12))->map(function ($month) {
+            $appointments = Appointment::where('company_id', $this->companyId)
+                ->whereMonth('date', $month)
+                ->whereYear('date', now()->year)
+                ->get();
+
+            $total = $appointments->count();
+            $cancelled = $appointments->where('status', 'cancelled')->count();
+            $completed = $appointments->where('status', 'completed')->count();
+
+            $timeDiffs = $appointments->filter(fn($a) => $a->created_at && $a->date)
+                ->map(fn($a) => $a->date->diffInDays($a->created_at));
+
+            return [
+                'month' => Carbon::create()->month($month)->format('M'),
+                'cancelRate' => $total ? round(($cancelled / $total) * 100, 1) : 0,
+                'completionRate' => $total ? round(($completed / $total) * 100, 1) : 0,
+                'avgTimeToAppointment' => $timeDiffs->isNotEmpty() ? round($timeDiffs->avg(), 1) : 0,
+                'income' => $appointments->where('status', 'completed')->sum('price'),
+                'completedProjects' => $completed,
+            ];
+        });
+    }
+
 }
