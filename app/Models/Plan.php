@@ -15,8 +15,8 @@ class Plan extends Model
         'features',
         'max_workers',
         'max_services',
-        'api_access',
         'can_view_stats',
+        'extra_stats',
     ];
 
     protected $casts = [
