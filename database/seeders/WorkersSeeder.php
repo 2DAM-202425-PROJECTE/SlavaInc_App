@@ -24,7 +24,7 @@ class WorkersSeeder extends Seeder
                 'company_id' => $company->id,
                 'name' => 'Treballador 1 de ' . $company->name,
                 'email' => 'treballador1@' . $company->name . '.com',
-                'password' => Hash::make('password'), // Poses una contrasenya segura
+                'password' => Hash::make('password'),
                 'phone' => '600111222',
                 'address' => $company->address,
                 'is_admin' => false,

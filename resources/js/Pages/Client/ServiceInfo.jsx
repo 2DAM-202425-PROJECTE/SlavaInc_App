@@ -322,7 +322,8 @@ const useFilters = (userCity) => {
     return { filters, updateFilter, resetFilters };
 };
 
-const ServiceInfo = ({ service, companies, auth }) => {
+
+const ServiceInfo = ({ service, companies, priceEstimate, impersonating_client = false }) => {
     const initialInput = {
         casa: 100,
         garatge: 20,
@@ -550,6 +551,17 @@ const ServiceInfo = ({ service, companies, auth }) => {
                                 </p>
                             </div>
                         )}
+                        {impersonating_client && (
+                            <div className="fixed bottom-6 right-6 z-50">
+                                <button
+                                    onClick={() => window.location.href = route('company.exitPreview')}
+                                    className="px-4 py-2 bg-[#9e2a2f] text-white rounded-lg shadow-lg hover:bg-[#7c1e22] transition"
+                                >
+                                    Tornar com a empresa
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>

@@ -85,7 +85,7 @@ export default function CompanyProfileAdmin() {
     const renderActiveSection = () => {
         switch (activeTab) {
             case "dashboard":
-                return <DashboardStats company={company} />
+                return <DashboardStats company={company} onRequestUpgrade={() => setActiveTab("profile")} />
             case "workers":
                 return (
                     <WorkersSection

@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Review;
 use App\Models\Notification;
 use App\Models\Worker;
+use App\Services\CompanyStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,46 +20,43 @@ class CompanyController extends Controller
 {
     public function index(): Response
     {
+        $companyId = auth('company')->id() ?? auth('worker')->user()?->company_id;
+
+        if (!$companyId || (auth('worker')->check() && !auth('worker')->user()->is_admin)) {
+            abort(403, 'No tens permisos');
+        }
+
+        $companyStats = (new CompanyStatsService($companyId))->getAll();
+
         return Inertia::render('Company/Dashboard', [
-            'company' => $this->getCompanyFullData(),
+            'company' => $companyStats,
         ]);
     }
 
     public function getCompanyFullData(): array
     {
-        // Verificar si el usuario autenticado es una empresa o un trabajador con permisos de administrador
         if (Auth::guard('company')->check()) {
-            // Es una empresa
             $company = Auth::guard('company')->user();
             $companyId = $company->id;
         } elseif (Auth::guard('worker')->check()) {
-            // Es un trabajador
             $worker = Auth::guard('worker')->user();
-
-            // Verificar si el trabajador tiene permisos de administrador
             if (!$worker->is_admin) {
                 abort(403, 'No tienes permisos para acceder a esta página');
             }
-
-            // Obtener el ID de la empresa asociada al trabajador
             $companyId = $worker->company_id;
-
             if (!$companyId) {
                 abort(404, 'No se encontró una empresa asociada a este trabajador');
             }
         } else {
-            // No hay usuario autenticado o no es del tipo correcto
             abort(403, 'No tienes permisos para acceder a esta página');
         }
 
-        // Obtener los datos completos de la empresa
         $companyData = Company::with([
             'workers',
             'services',
             'plan',
         ])->findOrFail($companyId);
 
-        // Preparar serveis
         $services = $companyData->services->map(function ($item) {
             return [
                 'id' => $item->pivot->id ?? null,
@@ -80,14 +78,11 @@ class CompanyController extends Controller
             ];
         });
 
-        // Estadístiques bàsiques
         $totalWorkers = $companyData->workers->count();
         $activeWorkers = $companyData->workers->where('status', 'active')->count();
         $inactiveWorkers = $totalWorkers - $activeWorkers;
-
         $totalServices = $services->count();
         $activeServices = $services->where('status', 'active')->count();
-
         $completedProjects = $services->sum('completedProjects');
 
         $ongoingProjects = Appointment::where('company_id', $companyId)
@@ -111,11 +106,11 @@ class CompanyController extends Controller
                     'service' => $review->companyService->service->name ?? 'Servei desconegut',
                 ];
             });
+
         $totalReviews = $clientReviews->count();
         $clientsRating = $totalReviews > 0 ? round($clientReviews->avg('rating'), 1) : 0;
         $positiveReviews = $clientReviews->where('rating', '>=', 2.5)->count();
         $negativeReviews = $clientReviews->where('rating', '<', 2.5)->count();
-
 
         $monthlyIncome = rand(20000, 30000);
         $yearlyGrowth = rand(10, 30);
@@ -165,7 +160,48 @@ class CompanyController extends Controller
             ];
         });
 
+        // 📊 GRÀFIQUES TARTA
 
+        $mostRequestedServicesPie = Appointment::where('company_id', $companyId)
+            ->select('service_id', DB::raw('count(*) as total'))
+            ->groupBy('service_id')
+            ->with('service:id,name')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->service?->name ?? 'Desconegut',
+                'value' => $item->total
+            ]);
+
+        $topRatedServicesPie = Review::whereHas('companyService', fn($q) => $q->where('company_id', $companyId))
+            ->with('companyService.service')
+            ->get()
+            ->groupBy(fn($review) => $review->companyService?->service?->name ?? 'Desconegut')
+            ->map(fn($reviews, $name) => [
+                'label' => $name,
+                'value' => round($reviews->avg('rate'), 2)
+            ])
+            ->values();
+
+        $revenuePerServicePie = Appointment::where('company_id', $companyId)
+            ->where('status', 'completed')
+            ->select('service_id', DB::raw('SUM(price) as total'))
+            ->groupBy('service_id')
+            ->with('service:id,name')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->service?->name ?? 'Desconegut',
+                'value' => round($item->total, 2)
+            ]);
+
+        $reviewsPerServicePie = Review::whereHas('companyService', fn($q) => $q->where('company_id', $companyId))
+            ->with('companyService.service')
+            ->get()
+            ->groupBy(fn($r) => $r->companyService?->service?->name ?? 'Desconegut')
+            ->map(fn($items, $name) => [
+                'label' => $name,
+                'value' => count($items)
+            ])
+            ->values();
 
         $plans = Plan::all()->map(function ($plan) use ($companyData) {
             return [
@@ -178,30 +214,74 @@ class CompanyController extends Controller
         });
 
         $ongoingAppointments = Appointment::with(['service', 'user', 'workers'])
-            ->where('company_id', $company->id)
-
+            ->where('company_id', $companyId)
             ->whereIn('status', ['pending', 'confirmed'])
             ->latest('date')
             ->take(15)
             ->get()
-            ->map(function ($appointment) {
-                return [
-                    'id' => $appointment->id,
-                    'date' => $appointment->date,
-                    'time' => $appointment->time,
-                    'price' => $appointment->price,
-                    'status' => $appointment->status,
-                    'notes' => $appointment->notes,
-                    'service' => $appointment->service?->name,
-                    'user' => $appointment->user?->name,
-                    'worker' => $appointment->worker?->name,
-                ];
-            });
+            ->map(fn($appointment) => [
+                'id' => $appointment->id,
+                'date' => $appointment->date,
+                'time' => $appointment->time,
+                'price' => $appointment->price,
+                'status' => $appointment->status,
+                'notes' => $appointment->notes,
+                'service' => $appointment->service?->name,
+                'user' => $appointment->user?->name,
+                'worker' => $appointment->workers->pluck('name')->implode(', '),
+            ]);
 
         $notifications = Notification::where('company_id', $companyId)
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
+
+
+        $allAppointments = Appointment::where('company_id', $companyId)->get();
+
+        $totalAppointments = $allAppointments->count();
+        $cancelledAppointments = $allAppointments->where('status', 'cancelled')->count();
+        $completedAppointments = $allAppointments->where('status', 'completed')->count();
+
+        $cancelRate = $totalAppointments > 0 ? round(($cancelledAppointments / $totalAppointments) * 100, 1) : 0;
+        $completionRate = $totalAppointments > 0 ? round(($completedAppointments / $totalAppointments) * 100, 1) : 0;
+
+        $avgTimeToAppointment = $allAppointments
+            ->filter(fn($a) => $a->created_at && $a->date)
+            ->map(fn($a) => $a->date->diffInDays($a->created_at))
+            ->avg();
+
+        $avgTimeToAppointment = $avgTimeToAppointment ? round($avgTimeToAppointment, 1) : null;
+
+        $uniqueClients = $allAppointments->pluck('user_id')->unique()->count();
+        $repeatClients = $totalAppointments > 0 ? $totalAppointments - $uniqueClients : 0;
+
+        $appointmentsByStatus = $allAppointments->groupBy('status')->map(fn($group) => $group->count());
+
+        $servicesWithCancellations = Appointment::where('company_id', $companyId)
+            ->where('status', 'cancelled')
+            ->select('service_id', DB::raw('count(*) as total'))
+            ->groupBy('service_id')
+            ->with('service:id,name')
+            ->get()
+            ->map(fn($a) => [
+                'label' => $a->service?->name ?? 'Desconegut',
+                'value' => $a->total
+            ]);
+
+        $monthlyAverageRatings = Review::whereHas('companyService', fn($q) => $q->where('company_id', $companyId))
+            ->select(DB::raw("strftime('%m', created_at) as month"), DB::raw('AVG(rate) as avg_rating'))
+            ->groupBy(DB::raw("strftime('%m', created_at)"))
+            ->get()
+            ->map(function ($item) {
+                $monthNumber = (int) $item->month;
+                $monthName = \Carbon\Carbon::create()->month($monthNumber)->format('M');
+                return [
+                    'month' => $monthName,
+                    'value' => round($item->avg_rating, 1),
+                ];
+            });
+
 
         return [
             'info' => $companyData->only([
@@ -222,8 +302,27 @@ class CompanyController extends Controller
             'notifications_system' => $companyData->notifications_system,
             'notifications_appointments' => $companyData->notifications_appointments,
             'notifications_reviews' => $companyData->notifications_reviews,
+
+            // 🎯 NOVES DADES PER A GRÀFIQUES
+            'charts' => [
+                'mostRequestedServicesPie' => $mostRequestedServicesPie,
+                'topRatedServicesPie' => $topRatedServicesPie,
+                'revenuePerServicePie' => $revenuePerServicePie,
+                'reviewsPerServicePie' => $reviewsPerServicePie,
+            ],
+            'advancedStats' => [
+                'cancelRate' => $cancelRate,
+                'completionRate' => $completionRate,
+                'avgTimeToAppointment' => $avgTimeToAppointment,
+                'uniqueClients' => $uniqueClients,
+                'repeatClients' => $repeatClients,
+                'appointmentsByStatus' => $appointmentsByStatus,
+                'servicesWithCancellations' => $servicesWithCancellations,
+                'monthlyAverageRatings' => $monthlyAverageRatings,
+            ],
         ];
     }
+
 
     public function show(Company $company, Request $request): Response
     {

@@ -56,7 +56,8 @@ class ClientController extends Controller
 
         return Inertia::render('Client/ServiceInfo', [
             'service' => $service,
-            'companies' => $companies
+            'companies' => $companies,
+            'impersonating_client' => session('impersonating_client', false),
         ]);
     }
 
@@ -208,22 +209,25 @@ class ClientController extends Controller
             // Notificació
             $user = auth()->user();
             $service = Service::find($validated['service_id']);
+            $company = Company::find($validated['company_id']);
 
-            Notification::create([
-                'company_id' => $validated['company_id'],
-                'type' => 'service',
-                'action' => 'appointment_created',
-                'data' => [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'service_id' => $service->id,
-                    'service_name' => $service->name,
-                    'date' => $validated['date'],
-                    'time' => $validated['time'],
-                ],
-                'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
-                'read' => false,
-            ]);
+            if ($company && $company->notifications_appointments == 1) {
+                Notification::create([
+                    'company_id' => $validated['company_id'],
+                    'type' => 'service',
+                    'action' => 'appointment_created',
+                    'data' => [
+                        'user_id' => $user->id,
+                        'user_name' => $user->name,
+                        'service_id' => $service->id,
+                        'service_name' => $service->name,
+                        'date' => $validated['date'],
+                        'time' => $validated['time'],
+                    ],
+                    'message' => "{$user->name} ha sol·licitat una cita per a \"{$service->name}\" el {$validated['date']} a les {$validated['time']}.",
+                    'read' => false,
+                ]);
+            }
 
             DB::commit();
 
@@ -421,20 +425,47 @@ class ClientController extends Controller
         ]);
 
         try {
-            Appointment::where([['id', $validated['appointment_id']], ['user_id', auth()->id()], ['status', 'completed']])->firstOrFail();
+            Appointment::where([
+                ['id', $validated['appointment_id']],
+                ['user_id', auth()->id()],
+                ['status', 'completed']
+            ])->firstOrFail();
 
-            if (Review::where([['client_id', auth()->id()], ['appointment_id', $validated['appointment_id']]])->exists()) {
+            if (Review::where([
+                ['client_id', auth()->id()],
+                ['appointment_id', $validated['appointment_id']]
+            ])->exists()) {
                 session()->flash('error', 'Ja has deixat una ressenya per aquesta cita.');
                 return Inertia::location(route('client.appointments.index'));
             }
 
-            Review::create([
+            $review = Review::create([
                 'client_id'          => auth()->id(),
                 'company_service_id' => $validated['company_service_id'],
                 'appointment_id'     => $validated['appointment_id'],
                 'rate'               => $validated['rate'],
                 'comment'            => $validated['comment'],
             ]);
+
+            // Obtenir la companyia associada al servei
+            $service = CompanyService::with(['company', 'service'])->find($validated['company_service_id']);
+            $company = $service->company ?? null;
+
+            if ($company && $company->notifications_reviews == 1) {
+                $user = auth()->user();
+                Notification::create([
+                    'company_id' => $company->id,
+                    'type' => 'review',
+                    'action' => 'review_created',
+                    'data' => [
+                        'clientName' => $user->name,
+                        'rating' => $validated['rate'],
+                        'comment' => $validated['comment'],
+                        'serviceName' => $service->service->name,                     ],
+                    'message' => "{$user->name} ha deixat una ressenya de {$validated['rate']} estrelles pel servei \"{$service->name}\".",
+                    'read' => false,
+                ]);
+            }
 
             session()->flash('success', 'Ressenya creada amb èxit!');
             return Inertia::location(route('client.appointments.index'));
@@ -447,6 +478,7 @@ class ClientController extends Controller
             return Inertia::location(route('client.appointments.index'));
         }
     }
+
 
     /**
      * Actualitza una ressenya existent.
