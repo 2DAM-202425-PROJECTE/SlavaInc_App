@@ -33,8 +33,7 @@ const Dashboard = () => {
     useEffect(() => {
         // Filtrar appointments para este worker y solo pending/confirmed
         const workerAppointments = appointments.filter(app =>
-            app.workers?.some(worker => worker.id === userId) &&
-            ['pending', 'confirmed'].includes(app.status)
+            app.workers?.some(worker => worker.id === userId)
         );
         setFilteredAppointments(workerAppointments);
 
@@ -200,7 +199,7 @@ const Dashboard = () => {
                             <h3 className="text-xl font-semibold text-gray-800 mb-1">
                                 No tens cites pendents o confirmades
                             </h3>
-                            <p className="text-gray-500">Quan et assignin cites pendents o confirmades, apareixeran aquí</p>
+                            <p className="text-gray-500">Les teves cites apareixeran aquí</p>
                         </div>
                     )}
                 </div>

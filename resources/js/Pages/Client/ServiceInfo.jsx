@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faBuilding, faMapMarkerAlt, faFilter, faSort, faEuroSign, faStar } from '@fortawesome/free-solid-svg-icons';
 import { useDebounce } from 'use-debounce';
@@ -322,8 +322,10 @@ const useFilters = (userCity) => {
     return { filters, updateFilter, resetFilters };
 };
 
-
 const ServiceInfo = ({ service, companies, priceEstimate, impersonating_client = false }) => {
+    const { props } = usePage();
+    const { auth } = props;
+
     const initialInput = {
         casa: 100,
         garatge: 20,
@@ -334,7 +336,7 @@ const ServiceInfo = ({ service, companies, priceEstimate, impersonating_client =
 
     const [inputValue, setInputValue] = useState(initialInput[service.type]);
     const [selectedSize, setSelectedSize] = useState('');
-    const { filters, updateFilter, resetFilters } = useFilters(auth.user.city);
+    const { filters, updateFilter, resetFilters } = useFilters(auth?.user?.city || '');
     const [debouncedSearch] = useDebounce(filters.search, 300);
     const [visibleItems, setVisibleItems] = useState(10);
     const [showFilters, setShowFilters] = useState(false);
@@ -344,7 +346,6 @@ const ServiceInfo = ({ service, companies, priceEstimate, impersonating_client =
         setSelectedSize('');
     }, [service.type]);
 
-    // Compute average rating for each company
     const companiesWithRatings = useMemo(() => {
         return companies.map(company => {
             const reviews = company.reviews || [];
@@ -417,154 +418,155 @@ const ServiceInfo = ({ service, companies, priceEstimate, impersonating_client =
     const backgroundImage = backgroundImages[service.type] || '/images/default.jpg';
 
     return (
-        <div
-            className="min-h-screen bg-gray-50"
-            style={{
-                backgroundImage: `url(${backgroundImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundAttachment: 'fixed',
-            }}
-            role="main"
-        >
+        <div className="flex flex-col min-h-screen bg-gray-50">
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
-            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">{service.name}</h1>
-                        <p className="text-lg text-white/90">Empreses disponibles per aquest servei</p>
+            <main
+                className="flex-grow"
+                style={{
+                    backgroundImage: `url(${backgroundImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundAttachment: 'fixed',
+                }}
+                role="main"
+            >
+                <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">{service.name}</h1>
+                            <p className="text-lg text-white/90">Empreses disponibles per aquest servei</p>
+                        </div>
+                        <Link href="/dashboard" className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <FontAwesomeIcon icon={faArrowLeft} />
+                            Tornar als serveis
+                        </Link>
                     </div>
-                    <Link href="/dashboard" className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors">
-                        <FontAwesomeIcon icon={faArrowLeft} />
-                        Tornar als serveis
-                    </Link>
-                </div>
-            </section>
+                </section>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="mb-6 flex items-center gap-4 bg-white/90 p-4 rounded-lg shadow-md">
-                    {service.id !== 5 && ['casa', 'garatge', 'altres'].includes(service.type) ? (
-                        <>
-                            <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                {service.type === 'altres' ? 'Unitats' : 'Metres quadrats (m²)'}
+                <div className="max-w-7xl mx-auto px-4 py-8">
+                    <div className="mb-6 flex items-center gap-4 bg-white/90 p-4 rounded-lg shadow-md">
+                        {service.id !== 5 && ['casa', 'garatge', 'altres'].includes(service.type) ? (
+                            <>
+                                <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                    {service.type === 'altres' ? 'Unitats' : 'Metres quadrats (m²)'}
+                                </p>
+                                <div className="w-32">
+                                    <input
+                                        type="number"
+                                        value={inputValue}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || (!isNaN(value) && value >= 0)) {
+                                                setInputValue(value === '' ? '' : Number(value));
+                                            }
+                                        }}
+                                        min="0"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
+                                        placeholder={service.type === 'altres' ? 'Unitats' : 'm²'}
+                                    />
+                                </div>
+                            </>
+                        ) : (service.type === 'piscina' || service.type === 'cotxe') ? (
+                            <>
+                                <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                    Mida
+                                </p>
+                                <div className="w-32">
+                                    <select
+                                        value={selectedSize}
+                                        onChange={(e) => setSelectedSize(e.target.value)}
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
+                                    >
+                                        <option value="">Selecciona</option>
+                                        <option value="petit">Petita</option>
+                                        <option value="mitjà">Mitjana</option>
+                                        <option value="gran">Gran</option>
+                                    </select>
+                                </div>
+                            </>
+                        ) : null}
+
+                        <div className="h-8 w-px bg-gray-300"></div>
+
+                        <div className="flex-1 text-right">
+                            <p className="text-gray-700">
+                                Mostrant {Math.min(visibleItems, filteredCompanies.length)} de {filteredCompanies.length} resultats
                             </p>
-                            <div className="w-32">
-                                <input
-                                    type="number"
-                                    value={inputValue}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (value === '' || (!isNaN(value) && value >= 0)) {
-                                            setInputValue(value === '' ? '' : Number(value));
-                                        }
-                                    }}
-                                    min="0"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                                    placeholder={service.type === 'altres' ? 'Unitats' : 'm²'}
-                                />
-                            </div>
-                        </>
-                    ) : (service.type === 'piscina' || service.type === 'cotxe') ? (
-                        <>
-                            <p className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                                Mida
-                            </p>
-                            <div className="w-32">
-                                <select
-                                    value={selectedSize}
-                                    onChange={(e) => setSelectedSize(e.target.value)}
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-[#01a0a6] transition-all"
-                                >
-                                    <option value="">Selecciona</option>
-                                    <option value="petit">Petita</option>
-                                    <option value="mitjà">Mitjana</option>
-                                    <option value="gran">Gran</option>
-                                </select>
-                            </div>
-                        </>
-                    ) : null}
-
-                    <div className="h-8 w-px bg-gray-300"></div>
-
-                    <div className="flex-1 text-right">
-                        <p className="text-gray-700">
-                            Mostrant {Math.min(visibleItems, filteredCompanies.length)} de {filteredCompanies.length} resultats
-                        </p>
-                    </div>
-                </div>
-
-                <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="md:hidden bg-white text-[#1f7275] px-4 py-2 rounded-lg mb-4 shadow-md"
-                >
-                    <FontAwesomeIcon icon={faFilter} className="mr-2" />
-                    {showFilters ? 'Amagar filtres' : 'Mostrar filtres'}
-                </button>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div className={`${showFilters ? 'block' : 'hidden'} md:block md:col-span-1 sticky top-24 h-fit`}>
-                        <FiltersSection
-                            cities={cities}
-                            states={states}
-                            filters={filters}
-                            onFilterChange={updateFilter}
-                            onClear={resetFilters}
-                            onSortChange={handleSort}
-                            onPriceRangeChange={handlePriceRangeChange}
-                            serviceType={service.type}
-                        />
+                        </div>
                     </div>
 
-                    <div className="md:col-span-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-                        <div className="grid grid-cols-1 gap-6">
-                            {filteredCompanies.slice(0, visibleItems).map((company) => (
-                                <CompanyCard
-                                    key={company.id}
-                                    company={company}
-                                    service={service}
-                                    serviceType={service.type}
-                                    inputValue={inputValue}
-                                    selectedSize={selectedSize}
-                                />
-                            ))}
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="md:hidden bg-white text-[#1f7275] px-4 py-2 rounded-lg mb-4 shadow-md"
+                    >
+                        <FontAwesomeIcon icon={faFilter} className="mr-2" />
+                        {showFilters ? 'Amagar filtres' : 'Mostrar filtres'}
+                    </button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div className={`${showFilters ? 'block' : 'hidden'} md:block md:col-span-1 sticky top-24 h-fit`}>
+                            <FiltersSection
+                                cities={cities}
+                                states={states}
+                                filters={filters}
+                                onFilterChange={updateFilter}
+                                onClear={resetFilters}
+                                onSortChange={handleSort}
+                                onPriceRangeChange={handlePriceRangeChange}
+                                serviceType={service.type}
+                            />
                         </div>
 
-                        {visibleItems < filteredCompanies.length && (
-                            <div className="mt-8 text-center">
-                                <button
-                                    onClick={loadMore}
-                                    className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-3 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-lg"
-                                >
-                                    Carregar més
-                                </button>
+                        <div className="md:col-span-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+                            <div className="grid grid-cols-1 gap-6">
+                                {filteredCompanies.slice(0, visibleItems).map((company) => (
+                                    <CompanyCard
+                                        key={company.id}
+                                        company={company}
+                                        service={service}
+                                        serviceType={service.type}
+                                        inputValue={inputValue}
+                                        selectedSize={selectedSize}
+                                    />
+                                ))}
                             </div>
-                        )}
 
-                        {filteredCompanies.length === 0 && (
-                            <div className="text-center py-12 bg-white/90 p-6 rounded-lg shadow-md">
-                                <div className="text-4xl mb-4 text-gray-400">🏢</div>
-                                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                    Cap empresa coincideix amb els filtres
-                                </h3>
-                                <p className="text-gray-600">
-                                    Prova amb diferents criteris de cerca
-                                </p>
-                            </div>
-                        )}
-                        {impersonating_client && (
-                            <div className="fixed bottom-6 right-6 z-50">
-                                <button
-                                    onClick={() => window.location.href = route('company.exitPreview')}
-                                    className="px-4 py-2 bg-[#9e2a2f] text-white rounded-lg shadow-lg hover:bg-[#7c1e22] transition"
-                                >
-                                    Tornar com a empresa
-                                </button>
-                            </div>
-                        )}
+                            {visibleItems < filteredCompanies.length && (
+                                <div className="mt-8 text-center">
+                                    <button
+                                        onClick={loadMore}
+                                        className="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white px-6 py-3 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] transition-all shadow-lg"
+                                    >
+                                        Carregar més
+                                    </button>
+                                </div>
+                            )}
 
+                            {filteredCompanies.length === 0 && (
+                                <div className="text-center py-12 bg-white/90 p-6 rounded-lg shadow-md">
+                                    <div className="text-4xl mb-4 text-gray-400">🏢</div>
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                        Cap empresa coincideix amb els filtres
+                                    </h3>
+                                    <p className="text-gray-600">
+                                        Prova amb diferents criteris de cerca
+                                    </p>
+                                </div>
+                            )}
+                            {impersonating_client && (
+                                <div className="fixed bottom-6 right-6 z-50">
+                                    <button
+                                        onClick={() => window.location.href = route('company.exitPreview')}
+                                        className="px-4 py-2 bg-[#9e2a2f] text-white rounded-lg shadow-lg hover:bg-[#7c1e22] transition"
+                                    >
+                                        Tornar com a empresa
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </main>
             <Footer />
         </div>
     );

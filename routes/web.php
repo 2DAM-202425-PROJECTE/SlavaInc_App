@@ -212,6 +212,7 @@ Route::middleware('auth:worker')->group(function () {
     })->name('worker.dashboard');
     Route::get('/worker/appointments', [AdminWorkerController::class, 'indexAppointments'])->name('worker.appointments.index');
     Route::get('/worker/appointments/{appointment}', [WorkerController::class, 'showAppointment'])->name('worker.appointments.show');
+    Route::patch('/worker/appointments/{appointment}/confirm', [WorkerController::class, 'confirmAppointment'])->name('worker.appointments.confirm');
     Route::patch('/worker/appointments/{appointment}/complete', [WorkerController::class, 'markAppointmentCompleted'])->name('worker.appointments.complete');
     Route::patch('/worker/appointments/{appointment}/cancel', [WorkerController::class, 'cancelAppointment'])->name('worker.appointments.cancel');
 });

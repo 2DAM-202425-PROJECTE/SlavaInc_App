@@ -197,6 +197,26 @@ class WorkerController extends Controller
         ]);
     }
 
+    public function confirmAppointment(Appointment $appointment)
+    {
+        $worker = Auth::guard('worker')->user();
+
+        $appointment->load('workers');
+
+        if (!$worker || !$appointment->workers->contains($worker->id)) {
+            abort(403, 'No tens permís per modificar aquesta cita.');
+        }
+
+        if ($appointment->status !== 'pending') {
+            return redirect()->back()->withErrors(['error' => 'Només es poden confirmar cites pendents.']);
+        }
+
+        $appointment->status = 'confirmed';
+        $appointment->save();
+
+        return redirect()->back()->with('success', 'Cita confirmada correctament.');
+    }
+
 
     public function markAppointmentCompleted(Appointment $appointment)
     {

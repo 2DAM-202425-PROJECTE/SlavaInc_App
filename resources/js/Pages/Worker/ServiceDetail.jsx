@@ -160,20 +160,45 @@ const ServiceDetail = () => {
                         <div className="pt-4 border-t border-gray-200">
                             <h3 className="text-xl font-semibold text-gray-800 mb-3">Accions</h3>
                             <div className="space-y-3">
-                                <button
-                                    className="w-full bg-[#7f1d1d] hover:bg-[#dc2626] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-                                    onClick={() => router.patch(route('worker.appointments.complete', appointment.id))}
-                                >
-                                    <FontAwesomeIcon icon={faInfoCircle} />
-                                    Marcar com a completada
-                                </button>
-                                <button
-                                    className="w-full bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
-                                    onClick={() => setShowCancelModal(true)}
-                                >
-                                    <FontAwesomeIcon icon={faTimes} />
-                                    Cancel·lar cita
-                                </button>
+                                {appointment.status === 'pending' && (
+                                    <>
+                                        <button
+                                            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                                            onClick={() => router.patch(route('worker.appointments.confirm', appointment.id))}
+                                        >
+                                            <FontAwesomeIcon icon={faInfoCircle} />
+                                            Confirmar cita
+                                        </button>
+                                        <button
+                                            className="w-full bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                                            onClick={() => setShowCancelModal(true)}
+                                        >
+                                            <FontAwesomeIcon icon={faTimes} />
+                                            Cancel·lar cita
+                                        </button>
+                                    </>
+                                )}
+                                {appointment.status === 'confirmed' && (
+                                    <>
+                                        <button
+                                            className="w-full bg-[#7f1d1d] hover:bg-[#dc2626] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                                            onClick={() => router.patch(route('worker.appointments.complete', appointment.id))}
+                                        >
+                                            <FontAwesomeIcon icon={faInfoCircle} />
+                                            Marcar com a completada
+                                        </button>
+                                        <button
+                                            className="w-full bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                                            onClick={() => setShowCancelModal(true)}
+                                        >
+                                            <FontAwesomeIcon icon={faTimes} />
+                                            Cancel·lar cita
+                                        </button>
+                                    </>
+                                )}
+                                {(appointment.status === 'completed' || appointment.status === 'cancelled') && (
+                                    <p className="text-gray-600 italic">No hi ha accions disponibles per aquesta cita.</p>
+                                )}
                             </div>
                         </div>
                     </div>
