@@ -21,7 +21,7 @@ class AuthenticatedSessionController extends Controller
             'password' => 'required|string',
         ]);
 
-        $guards = ['admin', 'web', 'worker', 'company'];
+        $guards = ['web', 'worker', 'company', 'admin'];
 
         foreach ($guards as $guard) {
             Auth::guard($guard)->logout();
@@ -50,7 +50,7 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request)
     {
-        $guards = ['admin', 'web', 'worker', 'company'];
+        $guards = ['web', 'worker', 'company', 'admin'];
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {

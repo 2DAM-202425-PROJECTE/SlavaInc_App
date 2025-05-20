@@ -5,6 +5,7 @@ import { router } from "@inertiajs/react"
 import Header from "@/Components/Header"
 import Footer from "@/Components/Footer.jsx"
 import AdminHeader from "@/Pages/Administrator/Components/Header.jsx"
+import Pagination from "@/Pages/Administrator/Components/Pagination.jsx"
 import {
     Search,
     Plus,
@@ -32,6 +33,11 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
     const [showCompanyFilter, setShowCompanyFilter] = useState(false)
     const [showServiceFilter, setShowServiceFilter] = useState(false)
 
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [paginatedCompanyServices, setPaginatedCompanyServices] = useState([])
+
     // Apply filters whenever search term, selected company, or selected service changes
     useEffect(() => {
         let results = companyServices
@@ -58,7 +64,16 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
         }
 
         setFilteredCompanyServices(results)
+        // Resetear a la primera página cuando cambian los filtros
+        setCurrentPage(1)
     }, [searchTerm, selectedCompany, selectedService, companyServices])
+
+    // Aplicar paginación a los servicios de empresa filtrados
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        setPaginatedCompanyServices(filteredCompanyServices.slice(startIndex, endIndex))
+    }, [filteredCompanyServices, currentPage, itemsPerPage])
 
     const handleDelete = (companyService) => {
         setSelectedCompanyServiceId(companyService.id)
@@ -68,7 +83,7 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
 
     const confirmDelete = () => {
         if (selectedCompanyServiceId) {
-            router.delete(`/administrator/company-services/${selectedCompanyServiceId}`)
+            router.delete(`/admin/company-services/${selectedCompanyServiceId}`)
         }
         setShowDialog(false)
     }
@@ -99,6 +114,19 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
         }
     }
 
+    // Manejar cambio de página
+    const handlePageChange = (page) => {
+        setCurrentPage(page)
+        // Scroll al inicio de la lista
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    // Manejar cambio de elementos por página
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage)
+        setCurrentPage(1) // Resetear a la primera página
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
@@ -114,7 +142,7 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
                             <p className="text-gray-500 mt-1">Gestiona els serveis personalitzats per empreses</p>
                         </div>
                         <button
-                            onClick={() => router.visit("/administrator/company-services/create")}
+                            onClick={() => router.visit("/admin/company-services/create")}
                             className="bg-[#1e40af] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2"
                         >
                             <Plus size={18} />
@@ -263,8 +291,8 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
 
                     {/* Llista de serveis d'empresa */}
                     <div className="divide-y divide-gray-200">
-                        {filteredCompanyServices.length > 0 ? (
-                            filteredCompanyServices.map((companyService) => (
+                        {paginatedCompanyServices.length > 0 ? (
+                            paginatedCompanyServices.map((companyService) => (
                                 <div key={companyService.id} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-start gap-4">
@@ -321,14 +349,14 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
 
                                         <div className="flex items-center gap-2 mt-4 md:mt-0">
                                             <button
-                                                onClick={() => router.visit(`/administrator/company-services/${companyService.id}`)}
+                                                onClick={() => router.visit(`/admin/company-services/${companyService.id}`)}
                                                 className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                                             >
                                                 <Eye size={16} />
                                                 <span className="hidden sm:inline">Veure</span>
                                             </button>
                                             <button
-                                                onClick={() => router.visit(`/administrator/company-services/${companyService.id}/edit`)}
+                                                onClick={() => router.visit(`/admin/company-services/${companyService.id}/edit`)}
                                                 className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                                             >
                                                 <Edit size={16} />
@@ -357,6 +385,20 @@ const CompanyServicesIndex = ({ companyServices, companies, services }) => {
                             </div>
                         )}
                     </div>
+
+                    {/* Paginación */}
+                    {filteredCompanyServices.length > 0 && (
+                        <div className="px-6 border-t border-gray-200">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={Math.ceil(filteredCompanyServices.length / itemsPerPage)}
+                                onPageChange={handlePageChange}
+                                itemsPerPage={itemsPerPage}
+                                totalItems={filteredCompanyServices.length}
+                                onItemsPerPageChange={handleItemsPerPageChange}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 

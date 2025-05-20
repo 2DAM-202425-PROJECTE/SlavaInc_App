@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Administrator\AdminCompanyController;
 use App\Http\Controllers\Administrator\AdminCompanyServicesController;
 use App\Http\Controllers\Administrator\AdminDashboardController;
@@ -39,12 +40,15 @@ Route::prefix('admin')
         Route::resource('workers', AdminWorkerController::class)->names('workers');
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);
+        Route::put('profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
 
 // RUTA INICIAL
 Route::get('/', function () {
     if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
         return redirect()->route('dashboard');
+    } elseif (Auth::guard('admin')->check()) {
+        return redirect()->route('administrator.dashboard');
     }
     return redirect()->route('login');
 });
@@ -83,8 +87,12 @@ Route::get('/dashboard', function () {
 
 
 // RUTES COMUNES AUTENTICATS
-Route::middleware('auth:company,web,worker')->group(function () {
+Route::middleware(['auth:admin,web,worker,company'])->group(function () {
     Route::get('/profile', function () {
+        if (Auth::guard('admin')->check()) {
+            return app(AdminController::class)->profile();
+        }
+
         if (Auth::guard('web')->check()) {
             return Inertia::render('Client/Profile');
         }
@@ -104,11 +112,18 @@ Route::middleware('auth:company,web,worker')->group(function () {
             ]);
         }
 
-        return redirect()->route('login');
-    })->name('profile.edit');
+        abort(403);
+    })->name('profile');
+
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/client/services/{service}', [ClientController::class, 'show'])->name('client.services.show');
+});
+
+
+// Ruta per canviar la contrasenya de admin
+Route::middleware(['auth:admin'])->group(function () {
+    Route::post('/admin/change-password', [AdminController::class, 'changePassword'])->name('admin.change-password');
 });
 
 // RUTES PER A EMPRESES (COMPANY)
@@ -212,11 +227,11 @@ require __DIR__.'/auth.php';
 
 // Rutes per restablir la contrasenya
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
-    ->middleware('guest')
+    ->middleware('web')
     ->name('password.request');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-    ->middleware('guest')
+    ->middleware('web')
     ->name('password.email');
 
 Route::get('/reset-password', function () {

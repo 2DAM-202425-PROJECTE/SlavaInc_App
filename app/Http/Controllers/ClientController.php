@@ -31,12 +31,15 @@ class ClientController extends Controller
         $service = Service::find($serviceTypeOrId) ?? Service::where('type', $serviceTypeOrId)->firstOrFail();
 
         $companies = $service->companies->map(function ($company) {
-            $averageRating = Review::where('company_service_id', $company->pivot->id)->avg('rate');
-            $topReviews = Review::where('company_service_id', $company->pivot->id)
+            // Calculate the average rating across all services for the company
+            $averageRating = Review::whereHas('companyService', function ($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })->avg('rate');
 
-                ->orderBy('rate', 'desc')
-                ->take(3)
-                ->get(['rate', 'comment']);
+            // Get all reviews for the company across all services
+            $reviews = Review::whereHas('companyService', function ($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })->select('id', 'rate', 'comment', 'created_at')->get();
 
             return [
                 'id' => $company->id,
@@ -47,7 +50,7 @@ class ClientController extends Controller
                 'zip_code' => $company->zip_code,
                 'pivot' => $company->pivot,
                 'average_rating' => $averageRating ? round($averageRating, 1) : null,
-                'top_reviews' => $topReviews,
+                'reviews' => $reviews,
             ];
         });
 
@@ -147,7 +150,7 @@ class ClientController extends Controller
                 'price' => 'required|numeric|min:0.1',
                 'notes' => 'nullable|string|max:500',
                 'input_value' => 'nullable|numeric|min:0',
-                'selected_size' => 'nullable|string|in:petit,mitjà,gran'
+                'selected_size' => 'nullable|string|in:small,mitjà,gran'
             ]);
 
             // Trobar el CompanyService corresponent
@@ -334,7 +337,7 @@ class ClientController extends Controller
                 'time'                => $appointment->time,
                 'price'               => (float)$appointment->price,
                 'status'              => $appointment->status,
-                'notes'               => $appointment->notes,
+                'notes'              => $appointment->notes,
                 'company'             => $appointment->company,
                 'service'             => $appointment->service,
                 'workers'             => $appointment->workers,

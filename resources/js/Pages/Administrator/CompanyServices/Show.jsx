@@ -49,7 +49,7 @@ const CompanyServicesShow = ({ companyService }) => {
     }
 
     const confirmDelete = () => {
-        router.delete(`/administrator/company-services/${companyService.id}`)
+        router.delete(`/admin/company-services/${companyService.id}`)
         setShowDialog(false)
     }
 
@@ -70,7 +70,7 @@ const CompanyServicesShow = ({ companyService }) => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <button
-                                    onClick={() => router.visit("/administrator/company-services")}
+                                    onClick={() => router.visit("/admin/company-services")}
                                     className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                                 >
                                     <ArrowLeft size={20} className="text-gray-600" />
@@ -95,7 +95,7 @@ const CompanyServicesShow = ({ companyService }) => {
                             </div>
                             <div className="flex items-center gap-2 mt-4 sm:mt-0">
                                 <button
-                                    onClick={() => router.visit(`/administrator/company-services/${companyService.id}/edit`)}
+                                    onClick={() => router.visit(`/admin/company-services/${companyService.id}/edit`)}
                                     className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg transition-colors"
                                 >
                                     <Edit size={16} />
@@ -220,7 +220,7 @@ const CompanyServicesShow = ({ companyService }) => {
 
                                             <div className="pt-2">
                                                 <button
-                                                    onClick={() => router.visit(`/administrator/services/${companyService.service.id}`)}
+                                                    onClick={() => router.visit(`/admin/services/${companyService.service.id}`)}
                                                     className="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1"
                                                 >
                                                     Veure detalls del servei
@@ -281,7 +281,7 @@ const CompanyServicesShow = ({ companyService }) => {
 
                                             <div className="pt-2">
                                                 <button
-                                                    onClick={() => router.visit(`/administrator/companies/${companyService.company.id}`)}
+                                                    onClick={() => router.visit(`/admin/companies/${companyService.company.id}`)}
                                                     className="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1"
                                                 >
                                                     Veure detalls de l'empresa

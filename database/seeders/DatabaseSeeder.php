@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AppointmentCompanyServiceSeeder::class,
             AdminsSeeder::class,
             ReviewSeeder::class,
+            QuotesSeeder::class,
         ]);
     }
 }

@@ -5,7 +5,8 @@ import { router } from "@inertiajs/react"
 import Header from "@/Components/Header"
 import Footer from "@/Components/Footer.jsx"
 import AdminHeader from "@/Pages/Administrator/Components/Header.jsx"
-import { Search, Plus, Eye, Edit, Trash2, X, Building, Mail, Phone, MapPin, AlertCircle } from 'lucide-react'
+import { Search, Plus, Eye, Edit, Trash2, X, Building, Mail, Phone, MapPin, AlertCircle } from "lucide-react"
+import Pagination from "@/Pages/Administrator/Components/Pagination"
 
 const CompaniesIndex = ({ companies }) => {
     const [showDialog, setShowDialog] = useState(false)
@@ -13,6 +14,11 @@ const CompaniesIndex = ({ companies }) => {
     const [selectedCompany, setSelectedCompany] = useState(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredCompanies, setFilteredCompanies] = useState(companies)
+
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [paginatedCompanies, setPaginatedCompanies] = useState([])
 
     // Apply filters whenever search term changes
     useEffect(() => {
@@ -26,12 +32,21 @@ const CompaniesIndex = ({ companies }) => {
                     (company.email && company.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
                     (company.city && company.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
                     (company.state && company.state.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                    (company.phone && company.phone.toLowerCase().includes(searchTerm.toLowerCase()))
+                    (company.phone && company.phone.toLowerCase().includes(searchTerm.toLowerCase())),
             )
         }
 
         setFilteredCompanies(results)
+        // Resetear a la primera página cuando cambian los filtros
+        setCurrentPage(1)
     }, [searchTerm, companies])
+
+    // Aplicar paginación a las empresas filtradas
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        setPaginatedCompanies(filteredCompanies.slice(startIndex, endIndex))
+    }, [filteredCompanies, currentPage, itemsPerPage])
 
     const handleDelete = (company) => {
         setSelectedCompanyId(company.id)
@@ -41,7 +56,7 @@ const CompaniesIndex = ({ companies }) => {
 
     const confirmDelete = () => {
         if (selectedCompanyId) {
-            router.delete(`/administrator/companies/${selectedCompanyId}`)
+            router.delete(`/admin/companies/${selectedCompanyId}`)
         }
         setShowDialog(false)
     }
@@ -53,6 +68,19 @@ const CompaniesIndex = ({ companies }) => {
 
     const clearFilters = () => {
         setSearchTerm("")
+    }
+
+    // Manejar cambio de página
+    const handlePageChange = (page) => {
+        setCurrentPage(page)
+        // Scroll al inicio de la lista
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    // Manejar cambio de elementos por página
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage)
+        setCurrentPage(1) // Resetear a la primera página
     }
 
     return (
@@ -70,7 +98,7 @@ const CompaniesIndex = ({ companies }) => {
                             <p className="text-gray-500 mt-1">Gestiona les empreses registrades al sistema</p>
                         </div>
                         <button
-                            onClick={() => router.visit("/administrator/companies/create")}
+                            onClick={() => router.visit("/admin/companies/create")}
                             className="bg-[#1e40af] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2"
                         >
                             <Plus size={18} />
@@ -116,15 +144,14 @@ const CompaniesIndex = ({ companies }) => {
 
                         {/* Comptador de resultats */}
                         <div className="mt-4 text-sm text-gray-600">
-                            {filteredCompanies.length}{" "}
-                            {filteredCompanies.length === 1 ? "empresa trobada" : "empreses trobades"}
+                            {filteredCompanies.length} {filteredCompanies.length === 1 ? "empresa trobada" : "empreses trobades"}
                         </div>
                     </div>
 
                     {/* Llista d'empreses */}
                     <div className="divide-y divide-gray-200">
-                        {filteredCompanies.length > 0 ? (
-                            filteredCompanies.map((company) => (
+                        {paginatedCompanies.length > 0 ? (
+                            paginatedCompanies.map((company) => (
                                 <div key={company.id} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-start gap-4">
@@ -141,9 +168,7 @@ const CompaniesIndex = ({ companies }) => {
                                             </div>
 
                                             <div className="flex-grow">
-                                                <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                                                    {company.name}
-                                                </h3>
+                                                <h3 className="text-lg font-semibold text-gray-800 mb-1">{company.name}</h3>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-500">
                                                     {company.email && (
@@ -161,9 +186,7 @@ const CompaniesIndex = ({ companies }) => {
                                                     {(company.city || company.state) && (
                                                         <div className="flex items-center gap-1">
                                                             <MapPin size={14} className="text-gray-400" />
-                                                            <span>
-                                                                {[company.city, company.state].filter(Boolean).join(", ")}
-                                                            </span>
+                                                            <span>{[company.city, company.state].filter(Boolean).join(", ")}</span>
                                                         </div>
                                                     )}
                                                     {company.created_at && (
@@ -177,14 +200,14 @@ const CompaniesIndex = ({ companies }) => {
 
                                         <div className="flex items-center gap-2 mt-4 md:mt-0">
                                             <button
-                                                onClick={() => router.visit(`/administrator/companies/${company.id}`)}
+                                                onClick={() => router.visit(`/admin/companies/${company.id}`)}
                                                 className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                                             >
                                                 <Eye size={16} />
                                                 <span className="hidden sm:inline">Veure</span>
                                             </button>
                                             <button
-                                                onClick={() => router.visit(`/administrator/companies/${company.id}/edit`)}
+                                                onClick={() => router.visit(`/admin/companies/${company.id}/edit`)}
                                                 className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                                             >
                                                 <Edit size={16} />
@@ -207,12 +230,24 @@ const CompaniesIndex = ({ companies }) => {
                                     <Search size={24} className="text-gray-400" />
                                 </div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-1">No s'han trobat empreses</h3>
-                                <p className="text-gray-500">
-                                    Prova amb uns altres filtres o crea una nova empresa.
-                                </p>
+                                <p className="text-gray-500">Prova amb uns altres filtres o crea una nova empresa.</p>
                             </div>
                         )}
                     </div>
+
+                    {/* Paginación */}
+                    {filteredCompanies.length > 0 && (
+                        <div className="px-6 border-t border-gray-200">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={Math.ceil(filteredCompanies.length / itemsPerPage)}
+                                onPageChange={handlePageChange}
+                                itemsPerPage={itemsPerPage}
+                                totalItems={filteredCompanies.length}
+                                onItemsPerPageChange={handleItemsPerPageChange}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -228,19 +263,15 @@ const CompaniesIndex = ({ companies }) => {
                         {selectedCompany && (
                             <div className="bg-red-50 border border-red-100 rounded-lg p-4 mb-4">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <p className="font-medium text-gray-900">
-                                        {selectedCompany.name}
-                                    </p>
+                                    <p className="font-medium text-gray-900">{selectedCompany.name}</p>
                                 </div>
-                                {selectedCompany.email && (
-                                    <p className="text-gray-600 text-sm">{selectedCompany.email}</p>
-                                )}
+                                {selectedCompany.email && <p className="text-gray-600 text-sm">{selectedCompany.email}</p>}
                             </div>
                         )}
 
                         <p className="text-gray-600 mb-6">
-                            Estàs segur que vols eliminar aquesta empresa? Aquesta acció no es pot desfer i s'eliminaran totes
-                            les dades associades, incloent serveis personalitzats i treballadors.
+                            Estàs segur que vols eliminar aquesta empresa? Aquesta acció no es pot desfer i s'eliminaran totes les
+                            dades associades, incloent serveis personalitzats i treballadors.
                         </p>
                         <div className="flex justify-end gap-4">
                             <button

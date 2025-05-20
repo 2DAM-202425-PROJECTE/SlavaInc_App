@@ -33,7 +33,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|string|in:company,admin,worker', // Ajusta els rols segons les teves necessitats
+            'role' => 'required|string|in:company,admin,worker',
         ]);
 
         // Crea l'usuari

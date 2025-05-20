@@ -28,9 +28,10 @@ export default function QuoteRequest({ serviceId, companyId }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50">
             <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
-            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-50">
+
+            <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white">Solicita Pressupost</h1>
@@ -45,47 +46,58 @@ export default function QuoteRequest({ serviceId, companyId }) {
                     </Link>
                 </div>
             </section>
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="bg-white p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <label className="block">
-                            <span className="text-gray-700">Detalla la teva sol·licitud</span>
-                            <textarea
-                                className="mt-1 block w-full p-2 border rounded-lg focus:ring focus:ring-[#1f7275]"
-                                rows={6}
-                                value={description}
-                                onChange={e => setDescription(e.target.value)}
-                                required
-                            />
-                        </label>
-                        <label className="block">
-                            <span className="text-gray-700">Data preferida</span>
-                            <input
-                                type="date"
-                                className="mt-1 block w-full p-2 border rounded-lg focus:ring focus:ring-[#1f7275]"
-                                value={preferredDate}
-                                onChange={e => setPreferredDate(e.target.value)}
-                            />
-                        </label>
-                        <label className="block">
-                            <span className="text-gray-700">Hora preferida</span>
-                            <input
-                                type="time"
-                                className="mt-1 block w-full p-2 border rounded-lg focus:ring focus:ring-[#1f7275]"
-                                value={preferredTime}
-                                onChange={e => setPreferredTime(e.target.value)}
-                            />
-                        </label>
+
+            <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
+                <div className="bg-white p-8 rounded-2xl shadow-lg max-w-3xl mx-auto">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-6">
+                            <label className="block">
+                                <span className="block text-gray-700 font-medium mb-2">Detalls de la sol·licitud</span>
+                                <textarea
+                                    className="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f7275] focus:border-transparent"
+                                    rows={5}
+                                    value={description}
+                                    onChange={e => setDescription(e.target.value)}
+                                    required
+                                />
+                            </label>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <label className="block">
+                                    <span className="block text-gray-700 font-medium mb-2">Data preferida</span>
+                                    <input
+                                        type="date"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f7275]"
+                                        value={preferredDate}
+                                        onChange={e => setPreferredDate(e.target.value)}
+                                    />
+                                </label>
+
+                                <label className="block">
+                                    <span className="block text-gray-700 font-medium mb-2">Hora preferida</span>
+                                    <input
+                                        type="time"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1f7275]"
+                                        value={preferredTime}
+                                        onChange={e => setPreferredTime(e.target.value)}
+                                    />
+                                </label>
+                            </div>
+                        </div>
+
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white py-2 rounded-lg hover:from-[#01a0a6] hover:to-[#1f7275] ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white py-3 rounded-xl font-medium transition-opacity ${
+                                isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                            }`}
                         >
                             {isSubmitting ? 'Enviant...' : 'Enviar sol·licitud'}
                         </button>
                     </form>
                 </div>
-            </div>
+            </main>
+
             <Footer />
         </div>
     );

@@ -71,7 +71,7 @@ const CompaniesEdit = ({ company }) => {
         // Add method spoofing for PUT request
         submitData.append('_method', 'PUT')
 
-        router.post(`/administrator/companies/${company.id}`, submitData, {
+        router.post(`/admin/companies/${company.id}`, submitData, {
             onError: (errors) => {
                 setErrors(errors)
                 window.scrollTo(0, 0)
@@ -92,7 +92,7 @@ const CompaniesEdit = ({ company }) => {
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => router.visit("/administrator/companies")}
+                                onClick={() => router.visit("/admin/companies")}
                                 className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                             >
                                 <ArrowLeft size={20} className="text-gray-600" />
@@ -435,7 +435,7 @@ const CompaniesEdit = ({ company }) => {
                         <div className="mt-8 flex justify-end gap-4">
                             <button
                                 type="button"
-                                onClick={() => router.visit("/administrator/companies")}
+                                onClick={() => router.visit("/admin/companies")}
                                 className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors"
                             >
                                 Cancel·lar

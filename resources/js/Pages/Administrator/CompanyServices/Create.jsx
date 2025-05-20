@@ -103,7 +103,7 @@ const CompanyServicesCreate = ({ companies, services }) => {
             }
         })
 
-        router.post('/administrator/company-services', submitData, {
+        router.post('/admin/company-services', submitData, {
             onError: (errors) => {
                 setErrors(errors)
                 window.scrollTo(0, 0)
@@ -124,7 +124,7 @@ const CompanyServicesCreate = ({ companies, services }) => {
                     <div className="p-6 border-b border-gray-200">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => router.visit("/administrator/company-services")}
+                                onClick={() => router.visit("/admin/company-services")}
                                 className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                             >
                                 <ArrowLeft size={20} className="text-gray-600" />
@@ -526,7 +526,7 @@ const CompanyServicesCreate = ({ companies, services }) => {
                         <div className="mt-8 flex justify-end gap-4">
                             <button
                                 type="button"
-                                onClick={() => router.visit("/administrator/company-services")}
+                                onClick={() => router.visit("/admin/company-services")}
                                 className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors"
                             >
                                 Cancel·lar

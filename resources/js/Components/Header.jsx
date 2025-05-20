@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -13,7 +13,8 @@ import {
     faChevronUp,
     faBroom,
     faBars,
-    faStar
+    faStar,
+    faFileInvoice
 } from '@fortawesome/free-solid-svg-icons';
 
 const Header = ({ theme = 'bg-black text-white' }) => {
@@ -21,6 +22,8 @@ const Header = ({ theme = 'bg-black text-white' }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isServicesOpen, setIsServicesOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const profileRef = useRef(null);
+    const servicesRef = useRef(null);
 
     const isClient = auth.guard === 'web' && auth.user;
 
@@ -37,6 +40,50 @@ const Header = ({ theme = 'bg-black text-white' }) => {
         { name: 'Altres', value: 'altres', icon: faBroom }
     ];
 
+    // Handle F12 key press and resize events
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'F12') {
+                setIsProfileOpen(false);
+                setIsServicesOpen(false);
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        const handleResize = () => {
+            if (window.innerWidth >= 768) {
+                setIsMobileMenuOpen(false);
+                setIsProfileOpen(false);
+                setIsServicesOpen(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+    // Handle click outside for dropdowns
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (profileRef.current && !profileRef.current.contains(e.target)) {
+                setIsProfileOpen(false);
+            }
+            if (servicesRef.current && !servicesRef.current.contains(e.target)) {
+                setIsServicesOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
         <header className={`${theme} w-full py-4 px-6 shadow-md`}>
             <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -49,7 +96,7 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                     <nav className="hidden md:flex items-center gap-6">
                         <Link href={route('dashboard')} className="hover:text-white/80 transition">Inici</Link>
 
-                        <div className="relative">
+                        <div className="relative" ref={servicesRef}>
                             <button
                                 onClick={() => setIsServicesOpen(!isServicesOpen)}
                                 onMouseEnter={() => setIsServicesOpen(true)}
@@ -93,6 +140,14 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                             <FontAwesomeIcon icon={faStar} />
                             <span>Reviews pendents</span>
                         </Link>
+
+                        <Link
+                            href={route('quotes.index')}
+                            className="hover:text-white/80 transition flex items-center gap-1"
+                        >
+                            <FontAwesomeIcon icon={faFileInvoice} />
+                            <span>Pressupostos</span>
+                        </Link>
                     </nav>
                 )}
 
@@ -104,7 +159,7 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                 </div>
 
                 {/* Perfil escriptori */}
-                <div className="relative hidden md:block">
+                <div className="relative hidden md:block" ref={profileRef}>
                     <button
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className="flex items-center gap-2 hover:bg-white/10 p-2 rounded-lg transition"
@@ -117,8 +172,8 @@ const Header = ({ theme = 'bg-black text-white' }) => {
 
                     {isProfileOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 text-gray-800">
-                            <Link href={route('profile.edit')} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                                <FontAwesomeIcon icon={faUser} />
+                            <Link href="/profile" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                            <FontAwesomeIcon icon={faUser} />
                                 <span>Perfil</span>
                             </Link>
                             <button
@@ -186,6 +241,14 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         Reviews pendents
+                                    </Link>
+
+                                    <Link
+                                        href={route('quotes.index')}
+                                        className="block px-2 py-2 rounded hover:bg-gray-100"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Pressupostos
                                     </Link>
                                 </>
                             )}

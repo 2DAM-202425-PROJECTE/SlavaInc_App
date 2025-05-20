@@ -34,7 +34,7 @@ const CompaniesShow = ({ company }) => {
     }
 
     const confirmDelete = () => {
-        router.delete(`/administrator/companies/${company.id}`)
+        router.delete(`/admin/companies/${company.id}`)
         setShowDialog(false)
     }
 
@@ -55,7 +55,7 @@ const CompaniesShow = ({ company }) => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <button
-                                    onClick={() => router.visit("/administrator/companies")}
+                                    onClick={() => router.visit("/admin/companies")}
                                     className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                                 >
                                     <ArrowLeft size={20} className="text-gray-600" />
@@ -76,7 +76,7 @@ const CompaniesShow = ({ company }) => {
                             </div>
                             <div className="flex items-center gap-2 mt-4 sm:mt-0">
                                 <button
-                                    onClick={() => router.visit(`/administrator/companies/${company.id}/edit`)}
+                                    onClick={() => router.visit(`/admin/companies/${company.id}/edit`)}
                                     className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg transition-colors"
                                 >
                                     <Edit size={16} />
@@ -190,7 +190,7 @@ const CompaniesShow = ({ company }) => {
                                     <div className="flex items-center justify-between mb-4">
                                         <h2 className="text-lg font-semibold text-gray-800">Serveis personalitzats</h2>
                                         <button
-                                            onClick={() => router.visit(`/administrator/company-services/create?company_id=${company.id}`)}
+                                            onClick={() => router.visit(`/admin/company-services/create?company_id=${company.id}`)}
                                             className="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1"
                                         >
                                             Afegir servei
@@ -259,7 +259,7 @@ const CompaniesShow = ({ company }) => {
                                                             </div>
                                                         </div>
                                                         <button
-                                                            onClick={() => router.visit(`/administrator/company-services/${service.pivot.id}`)}
+                                                            onClick={() => router.visit(`/admin/company-services/${service.pivot.id}`)}
                                                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                                                         >
                                                             Veure
@@ -273,7 +273,7 @@ const CompaniesShow = ({ company }) => {
                                             <Briefcase size={40} className="mx-auto text-gray-300 mb-2" />
                                             <p className="text-gray-500">Aquesta empresa no té serveis personalitzats</p>
                                             <button
-                                                onClick={() => router.visit(`/administrator/company-services/create?company_id=${company.id}`)}
+                                                onClick={() => router.visit(`/admin/company-services/create?company_id=${company.id}`)}
                                                 className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium"
                                             >
                                                 Afegir el primer servei
@@ -287,7 +287,7 @@ const CompaniesShow = ({ company }) => {
                                     <div className="flex items-center justify-between mb-4">
                                         <h2 className="text-lg font-semibold text-gray-800">Treballadors</h2>
                                         <button
-                                            onClick={() => router.visit(`/administrator/workers/create?company_id=${company.id}`)}
+                                            onClick={() => router.visit(`/admin/workers/create?company_id=${company.id}`)}
                                             className="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center gap-1"
                                         >
                                             Afegir treballador
@@ -346,7 +346,7 @@ const CompaniesShow = ({ company }) => {
                                                             </div>
                                                         </div>
                                                         <button
-                                                            onClick={() => router.visit(`/administrator/workers/${worker.id}`)}
+                                                            onClick={() => router.visit(`/admin/workers/${worker.id}`)}
                                                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                                                         >
                                                             Veure
@@ -360,7 +360,7 @@ const CompaniesShow = ({ company }) => {
                                             <Users size={40} className="mx-auto text-gray-300 mb-2" />
                                             <p className="text-gray-500">Aquesta empresa no té treballadors registrats</p>
                                             <button
-                                                onClick={() => router.visit(`/administrator/workers/create?company_id=${company.id}`)}
+                                                onClick={() => router.visit(`/admin/workers/create?company_id=${company.id}`)}
                                                 className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium"
                                             >
                                                 Afegir el primer treballador
@@ -398,7 +398,7 @@ const CompaniesShow = ({ company }) => {
 
                                     <div className="space-y-3">
                                         <button
-                                            onClick={() => router.visit(`/administrator/companies/${company.id}/edit`)}
+                                            onClick={() => router.visit(`/admin/companies/${company.id}/edit`)}
                                             className="w-full flex items-center gap-2 p-3 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg text-left"
                                         >
                                             <Edit size={18} className="text-blue-600" />
@@ -406,7 +406,7 @@ const CompaniesShow = ({ company }) => {
                                         </button>
 
                                         <button
-                                            onClick={() => router.visit(`/administrator/company-services/create?company_id=${company.id}`)}
+                                            onClick={() => router.visit(`/admin/company-services/create?company_id=${company.id}`)}
                                             className="w-full flex items-center gap-2 p-3 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg text-left"
                                         >
                                             <Briefcase size={18} className="text-purple-600" />
@@ -414,7 +414,7 @@ const CompaniesShow = ({ company }) => {
                                         </button>
 
                                         <button
-                                            onClick={() => router.visit(`/administrator/workers/create?company_id=${company.id}`)}
+                                            onClick={() => router.visit(`/admin/workers/create?company_id=${company.id}`)}
                                             className="w-full flex items-center gap-2 p-3 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg text-left"
                                         >
                                             <Users size={18} className="text-green-600" />
