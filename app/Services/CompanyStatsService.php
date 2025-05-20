@@ -27,6 +27,7 @@ class CompanyStatsService
     {
         return [
             'info' => $this->getCompanyInfo(),
+            'plan' => $this->company->plan,
             'workers' => $this->company->workers,
             'services' => $this->prepareServices(),
             'stats' => $this->getStats(),
@@ -73,7 +74,9 @@ class CompanyStatsService
                 'max_price' => $item->pivot->max_price,
                 'logo' => $item->pivot->logo,
                 'status' => 'active',
-                'completedProjects' => rand(25, 50),
+                'completedProjects' => Appointment::where('company_id', $this->companyId)
+                    ->where('status', 'completed')
+                    ->count(),
                 'averageRating' => round(mt_rand(40, 50) / 10, 1),
                 'totalRevenue' => rand(20000, 120000),
             ];
@@ -108,13 +111,24 @@ class CompanyStatsService
             ? round((($currentYearIncome - $previousYearIncome) / $previousYearIncome) * 100, 1)
             : 0;
 
+        $appointments = Appointment::where('company_id', $this->companyId)->get();
+
+        $totalClients = $appointments->pluck('user_id')->unique()->count();
+        $repeatedClients = $appointments->groupBy('user_id')->filter(fn($group) => $group->count() > 1)->count();
+
+        $retentionRate = $totalClients > 0
+            ? round(($repeatedClients / $totalClients) * 100)
+            : 0;
+
+        $completedProjects = $appointments->where('status', 'completed')->count();
+
         return [
             'totalWorkers' => $totalWorkers,
             'activeWorkers' => $activeWorkers,
             'inactiveWorkers' => $totalWorkers - $activeWorkers,
             'totalServices' => $services->count(),
             'activeServices' => $services->where('status', 'active')->count(),
-            'completedProjects' => $services->sum('completedProjects'),
+            'completedProjects' => $completedProjects,
             'ongoingProjects' => $ongoingProjects,
             'clientsRating' => round(Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))->avg('rate'), 1),
             'totalReviews' => Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))->count(),
@@ -128,22 +142,41 @@ class CompanyStatsService
             'yearlyGrowth' => $yearlyGrowth,
             'mostRequestedService' => optional($mostRequested?->service)->name ?? 'Cap',
             'averageProjectDuration' => rand(30, 60),
-            'clientRetentionRate' => rand(70, 95),
+            'clientRetentionRate' => $retentionRate,
             'currentPlan' => $this->company->plan?->name ?? 'Sense pla',
         ];
     }
 
     private function getMonthlyStats(): Collection
     {
-        return collect(['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Des'])
-            ->map(fn($m) => [
-                'month' => $m,
-                'workers' => rand(8, 12),
-                'services' => rand(5, 8),
-                'projects' => rand(10, 16),
-                'income' => rand(18000, 26000),
-            ]);
+        return collect(range(1, now()->month))->map(function ($month) {
+            $start = Carbon::create(null, $month, 1)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+
+            $completedAppointments = Appointment::where('company_id', $this->companyId)
+                ->where('status', 'completed')
+                ->whereBetween('date', [$start, $end])
+                ->get();
+
+            $income = $completedAppointments->sum('price');
+            $projects = $completedAppointments->count();
+
+            $activeWorkers = $this->company->workers
+                ->where('status', 'active')
+                ->filter(fn($worker) => $worker->created_at <= $end)
+                ->count();
+
+            return [
+                'month' => $start->format('M'),
+                'income' => $income,
+                'projects' => $projects,
+                'workers' => $activeWorkers,
+            ];
+        });
     }
+
+
+
 
     private function getClientReviews(): Collection
     {
@@ -198,8 +231,11 @@ class CompanyStatsService
     private function getCharts(): array
     {
         return [
+            // Serveis més sol·licitats (quantitat de cites per servei)
             'mostRequestedServicesPie' => Appointment::where('company_id', $this->companyId)
                 ->select('service_id', DB::raw('count(*) as total'))
+                ->whereMonth('date', now()->month) // Filtrem per mes actual
+                ->whereYear('date', now()->year)
                 ->groupBy('service_id')
                 ->with('service:id,name')->get()
                 ->map(fn($i) => [
@@ -208,7 +244,10 @@ class CompanyStatsService
                     'service_id' => $i->service_id,
                 ]),
 
+            // Serveis millor valorats (mitjana de valoració per servei aquest mes)
             'topRatedServicesPie' => Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
                 ->with('companyService.service')->get()
                 ->groupBy(fn($r) => $r->companyService?->service?->id ?? 0)
                 ->map(function ($g, $id) {
@@ -220,8 +259,11 @@ class CompanyStatsService
                     ];
                 })->values(),
 
+            // Ingressos per servei (acumulat aquest mes)
             'revenuePerServicePie' => Appointment::where('company_id', $this->companyId)
                 ->where('status', 'completed')
+                ->whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
                 ->select('service_id', DB::raw('SUM(price) as total'))
                 ->groupBy('service_id')
                 ->with('service:id,name')->get()
@@ -231,7 +273,10 @@ class CompanyStatsService
                     'service_id' => $i->service_id,
                 ]),
 
+            // Nombre de ressenyes per servei (aquest mes)
             'reviewsPerServicePie' => Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
                 ->with('companyService.service')->get()
                 ->groupBy(fn($r) => $r->companyService?->service?->id ?? 0)
                 ->map(function ($g, $id) {
@@ -243,8 +288,9 @@ class CompanyStatsService
                     ];
                 })->values(),
         ];
-
     }
+
+
 
     private function getAdvancedStats(): array
     {
@@ -256,7 +302,7 @@ class CompanyStatsService
         $completionRate = $total ? round(($completed / $total) * 100, 1) : 0;
 
         $timeDiffs = $appointments->filter(fn($a) => $a->created_at && $a->date)
-            ->map(fn($a) => $a->date->diffInDays($a->created_at));
+            ->map(fn($a) => $a->created_at->diffInDays($a->date, false));
         return [
             'cancelRate' => $cancelRate,
             'completionRate' => $completionRate,
