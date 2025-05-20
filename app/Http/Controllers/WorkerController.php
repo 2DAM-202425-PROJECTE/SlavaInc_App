@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreWorkerRequest;
 use App\Http\Requests\UpdateWorkerRequest;
 use App\Models\Appointment;
 use App\Models\Company;
@@ -42,17 +43,8 @@ class WorkerController extends Controller
         return Inertia::render('Worker/Create');
     }
 
-    public function store(Request $request)
+    public function store(StoreWorkerRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:workers,email',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:255',
-            'password' => 'required|string|min:8',
-            'status' => 'required|in:active,inactive',
-        ]);
-
         $company = Auth::guard('company')->user();
         if (!$company) {
             return redirect()->route('login')->withErrors([
@@ -70,23 +62,27 @@ class WorkerController extends Controller
             ]);
         }
 
-        Worker::create([
-            'company_id' => $company->id,
-            'name' => $request->name,
-            'email' => $request->email,
-            'schedule' => $request->schedule,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state,
-            'zip_code' => $request->zip_code,
-            'phone' => $request->phone,
-            'password' => bcrypt($request->password),
-            'is_admin' => false,
-            'status' => $request->status,
+        $validated = $request->validated();
+        \Log::info('Validated data for worker store:', $validated);
+
+        $worker = Worker::create([
+            'company_id' => $company->id, // Set from authenticated company user
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'schedule' => $validated['schedule'],
+            'address' => $validated['address'],
+            'city' => $validated['city'],
+            'state' => $validated['state'],
+            'zip_code' => $validated['zip_code'],
+            'phone' => $validated['phone'],
+            'password' => bcrypt($validated['password']),
+            'is_admin' => $validated['is_admin'] ?? false,
+            'status' => $validated['status'],
         ]);
+
         $this->createSystemNotification($company, 'worker_added', [
-            'workerName' => $request->name,
-        ]);
+            'workerName' => $validated['name'],
+        ], "S'ha afegit el treballador {$validated['name']}");
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
     }
