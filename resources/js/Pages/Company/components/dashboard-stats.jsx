@@ -201,8 +201,8 @@ export default function DashboardStats({ company, onRequestUpgrade }) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <StatCard
                             title="Serveis"
-                            value={`${company.stats.activeServices} / ${company.stats.totalServices}`}
-                            description="Actius / Total"
+                            value={` ${company.stats.totalServices}`}
+                            description="Total"
                             icon={WrenchScrewdriverIcon}
                             color="#9e2a2f"
                             delay={150}

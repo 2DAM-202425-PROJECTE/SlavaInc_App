@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CompanyStatsService
 {
@@ -28,7 +29,7 @@ class CompanyStatsService
         return [
             'info' => $this->getCompanyInfo(),
             'plan' => $this->company->plan,
-            'workers' => $this->company->workers,
+            'workers' => $this->company->workers()->paginate(6, ['*'], 'workers_page'),
             'services' => $this->prepareServices(),
             'stats' => $this->getStats(),
             'monthlyStats' => $this->getMonthlyStats(),
@@ -57,9 +58,27 @@ class CompanyStatsService
         ]);
     }
 
-    private function prepareServices(): Collection
+
+
+    private function prepareServices(): LengthAwarePaginator
     {
-        return $this->company->services->map(function ($item) {
+        $perPage = 6;
+        $currentPage = request('services_page', 1);
+        $search = request('search');
+
+        $query = $this->company->services();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                    ->orWhere('services.description', 'like', "%$search%");
+            });
+        }
+
+        $services = $query->paginate($perPage, ['*'], 'services_page')->withQueryString();
+
+        // Ara afegim els atributs del pivot
+        $services->getCollection()->transform(function ($item) {
             return [
                 'id' => $item->pivot->id ?? null,
                 'service_id' => $item->id,
@@ -81,7 +100,10 @@ class CompanyStatsService
                 'totalRevenue' => rand(20000, 120000),
             ];
         });
+
+        return $services;
     }
+
 
     private function getStats(): array
     {
@@ -126,8 +148,7 @@ class CompanyStatsService
             'totalWorkers' => $totalWorkers,
             'activeWorkers' => $activeWorkers,
             'inactiveWorkers' => $totalWorkers - $activeWorkers,
-            'totalServices' => $services->count(),
-            'activeServices' => $services->where('status', 'active')->count(),
+            'totalServices' => $services->total(),
             'completedProjects' => $completedProjects,
             'ongoingProjects' => $ongoingProjects,
             'clientsRating' => round(Review::whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))->avg('rate'), 1),
@@ -178,11 +199,14 @@ class CompanyStatsService
 
 
 
-    private function getClientReviews(): Collection
+    private function getClientReviews(): LengthAwarePaginator
     {
         return Review::with(['client', 'companyService.service'])
             ->whereHas('companyService', fn($q) => $q->where('company_id', $this->companyId))
-            ->latest()->take(10)->get()->map(fn($r) => [
+            ->latest()
+            ->paginate(2, ['*'], 'reviews_page')
+            ->withQueryString()
+            ->through(fn($r) => [
                 'id' => $r->id,
                 'clientName' => $r->client->name ?? 'Anònim',
                 'rating' => $r->rate,
@@ -203,13 +227,17 @@ class CompanyStatsService
         ]);
     }
 
-    private function getOngoingAppointments(): Collection
+    private function getOngoingAppointments(): LengthAwarePaginator
     {
+        $perPage = 2;
+
         return Appointment::with(['service', 'user', 'workers'])
             ->where('company_id', $this->companyId)
             ->whereIn('status', ['pending', 'confirmed'])
-            ->latest('date')->take(15)->get()
-            ->map(fn($a) => [
+            ->latest('date')
+            ->paginate(2, ['*'], 'appointments_page')
+            ->withQueryString()
+            ->through(fn($a) => [
                 'id' => $a->id,
                 'date' => $a->date,
                 'time' => $a->time,
@@ -221,7 +249,6 @@ class CompanyStatsService
                 'worker' => $a->workers->pluck('name')->implode(', '),
             ]);
     }
-
     private function getNotifications(): Collection
     {
         return Notification::where('company_id', $this->companyId)

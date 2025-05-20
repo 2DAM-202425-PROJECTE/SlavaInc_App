@@ -1,7 +1,7 @@
 "use client"
 import axios from 'axios'
 
-import { useState, useEffect } from "react"
+import {useState, useEffect} from "react"
 import {
     UserCircleIcon,
     BuildingOffice2Icon,
@@ -12,11 +12,12 @@ import {
     PencilSquareIcon,
 } from "@heroicons/react/24/outline"
 
-export default function ProfileSection({ company, addNotification, requestPlanChange }) {
+export default function ProfileSection({company, addNotification, requestPlanChange}) {
     const [isLoaded, setIsLoaded] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
-    const [companyInfo, setCompanyInfo] = useState({ ...company.info })
-    const [formData, setFormData] = useState({ ...company.info })
+    const [companyInfo, setCompanyInfo] = useState({...company.info})
+    const [formData, setFormData] = useState({...company.info})
+    const [errors, setErrors] = useState({})
 
     const [plans, setPlans] = useState(company.plans || [])
 
@@ -26,54 +27,57 @@ export default function ProfileSection({ company, addNotification, requestPlanCh
 
     const handleSave = async () => {
         try {
-            const response = await axios.put('/company/profile', formData)
+            const data = new FormData();
+            data.append('_method', 'PUT');
 
-            setCompanyInfo(response.data.company)
-            setIsEditing(false)
+            Object.entries(formData).forEach(([key, value]) => {
+                if (key === 'logo' && !(value instanceof File)) return;
+                const cleanedValue = (value === 'null' || value === '') ? null : value;
 
-            addNotification(response.data.message || "Perfil actualitzat correctament", "success")
+                data.append(key, value);
+            });
+
+            const response = await axios.post('/company/profile', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            setCompanyInfo(response.data.company);
+            setIsEditing(false);
+            setErrors({});
+            addNotification(response.data.message || "Perfil actualitzat correctament", "success");
         } catch (error) {
-            console.error('Error al actualitzar el perfil:', error.response?.data || error)
-
-            addNotification("Hi ha hagut un error en desar els canvis.", "error")
+            if (error.response?.status === 422) {
+                console.log("Errors de validació:", error.response.data.errors);
+                setErrors(error.response.data.errors || {});
+            } else {
+                console.error("Error al actualitzar el perfil:", error);
+                addNotification("Hi ha hagut un error en desar els canvis.", "error");
+            }
         }
-    }
-    const handleChangePlan = async (planId) => {
-        try {
-            const response = await axios.put('/company/change-plan', { plan_id: planId })
+    };
 
-            addNotification(response.data.message, "success")
-
-            // Actualitza el pla actiu localment
-            const updatedPlans = plans.map((p) => ({
-                ...p,
-                isActive: p.id === planId,
-            }))
-            setPlans(updatedPlans)
-        } catch (error) {
-            console.error('Error al canviar de pla:', error.response?.data || error)
-            addNotification("Error al canviar de pla", "error")
-        }
-    }
 
 
     return (
-        <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+        <div
+            className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
             <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-gray-800 flex items-center">
-                    <UserCircleIcon className="h-8 w-8 mr-3 text-[#9e2a2f]" />
+                    <UserCircleIcon className="h-8 w-8 mr-3 text-[#9e2a2f]"/>
                     Perfil de l'Empresa
                 </h2>
                 <button
                     onClick={() => {
                         if (!isEditing) {
-                            setFormData({ ...companyInfo })
-                        }
+                            const cleanedInfo = Object.fromEntries(
+                                Object.entries(companyInfo).map(([key, val]) => [key, val ?? ""])
+                            )
+                            setFormData(cleanedInfo);                        }
                         setIsEditing(!isEditing)
                     }}
                     className="inline-flex items-center px-4 py-2 rounded-lg bg-[#9e2a2f] text-white font-medium transition-all duration-300 hover:bg-[#8a2329] shadow-md hover:shadow-lg transform hover:-translate-y-1"
                 >
-                    <PencilSquareIcon className="h-5 w-5 mr-2" />
+                    <PencilSquareIcon className="h-5 w-5 mr-2"/>
                     {isEditing ? "Cancel·la" : "Editar Perfil"}
                 </button>
             </div>
@@ -90,6 +94,27 @@ export default function ProfileSection({ company, addNotification, requestPlanCh
 
                         {isEditing ? (
                             <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Logo de
+                                        l'empresa</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => setFormData({...formData, logo: e.target.files[0]})}
+                                        className="block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                    />
+                                    {formData.logo instanceof File === false && companyInfo.logo && (
+                                        <div className="mt-2">
+                                            <img
+                                                src={`/storage/${companyInfo.logo}`}
+                                                alt="Logo actual"
+                                                className="h-20 w-auto rounded-md border border-gray-200 shadow-sm"
+                                            />
+                                        </div>
+                                    )}
+                                    {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name[0]}</p>}
+
+                                </div>
                                 {[
                                     {label: "Nom de l'empresa", key: "name"},
                                     {label: "CIF", key: "vat_number"},
@@ -99,21 +124,37 @@ export default function ProfileSection({ company, addNotification, requestPlanCh
                                 ].map(({label, key, textarea}) => (
                                     <div key={key}>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+
                                         {textarea ? (
-                                            <textarea
-                                                value={formData[key] || ""}
-                                                onChange={(e) => setFormData({...formData, [key]: e.target.value})}
-                                                className="block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            />
+                                            <>
+                                        <textarea
+                                            value={formData[key] || ""}
+                                            onChange={(e) => setFormData({...formData, [key]: e.target.value})}
+                                            className={`block w-full border rounded-md shadow-sm p-2 ${
+                                                errors[key] ? "border-red-500" : "border-gray-300"
+                                            }`}
+                                        />
+                                                {errors[key] && (
+                                                    <p className="text-sm text-red-600 mt-1">{errors[key][0]}</p>
+                                                )}
+                                            </>
                                         ) : (
-                                            <input
-                                                type="text"
-                                                value={formData[key] || ""}
-                                                onChange={(e) => setFormData({...formData, [key]: e.target.value})}
-                                                className="block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            />
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={formData[key] || ""}
+                                                    onChange={(e) => setFormData({...formData, [key]: e.target.value})}
+                                                    className={`block w-full border rounded-md shadow-sm p-2 ${
+                                                        errors[key] ? "border-red-500" : "border-gray-300"
+                                                    }`}
+                                                />
+                                                {errors[key] && (
+                                                    <p className="text-sm text-red-600 mt-1">{errors[key][0]}</p>
+                                                )}
+                                            </>
                                         )}
                                     </div>
+
                                 ))}
 
 
@@ -124,6 +165,15 @@ export default function ProfileSection({ company, addNotification, requestPlanCh
                                     <div>
                                         <p className="text-sm font-medium text-gray-500 mb-1">Nom de l'empresa</p>
                                         <p className="text-lg font-semibold text-gray-800">{companyInfo.name}</p>
+                                        {companyInfo.logo && (
+                                            <img
+                                                src={`/storage/${companyInfo.logo}`}
+                                                alt="Logo empresa"
+                                                className="h-20 w-auto rounded-md border border-gray-200 shadow-sm mt-2"
+                                            />
+                                        )}
+
+
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500 mb-1">CIF</p>
@@ -164,8 +214,11 @@ export default function ProfileSection({ company, addNotification, requestPlanCh
                                     {label: "Telèfon", key: "phone"},
                                     {label: "Email", key: "email"},
                                     {label: "Web", key: "website"},
+
                                 ].map(({label, key}) => (
+
                                     <div key={key}>
+
                                         <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
                                         <input
                                             type="text"
@@ -173,6 +226,8 @@ export default function ProfileSection({ company, addNotification, requestPlanCh
                                             onChange={(e) => setFormData({...formData, [key]: e.target.value})}
                                             className="block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                         />
+                                        {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name[0]}</p>}
+
                                     </div>
 
                                 ))}

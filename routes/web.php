@@ -137,7 +137,6 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
     Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
-    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
     Route::get('/company/services/create', [CompanyServiceController::class, 'create'])->name('company.services.create');
@@ -161,7 +160,10 @@ Route::middleware(['auth:web,company'])->group(function () {
         ->middleware('auth:company');
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-    Route::middleware('auth:company')->put('/company/profile', [CompanyController::class, 'updateProfile'])->name('company.updateProfile');
+    Route::match(['post', 'put'], '/company/profile', [CompanyController::class, 'updateProfile'])
+        ->middleware('auth:company,worker')
+        ->name('company.profile.update');
+
     Route::middleware('auth:company')->put('/company/change-plan', [CompanyController::class, 'changePlan'])->name('company.changePlan');
 
     Route::get('/company/preview-client', [CompanyController::class, 'previewClient'])->name('company.previewClient');
@@ -169,18 +171,24 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
 });
 //Ruta per a que funcione la vista com a client sent empresa
-Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
-Route::get('/companies/{company}', [CompanyController::class, 'show'])
-    ->name('client.companies.show')
-    ->where('company', '[0-9]+');
+Route::middleware('auth:web,company,worker')->group(function () {
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])
+        ->name('client.companies.show');
+
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])
+        ->name('client.companies.show')
+        ->where('company', '[0-9]+');
+
+    Route::get('/services/{service}', [ClientController::class, 'show'])
+        ->name('client.services.show');
+});
 
 
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-    Route::get('/services/{service}', [ClientController::class, 'show'])
-        ->name('client.services.show');
+
 
     // Cites
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
