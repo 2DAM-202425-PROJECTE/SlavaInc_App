@@ -171,12 +171,18 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::put('/company/change-password', [CompanyController::class, 'changePassword'])->name('company.changePassword');
 });
 //Ruta per a que funcione la vista com a client sent empresa
-Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])->name('client.companies.show');
-Route::get('/companies/{company}', [CompanyController::class, 'show'])
-    ->name('client.companies.show')
-    ->where('company', '[0-9]+');
-Route::get('/services/{service}', [ClientController::class, 'show'])
-    ->name('client.services.show');
+Route::middleware('auth:web,company,worker')->group(function () {
+    Route::get('/services/companies/{company}', [ClientController::class, 'showCompany'])
+        ->name('client.companies.show');
+
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])
+        ->name('client.companies.show')
+        ->where('company', '[0-9]+');
+
+    Route::get('/services/{service}', [ClientController::class, 'show'])
+        ->name('client.services.show');
+});
+
 
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {
