@@ -175,14 +175,14 @@ Route::get('/services/companies/{company}', [ClientController::class, 'showCompa
 Route::get('/companies/{company}', [CompanyController::class, 'show'])
     ->name('client.companies.show')
     ->where('company', '[0-9]+');
-
+Route::get('/services/{service}', [ClientController::class, 'show'])
+    ->name('client.services.show');
 
 // RUTES PER A CLIENTS (WEB USERS)
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-    Route::get('/services/{service}', [ClientController::class, 'show'])
-        ->name('client.services.show');
+
 
     // Cites
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');
