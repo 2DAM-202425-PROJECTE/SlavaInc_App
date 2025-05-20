@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Administrator\AdminCompanyController;
 use App\Http\Controllers\Administrator\AdminCompanyServicesController;
 use App\Http\Controllers\Administrator\AdminDashboardController;
+use App\Http\Controllers\Administrator\AdminPlanController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\ClientController;
@@ -37,9 +38,11 @@ Route::prefix('admin')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
+        Route::resource('admins', AdminController::class)->names('admins');
         Route::resource('workers', AdminWorkerController::class)->names('workers');
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);
+        Route::resource('plans', AdminPlanController::class);
         Route::put('profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
 
@@ -151,6 +154,8 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
     Route::patch('/company/appointments/{appointment}/complete', [\App\Http\Controllers\AppointmentController::class, 'markAsCompleted'])->name('appointments.complete');
     Route::patch('/company/appointments/{appointment}/cancel', [\App\Http\Controllers\AppointmentController::class, 'markAsCancelled'])->name('appointments.cancel');
+    Route::patch('company/appointments/{appointment}/confirmed', [\App\Http\Controllers\AppointmentController::class, 'markAsConfirmed'])->name('appointments.confirmed');
+
     Route::patch('/company/settings/notifications', [CompanyController::class, 'updateNotifications'])
         ->name('company.notifications.update')
         ->middleware('auth:company');
