@@ -10,11 +10,29 @@ use Inertia\Inertia;
 
 class AdminController extends Controller
 {
-    public function create()
+    /**
+     * Mostrar la llista d'administradors.
+     */
+    public function index()
     {
-        return view('admin.create');
+        $admins = Admin::all();
+
+        return Inertia::render('Administrator/Admins/Index', [
+            'admins' => $admins
+        ]);
     }
 
+    /**
+     * Mostrar formulari per crear un nou administrador.
+     */
+    public function create()
+    {
+        return Inertia::render('Administrator/Admins/Create');
+    }
+
+    /**
+     * Emmagatzemar un nou administrador a la base de dades.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -32,16 +50,29 @@ class AdminController extends Controller
         return redirect()->route('administrator.admins.index')->with('success', 'Administrador creat correctament.');
     }
 
+    /**
+     * Mostrar informació detallada d'un administrador.
+     */
     public function show(Admin $admin)
     {
-        return view('admin.show', compact('admin'));
+        return Inertia::render('Administrator/Admins/Show', [
+            'admin' => $admin,
+        ]);
     }
 
+    /**
+     * Mostrar formulari per editar un administrador.
+     */
     public function edit(Admin $admin)
     {
-        return view('admin.edit', compact('admin'));
+        return Inertia::render('Administrator/Admins/Edit', [
+            'admin' => $admin,
+        ]);
     }
 
+    /**
+     * Actualitzar la informació d'un administrador.
+     */
     public function update(Request $request, Admin $admin)
     {
         $request->validate([
@@ -62,6 +93,9 @@ class AdminController extends Controller
         return redirect()->route('administrator.admins.index')->with('success', 'Administrador actualitzat correctament.');
     }
 
+    /**
+     * Eliminar un administrador.
+     */
     public function destroy(Admin $admin)
     {
         $admin->delete();

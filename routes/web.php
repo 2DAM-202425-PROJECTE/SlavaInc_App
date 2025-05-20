@@ -38,6 +38,7 @@ Route::prefix('admin')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::resource('services', ServiceController::class)->names('services');
         Route::resource('users', UserController::class)->names('users');
+        Route::resource('admins', UserController::class)->names('admins');
         Route::resource('workers', AdminWorkerController::class)->names('workers');
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);

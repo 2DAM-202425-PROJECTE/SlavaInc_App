@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,8 +15,11 @@ class UserController extends Controller
     public function index()
     {
         $users = User::all();
+        $admins = Admin::all();
         return Inertia::render('Administrator/Users/Index', [
             'users' => $users,
+            'admins' => $admins,
+            'initialTab' => 'admins',
         ]);
     }
 

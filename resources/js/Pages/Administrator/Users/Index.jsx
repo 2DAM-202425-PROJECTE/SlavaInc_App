@@ -1,58 +1,67 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { router } from "@inertiajs/react"
+import { router, Link } from "@inertiajs/react"
 import Header from "@/Components/Header"
 import Footer from "@/Components/Footer.jsx"
 import AdminHeader from "@/Pages/Administrator/Components/Header.jsx"
-import { Search, Plus, Eye, Edit, Trash2, X, UserCircle, Shield, User, Mail, Calendar, AlertCircle } from "lucide-react"
+import { Search, Plus, Eye, Edit, Trash2, X, UserCircle, Shield, User, Mail, Calendar, AlertCircle } from 'lucide-react'
 import Pagination from "@/Pages/Administrator/Components/Pagination"
 
-const UsersIndex = ({ users, auth }) => {
+const UsersIndex = ({ users, admins, auth }) => {
+    // Estado para controlar qué pestaña está activa
+    const [activeTab, setActiveTab] = useState("users")
+
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [selectedUserId, setSelectedUserId] = useState(null)
     const [selectedUser, setSelectedUser] = useState(null)
     const [searchTerm, setSearchTerm] = useState("")
-    const [filteredUsers, setFilteredUsers] = useState(users)
+    const [filteredItems, setFilteredItems] = useState(users)
 
     // Paginación
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
-    const [paginatedUsers, setPaginatedUsers] = useState([])
+    const [paginatedItems, setPaginatedItems] = useState([])
 
-    // Apply search filter
+    // Apply search filter and handle tab changes
     useEffect(() => {
-        if (searchTerm) {
-            const results = users.filter(
-                (user) =>
-                    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase())),
-            )
-            setFilteredUsers(results)
-        } else {
-            setFilteredUsers(users)
-        }
-        // Resetear a la primera página cuando cambian los filtros
-        setCurrentPage(1)
-    }, [searchTerm, users])
+        let items = activeTab === "users" ? users : admins;
 
-    // Aplicar paginación a los usuarios filtrados
+        if (searchTerm) {
+            const results = items.filter(
+                (item) =>
+                    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (item.role && item.role.toLowerCase().includes(searchTerm.toLowerCase())),
+            )
+            setFilteredItems(results)
+        } else {
+            setFilteredItems(items)
+        }
+        // Resetear a la primera página cuando cambian los filtros o las pestañas
+        setCurrentPage(1)
+    }, [searchTerm, users, admins, activeTab])
+
+    // Aplicar paginación a los elementos filtrados
     useEffect(() => {
         const startIndex = (currentPage - 1) * itemsPerPage
         const endIndex = startIndex + itemsPerPage
-        setPaginatedUsers(filteredUsers.slice(startIndex, endIndex))
-    }, [filteredUsers, currentPage, itemsPerPage])
+        setPaginatedItems(filteredItems.slice(startIndex, endIndex))
+    }, [filteredItems, currentPage, itemsPerPage])
 
-    const handleDelete = (user) => {
-        setSelectedUserId(user.id)
-        setSelectedUser(user)
+    const handleDelete = (item) => {
+        setSelectedUserId(item.id)
+        setSelectedUser(item)
         setShowDeleteDialog(true)
     }
 
     const confirmDelete = () => {
         if (selectedUserId) {
-            router.delete(`/admin/users/${selectedUserId}`)
+            if (activeTab === "users") {
+                router.delete(route('administrator.users.destroy', selectedUserId))
+            } else {
+                router.delete(route('administrator.admins.destroy', selectedUserId))
+            }
         }
         setShowDeleteDialog(false)
     }
@@ -103,6 +112,29 @@ const UsersIndex = ({ users, auth }) => {
         setCurrentPage(1) // Resetear a la primera página
     }
 
+    // Función para cambiar entre pestañas
+    const handleTabChange = (tab) => {
+        setActiveTab(tab)
+        setSearchTerm("")
+    }
+
+    // Función para obtener la ruta correcta según el tipo de elemento
+    const getRoute = (action, id = null) => {
+        if (activeTab === "users") {
+            if (action === "index") return route('administrator.users.index');
+            if (action === "create") return route('administrator.users.create');
+            if (action === "show") return route('administrator.users.show', id);
+            if (action === "edit") return route('administrator.users.edit', id);
+            if (action === "destroy") return route('administrator.users.destroy', id);
+        } else {
+            if (action === "index") return route('administrator.admins.index');
+            if (action === "create") return route('administrator.admins.create');
+            if (action === "show") return route('administrator.admins.show', id);
+            if (action === "edit") return route('administrator.admins.edit', id);
+            if (action === "destroy") return route('administrator.admins.destroy', id);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Header theme="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] text-white" />
@@ -114,15 +146,45 @@ const UsersIndex = ({ users, auth }) => {
                     {/* Header amb títol i botó de crear */}
                     <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Gestió d'Usuaris</h1>
-                            <p className="text-gray-500 mt-1">Administra els usuaris del sistema</p>
+                            <h1 className="text-2xl font-bold text-gray-800">
+                                {activeTab === "users" ? "Gestió d'Usuaris" : "Gestió d'Administradors"}
+                            </h1>
+                            <p className="text-gray-500 mt-1">
+                                {activeTab === "users"
+                                    ? "Administra els usuaris del sistema"
+                                    : "Administra els administradors del sistema"}
+                            </p>
                         </div>
-                        <button
-                            onClick={() => router.visit("/admin/users/create")}
+                        <Link
+                            href={getRoute('create')}
                             className="bg-[#1e40af] hover:bg-[#3b82f6] text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center gap-2"
                         >
                             <Plus size={18} />
-                            <span>Nou Usuari</span>
+                            <span>{activeTab === "users" ? "Nou Usuari" : "Nou Administrador"}</span>
+                        </Link>
+                    </div>
+
+                    {/* Pestañas */}
+                    <div className="flex border-b border-gray-200">
+                        <button
+                            onClick={() => handleTabChange("users")}
+                            className={`flex-1 py-4 px-6 text-center font-medium ${
+                                activeTab === "users"
+                                    ? "text-blue-600 border-b-2 border-blue-600"
+                                    : "text-gray-500 hover:text-gray-700"
+                            }`}
+                        >
+                            Usuaris
+                        </button>
+                        <button
+                            onClick={() => handleTabChange("admins")}
+                            className={`flex-1 py-4 px-6 text-center font-medium ${
+                                activeTab === "admins"
+                                    ? "text-blue-600 border-b-2 border-blue-600"
+                                    : "text-gray-500 hover:text-gray-700"
+                            }`}
+                        >
+                            Administradors
                         </button>
                     </div>
 
@@ -136,7 +198,7 @@ const UsersIndex = ({ users, auth }) => {
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Cercar per nom, email o rol..."
+                                placeholder={`Cercar ${activeTab === "users" ? "usuaris" : "administradors"}...`}
                                 className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                             />
                             {searchTerm && (
@@ -148,19 +210,21 @@ const UsersIndex = ({ users, auth }) => {
 
                         {/* Comptador de resultats */}
                         <div className="mt-4 text-sm text-gray-600">
-                            {filteredUsers.length} {filteredUsers.length === 1 ? "usuari trobat" : "usuaris trobats"}
+                            {filteredItems.length} {filteredItems.length === 1
+                            ? (activeTab === "users" ? "usuari trobat" : "administrador trobat")
+                            : (activeTab === "users" ? "usuaris trobats" : "administradors trobats")}
                         </div>
                     </div>
 
-                    {/* Llista d'usuaris */}
+                    {/* Llista d'elements */}
                     <div className="divide-y divide-gray-200">
-                        {paginatedUsers.length > 0 ? (
-                            paginatedUsers.map((user) => {
-                                const roleBadge = getRoleBadge(user.role)
-                                const isCurrentUser = user.id === auth.user.id
+                        {paginatedItems.length > 0 ? (
+                            paginatedItems.map((item) => {
+                                const roleBadge = getRoleBadge(item.role)
+                                const isCurrentUser = activeTab === "users" && item.id === auth.user.id
 
                                 return (
-                                    <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors duration-150">
+                                    <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors duration-150">
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                             <div className="flex items-start gap-4">
                                                 <div className="hidden sm:flex h-12 w-12 rounded-full bg-blue-100 text-blue-600 items-center justify-center flex-shrink-0">
@@ -168,50 +232,58 @@ const UsersIndex = ({ users, auth }) => {
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="text-lg font-semibold text-gray-800">{user.name}</h3>
+                                                        <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
                                                         {isCurrentUser && (
                                                             <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full border border-blue-200">
-                                Tu
-                              </span>
+                                                                Tu
+                                                            </span>
                                                         )}
-                                                        <span
-                                                            className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${roleBadge.class}`}
-                                                        >
-                              {roleBadge.icon}
-                                                            {user.role || "Usuari"}
-                            </span>
+                                                        {activeTab === "admins" && (
+                                                            <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full border border-purple-200 flex items-center gap-1">
+                                                                <Shield size={14} />
+                                                                Administrador
+                                                            </span>
+                                                        )}
+                                                        {activeTab === "users" && item.role && (
+                                                            <span
+                                                                className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${roleBadge.class}`}
+                                                            >
+                                                                {roleBadge.icon}
+                                                                {item.role || "Usuari"}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="space-y-1">
                                                         <p className="text-gray-600 text-sm flex items-center gap-1.5">
                                                             <Mail size={14} className="text-gray-400" />
-                                                            {user.email}
+                                                            {item.email}
                                                         </p>
-                                                        {user.created_at && (
+                                                        {item.created_at && (
                                                             <p className="text-gray-500 text-xs flex items-center gap-1.5">
                                                                 <Calendar size={14} className="text-gray-400" />
-                                                                Registrat: {new Date(user.created_at).toLocaleDateString()}
+                                                                Registrat: {new Date(item.created_at).toLocaleDateString()}
                                                             </p>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 mt-4 sm:mt-0">
-                                                <button
-                                                    onClick={() => router.visit(`/admin/users/${user.id}`)}
+                                                <Link
+                                                    href={getRoute('show', item.id)}
                                                     className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                                                 >
                                                     <Eye size={16} />
                                                     <span className="hidden sm:inline">Veure</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => router.visit(`/admin/users/${user.id}/edit`)}
+                                                </Link>
+                                                <Link
+                                                    href={getRoute('edit', item.id)}
                                                     className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                                                 >
                                                     <Edit size={16} />
                                                     <span className="hidden sm:inline">Editar</span>
-                                                </button>
+                                                </Link>
                                                 <button
-                                                    onClick={() => handleDelete(user)}
+                                                    onClick={() => handleDelete(item)}
                                                     disabled={isCurrentUser}
                                                     className={`flex items-center gap-1 ${
                                                         isCurrentUser
@@ -232,21 +304,27 @@ const UsersIndex = ({ users, auth }) => {
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                                     <Search size={24} className="text-gray-400" />
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-1">No s'han trobat usuaris</h3>
-                                <p className="text-gray-500">Prova amb uns altres termes de cerca o crea un nou usuari.</p>
+                                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                                    {activeTab === "users"
+                                        ? "No s'han trobat usuaris"
+                                        : "No s'han trobat administradors"}
+                                </h3>
+                                <p className="text-gray-500">
+                                    Prova amb uns altres termes de cerca o crea un nou {activeTab === "users" ? "usuari" : "administrador"}.
+                                </p>
                             </div>
                         )}
                     </div>
 
                     {/* Paginación */}
-                    {filteredUsers.length > 0 && (
+                    {filteredItems.length > 0 && (
                         <div className="px-6 border-t border-gray-200">
                             <Pagination
                                 currentPage={currentPage}
-                                totalPages={Math.ceil(filteredUsers.length / itemsPerPage)}
+                                totalPages={Math.ceil(filteredItems.length / itemsPerPage)}
                                 onPageChange={handlePageChange}
                                 itemsPerPage={itemsPerPage}
-                                totalItems={filteredUsers.length}
+                                totalItems={filteredItems.length}
                                 onItemsPerPageChange={handleItemsPerPageChange}
                             />
                         </div>
@@ -260,7 +338,9 @@ const UsersIndex = ({ users, auth }) => {
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
                         <div className="flex items-center gap-3 text-red-600 mb-4">
                             <AlertCircle size={24} />
-                            <h2 className="text-xl font-bold">Eliminar Usuari</h2>
+                            <h2 className="text-xl font-bold">
+                                {activeTab === "users" ? "Eliminar Usuari" : "Eliminar Administrador"}
+                            </h2>
                         </div>
 
                         {selectedUser && (
@@ -271,8 +351,8 @@ const UsersIndex = ({ users, auth }) => {
                         )}
 
                         <p className="text-gray-600 mb-6">
-                            Estàs segur que vols eliminar aquest usuari? Aquesta acció no es pot desfer i s'eliminaran totes les dades
-                            associades.
+                            Estàs segur que vols eliminar aquest {activeTab === "users" ? "usuari" : "administrador"}?
+                            Aquesta acció no es pot desfer i s'eliminaran totes les dades associades.
                         </p>
                         <div className="flex justify-end gap-4">
                             <button
