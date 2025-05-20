@@ -16,7 +16,7 @@
         },
         {
             "src": "/(.*)",
-            "dest": "/public/build/index.html",
+            "dest": "/public/build/index.php",
             "status": 200
         }
     ]
