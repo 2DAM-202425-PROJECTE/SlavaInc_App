@@ -31,9 +31,10 @@ const Dashboard = () => {
     const [filteredAppointments, setFilteredAppointments] = useState([]);
 
     useEffect(() => {
-        // Filtrar appointments para este worker
+        // Filtrar appointments para este worker y solo pending/confirmed
         const workerAppointments = appointments.filter(app =>
-            app.workers?.some(worker => worker.id === userId)
+            app.workers?.some(worker => worker.id === userId) &&
+            ['pending', 'confirmed'].includes(app.status)
         );
         setFilteredAppointments(workerAppointments);
 
@@ -66,8 +67,8 @@ const Dashboard = () => {
 
         if (event.resource.status === 'confirmed') {
             backgroundColor = '#15803d'; // Verde para citas confirmadas
-        } else if (event.resource.status === 'cancelled') {
-            backgroundColor = '#6b7280'; // Gris para citas canceladas
+        } else if (event.resource.status === 'pending') {
+            backgroundColor = '#d97706'; // Amarillo para citas pendientes
         }
 
         return {
@@ -149,14 +150,9 @@ const Dashboard = () => {
                                         </div>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                             appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                    appointment.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-red-100 text-red-800'}`}>
-                                                {appointment.status === 'pending' ? 'Pendent' :
-                                                    appointment.status === 'confirmed' ? 'Confirmada' :
-                                                        appointment.status === 'completed' ? 'Completada' :
-                                                            'Cancel·lada'}
-                                            </span>
+                                                'bg-green-100 text-green-800'}`}>
+                                            {appointment.status === 'pending' ? 'Pendent' : 'Confirmada'}
+                                        </span>
                                     </div>
 
                                     <div className="space-y-2 mb-3">
@@ -202,15 +198,15 @@ const Dashboard = () => {
                         <div className="text-center py-8">
                             <div className="text-5xl mb-3">📅</div>
                             <h3 className="text-xl font-semibold text-gray-800 mb-1">
-                                No tens cites assignades
+                                No tens cites pendents o confirmades
                             </h3>
-                            <p className="text-gray-500">Quan et assignin cites, apareixeran aquí</p>
+                            <p className="text-gray-500">Les teves cites apareixeran aquí</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            <Footer/>
+            <Footer />
         </div>
     );
 };

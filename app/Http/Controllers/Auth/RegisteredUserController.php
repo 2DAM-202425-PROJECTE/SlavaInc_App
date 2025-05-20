@@ -17,6 +17,14 @@ class RegisteredUserController extends Controller
 {
     public function create()
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('administrator.dashboard');
+        }
+
+        if (Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check()) {
+            return redirect()->route('dashboard');
+        }
+
         return Inertia::render('Auth/Register');
     }
 
