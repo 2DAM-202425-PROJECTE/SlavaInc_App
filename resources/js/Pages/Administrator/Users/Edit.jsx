@@ -10,7 +10,8 @@ const UsersEdit = ({ user }) => {
         email: user.email,
         password: '', // La contrasenya és opcional en l'edició
         password_confirmation: '',
-        role: user.role,
+        address: user.address || '',
+        city: user.city || '',
     });
 
     const handleSubmit = (e) => {
@@ -58,6 +59,41 @@ const UsersEdit = ({ user }) => {
                                 {errors.email && (
                                     <p className="mt-2 text-sm text-red-600">{errors.email}</p>
                                 )}
+                                <p className="mt-1 text-sm text-gray-500">
+                                    El correu ha de ser únic en tot el sistema (usuaris, treballadors, empreses i administradors).
+                                </p>
+                            </div>
+
+                            {/* Adreça */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Adreça
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.address}
+                                    onChange={(e) => setData('address', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1e40af] focus:ring-[#1e40af] sm:text-sm"
+                                />
+                                {errors.address && (
+                                    <p className="mt-2 text-sm text-red-600">{errors.address}</p>
+                                )}
+                            </div>
+
+                            {/* Ciutat */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Ciutat
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.city}
+                                    onChange={(e) => setData('city', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1e40af] focus:ring-[#1e40af] sm:text-sm"
+                                />
+                                {errors.city && (
+                                    <p className="mt-2 text-sm text-red-600">{errors.city}</p>
+                                )}
                             </div>
 
                             {/* Contrasenya */}
@@ -87,25 +123,6 @@ const UsersEdit = ({ user }) => {
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1e40af] focus:ring-[#1e40af] sm:text-sm"
                                 />
-                            </div>
-
-                            {/* Rol */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Rol
-                                </label>
-                                <select
-                                    value={data.role}
-                                    onChange={(e) => setData('role', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1e40af] focus:ring-[#1e40af] sm:text-sm"
-                                >
-                                    <option value="company">Empresa</option>
-                                    <option value="admin">Administrador</option>
-                                    <option value="worker">Worker</option>
-                                </select>
-                                {errors.role && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.role}</p>
-                                )}
                             </div>
 
                             {/* Botons */}

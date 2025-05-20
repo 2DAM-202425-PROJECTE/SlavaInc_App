@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -15,11 +15,11 @@ class UserController extends Controller
     public function index()
     {
         $users = User::all();
-        $admins = Admin::all();
         return Inertia::render('Administrator/Users/Index', [
             'users' => $users,
-            'admins' => $admins,
-            'initialTab' => 'admins',
+            'auth' => [
+                'user' => auth()->user()
+            ]
         ]);
     }
 
@@ -35,9 +35,21 @@ class UserController extends Controller
         // Validació de dades
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users'),
+                Rule::unique('workers'),
+                Rule::unique('companies'),
+                Rule::unique('admins'),
+            ],
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|string|in:company,admin,worker',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+        ], [
+            'email.unique' => 'Aquest correu electrònic ja està en ús per un altre usuari, treballador, empresa o administrador.'
         ]);
 
         // Crea l'usuari
@@ -45,7 +57,8 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'address' => $request->address,
+            'city' => $request->city,
         ]);
 
         // Redirigeix a la llista d'usuaris
@@ -74,16 +87,29 @@ class UserController extends Controller
         // Validació de dades
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id),
+                Rule::unique('workers'),
+                Rule::unique('companies'),
+                Rule::unique('admins'),
+            ],
             'password' => 'nullable|string|min:8|confirmed', // La contrasenya és opcional en l'actualització
-            'role' => 'required|string|in:company,admin,worker',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+        ], [
+            'email.unique' => 'Aquest correu electrònic ja està en ús per un altre usuari, treballador, empresa o administrador.'
         ]);
 
         // Actualitza l'usuari
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role,
+            'address' => $request->address,
+            'city' => $request->city,
         ]);
 
         // Si es proporciona una nova contrasenya, actualitza-la

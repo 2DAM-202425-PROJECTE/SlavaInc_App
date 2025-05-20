@@ -218,20 +218,20 @@ const WorkersIndex = ({ workers, companies }) => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 mt-4 md:mt-0">
-                                            <Link
+                                            <button
                                                 onClick={() => router.visit(`/admin/workers/${worker.id}`)}
                                                 className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                                             >
                                                 <Eye size={16} />
                                                 <span className="hidden sm:inline">Veure</span>
-                                            </Link>
-                                            <Link
+                                            </button>
+                                            <button
                                                 onClick={() => router.visit(`/admin/workers/${worker.id}/edit`)}
                                                 className="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg transition-colors"
                                             >
                                                 <Edit size={16} />
                                                 <span className="hidden sm:inline">Editar</span>
-                                            </Link>
+                                            </button>
                                             <button
                                                 onClick={() => handleDelete(worker.id)}
                                                 className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg transition-colors"

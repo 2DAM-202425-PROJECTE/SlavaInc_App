@@ -18,7 +18,10 @@ class AdminController extends Controller
         $admins = Admin::all();
 
         return Inertia::render('Administrator/Admins/Index', [
-            'admins' => $admins
+            'admins' => $admins,
+            'auth' => [
+                'user' => Auth::user() // Asegúrate de pasar el usuario autenticado
+            ]
         ]);
     }
 
