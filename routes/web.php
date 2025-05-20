@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Administrator\AdminCompanyController;
 use App\Http\Controllers\Administrator\AdminCompanyServicesController;
 use App\Http\Controllers\Administrator\AdminDashboardController;
+use App\Http\Controllers\Administrator\AdminPlanController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\ClientController;
@@ -40,6 +41,7 @@ Route::prefix('admin')
         Route::resource('workers', AdminWorkerController::class)->names('workers');
         Route::resource('company-services', AdminCompanyServicesController::class);
         Route::resource('companies', AdminCompanyController::class);
+        Route::resource('plans', AdminPlanController::class);
         Route::put('profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
 
