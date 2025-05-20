@@ -3,6 +3,7 @@ import { Inertia } from '@inertiajs/inertia';
 import { Link } from '@inertiajs/react';
 import { route } from "ziggy-js";
 import Header from "@/Components/Header.jsx";
+import HeaderCompany from "@/Components/HeaderCompany.jsx";
 import Footer from "@/Components/Footer.jsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
@@ -47,8 +48,10 @@ export default function QuoteDetail({ quote, userType }) {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-            <Header theme={`${theme} text-white`} />
-
+            {userType === 'client'
+                ? <Header theme={`${theme} text-white`} />
+                : <HeaderCompany theme={`${theme} text-white`} />
+            }
             <section className={`w-full ${theme} py-8 px-6 sticky top-0 z-40`}>
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
