@@ -4,19 +4,17 @@ import Header from "@/Components/Header";
 import Footer from "@/Components/Footer.jsx";
 import AdminHeader from "@/Pages/Administrator/Components/Header.jsx";
 
-const UsersCreate = () => {
-    const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        email: '',
-        password: '',
+const AdminsEdit = ({ admin }) => {
+    const { data, setData, put, processing, errors } = useForm({
+        name: admin.name,
+        email: admin.email,
+        password: '', // La contrasenya és opcional en l'edició
         password_confirmation: '',
-        address: '',
-        city: '',
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('administrator.users.store'));
+        put(route('administrator.admins.update', admin.id));
     };
 
     return (
@@ -59,47 +57,12 @@ const UsersCreate = () => {
                                 {errors.email && (
                                     <p className="mt-2 text-sm text-red-600">{errors.email}</p>
                                 )}
-                                <p className="mt-1 text-sm text-gray-500">
-                                    El correu ha de ser únic en tot el sistema (usuaris, treballadors, empreses i administradors).
-                                </p>
-                            </div>
-
-                            {/* Adreça */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Adreça
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.address}
-                                    onChange={(e) => setData('address', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1e40af] focus:ring-[#1e40af] sm:text-sm"
-                                />
-                                {errors.address && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.address}</p>
-                                )}
-                            </div>
-
-                            {/* Ciutat */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Ciutat
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.city}
-                                    onChange={(e) => setData('city', e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1e40af] focus:ring-[#1e40af] sm:text-sm"
-                                />
-                                {errors.city && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.city}</p>
-                                )}
                             </div>
 
                             {/* Contrasenya */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Contrasenya
+                                    Contrasenya (deixa en blanc si no vols canviar-la)
                                 </label>
                                 <input
                                     type="password"
@@ -128,7 +91,7 @@ const UsersCreate = () => {
                             {/* Botons */}
                             <div className="flex justify-end gap-4">
                                 <Link
-                                    href={route('administrator.users.index')}
+                                    href={route('administrator.admins.index')}
                                     className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-2.5 rounded-lg font-medium"
                                 >
                                     Cancel·lar
@@ -150,4 +113,4 @@ const UsersCreate = () => {
     );
 };
 
-export default UsersCreate;
+export default AdminsEdit;

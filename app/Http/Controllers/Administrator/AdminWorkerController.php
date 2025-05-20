@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Administrator;
 use App\Http\Controllers\Controller;
 use App\Models\Worker;
 use App\Models\Company;
+use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AdminWorkerController extends Controller
@@ -16,12 +19,15 @@ class AdminWorkerController extends Controller
      */
     public function index(Request $request)
     {
-        $workers = Worker::all();
+        $workers = Worker::with('company')->get();
         $companies = Company::all();
 
         return Inertia::render('Administrator/Workers/Index', [
             'workers' => $workers,
-            'companies' => $companies
+            'companies' => $companies,
+            'auth' => [
+                'user' => auth()->user()
+            ]
         ]);
     }
 
@@ -44,7 +50,16 @@ class AdminWorkerController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:workers,email',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('workers', 'email'),
+                Rule::unique('users', 'email'),
+                Rule::unique('companies', 'email'),
+                Rule::unique('admins', 'email'),
+            ],
             'password' => 'required|string|min:8|confirmed',
             'company_id' => 'required|integer|exists:companies,id',
             'schedule' => 'required|string',
@@ -53,6 +68,10 @@ class AdminWorkerController extends Controller
             'state' => 'required|string',
             'zip_code' => 'required|string',
             'phone' => 'required|string',
+            'status' => 'nullable|string|in:active,inactive',
+            'is_admin' => 'nullable|boolean',
+        ], [
+            'email.unique' => 'Aquest correu electrònic ja està en ús per un altre usuari, treballador, empresa o administrador.',
         ]);
 
         Worker::create([
@@ -66,7 +85,8 @@ class AdminWorkerController extends Controller
             'state' => $request->state,
             'zip_code' => $request->zip_code,
             'phone' => $request->phone,
-            // 'is_admin' => $request->is_admin ?? 0, // si vols incloure aquest camp
+            'status' => $request->status ?? 'active',
+            'is_admin' => $request->is_admin ?? false,
         ]);
 
         return redirect()->route('administrator.workers.index');
@@ -104,7 +124,16 @@ class AdminWorkerController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:workers,email,' . $worker->id,
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('workers', 'email')->ignore($worker->id),
+                Rule::unique('users', 'email'),
+                Rule::unique('companies', 'email'),
+                Rule::unique('admins', 'email'),
+            ],
             'password' => 'nullable|string|min:8|confirmed',
             'company_id' => 'required|integer|exists:companies,id',
             'schedule' => 'required|string',
@@ -113,9 +142,13 @@ class AdminWorkerController extends Controller
             'state' => 'required|string',
             'zip_code' => 'required|string',
             'phone' => 'required|string',
+            'status' => 'nullable|string|in:active,inactive',
+            'is_admin' => 'nullable|boolean',
+        ], [
+            'email.unique' => 'Aquest correu electrònic ja està en ús per un altre usuari, treballador, empresa o administrador.',
         ]);
 
-        $worker->update([
+        $updateData = [
             'name' => $request->name,
             'email' => $request->email,
             'company_id' => $request->company_id,
@@ -125,9 +158,19 @@ class AdminWorkerController extends Controller
             'state' => $request->state,
             'zip_code' => $request->zip_code,
             'phone' => $request->phone,
-        ]);
+        ];
 
-        if ($request->password) {
+        if ($request->has('status')) {
+            $updateData['status'] = $request->status;
+        }
+
+        if ($request->has('is_admin')) {
+            $updateData['is_admin'] = $request->is_admin;
+        }
+
+        $worker->update($updateData);
+
+        if ($request->filled('password')) {
             $worker->update([
                 'password' => Hash::make($request->password),
             ]);
