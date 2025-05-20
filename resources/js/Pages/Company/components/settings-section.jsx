@@ -22,6 +22,10 @@ export default function SettingsSection({ company, addNotification }) {
     const [confirmPassword, setConfirmPassword] = useState("")
     const [errors, setErrors] = useState({})
 
+    const handleLogout = () => {
+        router.post(route('logout'));
+    };
+
 
     const handleChangePassword = async () => {
         setErrors({})
@@ -125,7 +129,16 @@ export default function SettingsSection({ company, addNotification }) {
                                 </button>
                             ))}
                         </nav>
+
+                        {/* Botó tancar sessió */}
+                        <button
+                            onClick={handleLogout}
+                            className="mt-4 w-full flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-red-100 text-red-600 hover:bg-red-200 transition duration-200"
+                        >
+                            Tancar sessió
+                        </button>
                     </div>
+
 
                     {/* Content */}
                     <div className="flex-1 p-6">
@@ -267,8 +280,11 @@ export default function SettingsSection({ company, addNotification }) {
 
 
                     </div>
+
                 </div>
+
             </div>
+
         </div>
     )
 }

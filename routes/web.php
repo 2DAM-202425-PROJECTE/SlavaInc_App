@@ -151,6 +151,8 @@ Route::middleware(['auth:web,company'])->group(function () {
     Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
     Route::patch('/company/appointments/{appointment}/complete', [\App\Http\Controllers\AppointmentController::class, 'markAsCompleted'])->name('appointments.complete');
     Route::patch('/company/appointments/{appointment}/cancel', [\App\Http\Controllers\AppointmentController::class, 'markAsCancelled'])->name('appointments.cancel');
+    Route::patch('company/appointments/{appointment}/confirmed', [\App\Http\Controllers\AppointmentController::class, 'markAsConfirmed'])->name('appointments.confirmed');
+
     Route::patch('/company/settings/notifications', [CompanyController::class, 'updateNotifications'])
         ->name('company.notifications.update')
         ->middleware('auth:company');
