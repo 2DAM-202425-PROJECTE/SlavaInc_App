@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useForm, usePage } from "@inertiajs/react";
-import Header from "@/Components/Header.jsx";
+import Header from "@/Components/HeaderCompany";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 export default function Edit() {

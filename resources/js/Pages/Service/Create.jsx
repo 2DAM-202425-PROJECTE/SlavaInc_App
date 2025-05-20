@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useForm, router } from "@inertiajs/react";
-import Header from "@/Components/Header";
+import Header from "@/Components/HeaderCompany";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 export default function Create({ services, company }) {

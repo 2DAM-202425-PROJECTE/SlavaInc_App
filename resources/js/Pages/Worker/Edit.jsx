@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Header from '@/Components/Header.jsx';
+import Header from "@/Components/HeaderCompany";
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function Edit({ worker }) {

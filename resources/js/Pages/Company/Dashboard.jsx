@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useEffect, useState} from "react"
+import { useEffect, useState } from "react"
 import { usePage, router } from "@inertiajs/react"
 import { route } from "ziggy-js"
 import {
@@ -12,6 +12,10 @@ import {
     UserCircleIcon,
     Cog6ToothIcon,
     TrashIcon,
+    ArrowLeftIcon,
+    BellIcon,
+    XCircleIcon,
+    CheckCircleIcon,
 } from "@heroicons/react/24/outline"
 
 import DashboardStats from "./components/dashboard-stats"
@@ -21,12 +25,8 @@ import OngoingServicesSection from "./components/ongoing-services-section"
 import RatingsSection from "./components/ratings-section"
 import ProfileSection from "./components/profile-section"
 import SettingsSection from "./components/settings-section"
-import { XCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
 import Notification from "./components/Notification"
 import NotificationsPanel from "./components/notifications-panel"
-
-import { BellIcon } from "@heroicons/react/24/outline"
-import Header from "@/Components/Header.jsx";
 
 export default function CompanyProfileAdmin() {
     const { company, flash } = usePage().props
@@ -43,7 +43,7 @@ export default function CompanyProfileAdmin() {
     const [actionType, setActionType] = useState(null)
     const [showNotifications, setShowNotifications] = useState(false)
     const [notifications, setNotifications] = useState([])
-    const unreadCount = company.notifications?.filter(n => !n.read).length || 0
+    const unreadCount = company.notifications?.filter((n) => !n.read).length || 0
     const [planToChange, setPlanToChange] = useState(null)
 
     const addNotification = (message, type = "success", duration = 4000) => {
@@ -71,7 +71,6 @@ export default function CompanyProfileAdmin() {
         }
     }, [internalFlash])
 
-
     const tabs = [
         { id: "dashboard", name: "Dashboard", icon: ChartBarIcon },
         { id: "workers", name: "Treballadors", icon: UsersIcon },
@@ -96,39 +95,43 @@ export default function CompanyProfileAdmin() {
                     />
                 )
             case "services":
-                return <ServicesSection
-                    company={company}
-                    onViewServiceInfo={setSelectedService}
-                    onDeleteService={setServiceToDelete}
-                    showDeleteModal={() => setShowServiceModal(true)}
-                />
+                return (
+                    <ServicesSection
+                        company={company}
+                        onViewServiceInfo={setSelectedService}
+                        onDeleteService={setServiceToDelete}
+                        showDeleteModal={() => setShowServiceModal(true)}
+                    />
+                )
 
             case "ongoing":
-                return <OngoingServicesSection
-                    company={company}
-                    onConfirmComplete={(id) => {
-                        setAppointmentToAction(id)
-                        setActionType("complete")
-                    }}
-                    onConfirmCancel={(id) => {
-                        setAppointmentToAction(id)
-                        setActionType("cancel")
-                    }}
-                    onConfirmAccept={(id) => {
-                        setAppointmentToAction(id)
-                        setActionType("confirmed")
-                    }}
-                />
-
+                return (
+                    <OngoingServicesSection
+                        company={company}
+                        onConfirmComplete={(id) => {
+                            setAppointmentToAction(id)
+                            setActionType("complete")
+                        }}
+                        onConfirmCancel={(id) => {
+                            setAppointmentToAction(id)
+                            setActionType("cancel")
+                        }}
+                        onConfirmAccept={(id) => {
+                            setAppointmentToAction(id)
+                            setActionType("confirmed")
+                        }}
+                    />
+                )
 
             case "ratings":
                 return <RatingsSection company={company} />
             case "profile":
-                return <ProfileSection company={company} addNotification={addNotification} requestPlanChange={setPlanToChange} />
+                return (
+                    <ProfileSection company={company} addNotification={addNotification} requestPlanChange={setPlanToChange} />
+                )
 
             case "settings":
                 return <SettingsSection company={company} addNotification={addNotification} />
-
 
             default:
                 return <DashboardStats company={company} />
@@ -142,45 +145,96 @@ export default function CompanyProfileAdmin() {
         else if (actionType === "cancel") routeName = "appointments.cancel"
         else if (actionType === "confirmed") routeName = "appointments.confirmed"
 
-        router.patch(route(routeName, appointmentToAction), {}, {
-            preserveScroll: true,
-            onSuccess: () => addNotification(`Cita ${actionType === "complete" ? 'completada' : actionType === "cancel" ? 'cancel·lada' : 'acceptada'} correctament`, "success"),
-            onError: () => addNotification(`Error al ${actionType === "complete" ? 'completar' : actionType === "cancel" ? 'cancel·lar' : 'acceptar'} la cita`, "error"),
-        })
+        router.patch(
+            route(routeName, appointmentToAction),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                    addNotification(
+                        `Cita ${actionType === "complete" ? "completada" : actionType === "cancel" ? "cancel·lada" : "acceptada"} correctament`,
+                        "success",
+                    ),
+                onError: () =>
+                    addNotification(
+                        `Error al ${actionType === "complete" ? "completar" : actionType === "cancel" ? "cancel·lar" : "acceptar"} la cita`,
+                        "error",
+                    ),
+            },
+        )
 
         setAppointmentToAction(null)
         setActionType(null)
     }
 
-
     return (
         <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-            <Header theme="bg-gradient-to-r from-[#7f1d1d] to-[#dc2626] text-white" />
-            <section className="relative w-full bg-gradient-to-br from-[#9e2a2f] via-[#b83e43] to-[#9e2a2f] py-12 px-6 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,...')] animate-pulse"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#9e2a2f]/30"></div>
-                <div className="absolute top-4 right-6 z-10">
-                    <button
-                        onClick={() => setShowNotifications(true)}
-                        className="relative p-2 rounded-full bg-white shadow hover:bg-gray-100"
-                    >
-                        <BellIcon className="h-6 w-6 text-[#9e2a2f]" />
-                        {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-                        )}
-                    </button>
+            <header className="w-full bg-gradient-to-r from-[#600f0f] via-[#9e2a2f] to-[#b81b1b] shadow-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={() => router.visit(route("dashboard"))}
+                                className="flex items-center justify-center h-9 w-9 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+                            >
+                                <ChartBarIcon className="h-5 w-5 text-white" />
+                            </button>
+                            <div>
+                                <h1 className="text-xl font-bold text-white">{company.info.name}</h1>
+                                <p className="text-sm text-white/80">Panell d'administració</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <div className="hidden md:flex items-center space-x-2">
+                <span className="px-3 py-1 bg-white/15 text-white rounded-full font-medium text-sm">
+{company.plan ? company.plan.name : "Pla Bàsic"}
+                </span>
+                            </div>
+                            <button
+                                onClick={() => router.visit(route("dashboard"))}
+                                className="hidden sm:flex items-center text-white text-sm font-medium hover:text-white/80 transition-colors"
+                            >
+                                <ArrowLeftIcon className="h-4 w-4 mr-1" />
+                                Tornar al Dashboard
+                            </button>
+                            <button
+                                onClick={() => setShowNotifications(true)}
+                                className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <BellIcon className="h-6 w-6 text-white" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-white text-[#9e2a2f] text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </header>
 
-
-                <div className="max-w-6xl mx-auto text-center relative z-10">
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">{company.info.name}</h1>
-                    <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto">
-                        Gestiona la teva empresa, treballadors i serveis fàcilment des d'un sol lloc
-                    </p>
+            <div className="bg-[#9e2a2f] text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+                    <div className="md:flex md:items-center md:justify-between">
+                        <div className="max-w-2xl">
+                            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Benvingut al teu panell d'administració</h2>
+                            <p className="mt-3 text-lg text-white/80">
+                                Gestiona la teva empresa, treballadors i serveis fàcilment des d'un sol lloc
+                            </p>
+                        </div>
+                        <div className="mt-6 md:mt-0">
+                            <div className="inline-flex rounded-md shadow">
+                                <button
+                                    onClick={() => setActiveTab("profile")}
+                                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-[#9e2a2f] bg-white hover:bg-gray-50"
+                                >
+                                    Veure perfil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </section>
+            </div>
 
             <div className="bg-white shadow-md border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -220,11 +274,8 @@ export default function CompanyProfileAdmin() {
                 onClose={() => setShowNotifications(false)}
                 notifications={company.notifications || []}
                 showSystemNotifications={company.info.notifications_system}
-                onRead={() => router.reload({ only: ['company'] })}
+                onRead={() => router.reload({ only: ["company"] })}
             />
-
-
-
 
             {/* Modal Confirmació Cita */}
             {/* Modal Confirmació Cita */}
@@ -282,10 +333,24 @@ export default function CompanyProfileAdmin() {
                         </div>
                         <h3 className="text-2xl font-bold text-center text-gray-900 pt-8 mb-6">Informació del Treballador</h3>
                         <div className="space-y-3 divide-y divide-gray-100">
-                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Nom:</span><span className="w-2/3">{selectedWorker.name}</span></div>
-                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Correu:</span><span className="w-2/3">{selectedWorker.email}</span></div>
-                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Telèfon:</span><span className="w-2/3">{selectedWorker.phone}</span></div>
-                            {selectedWorker.schedule && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Horari:</span><span className="w-2/3">{selectedWorker.schedule}</span></div>}
+                            <div className="py-2 flex">
+                                <span className="w-1/3 text-gray-500">Nom:</span>
+                                <span className="w-2/3">{selectedWorker.name}</span>
+                            </div>
+                            <div className="py-2 flex">
+                                <span className="w-1/3 text-gray-500">Correu:</span>
+                                <span className="w-2/3">{selectedWorker.email}</span>
+                            </div>
+                            <div className="py-2 flex">
+                                <span className="w-1/3 text-gray-500">Telèfon:</span>
+                                <span className="w-2/3">{selectedWorker.phone}</span>
+                            </div>
+                            {selectedWorker.schedule && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Horari:</span>
+                                    <span className="w-2/3">{selectedWorker.schedule}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="mt-6 text-center">
                             <button
@@ -331,7 +396,6 @@ export default function CompanyProfileAdmin() {
                 </div>
             )}
 
-
             {selectedService && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
@@ -340,13 +404,46 @@ export default function CompanyProfileAdmin() {
                         </div>
                         <h3 className="text-2xl font-bold text-center text-gray-900 pt-8 mb-6">Informació del Servei</h3>
                         <div className="space-y-3 divide-y divide-gray-100">
-                            <div className="py-2 flex"><span className="w-1/3 text-gray-500">Nom:</span><span className="w-2/3">{selectedService.custom_name || selectedService.name}</span></div>
-                            {selectedService.description && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Descripció:</span><span className="w-2/3">{selectedService.description}</span></div>}
-                            {selectedService.unit && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Unitat:</span><span className="w-2/3">{selectedService.unit}</span></div>}
-                            {selectedService.price_per_unit && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Preu/unitat:</span><span className="w-2/3">{selectedService.price_per_unit} €</span></div>}
-                            {selectedService.min_price && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Preu mínim:</span><span className="w-2/3">{selectedService.min_price} €</span></div>}
-                            {selectedService.max_price && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Preu màxim:</span><span className="w-2/3">{selectedService.max_price} €</span></div>}
-                            {selectedService.type && <div className="py-2 flex"><span className="w-1/3 text-gray-500">Tipus:</span><span className="w-2/3">{selectedService.type}</span></div>}
+                            <div className="py-2 flex">
+                                <span className="w-1/3 text-gray-500">Nom:</span>
+                                <span className="w-2/3">{selectedService.custom_name || selectedService.name}</span>
+                            </div>
+                            {selectedService.description && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Descripció:</span>
+                                    <span className="w-2/3">{selectedService.description}</span>
+                                </div>
+                            )}
+                            {selectedService.unit && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Unitat:</span>
+                                    <span className="w-2/3">{selectedService.unit}</span>
+                                </div>
+                            )}
+                            {selectedService.price_per_unit && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Preu/unitat:</span>
+                                    <span className="w-2/3">{selectedService.price_per_unit} €</span>
+                                </div>
+                            )}
+                            {selectedService.min_price && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Preu mínim:</span>
+                                    <span className="w-2/3">{selectedService.min_price} €</span>
+                                </div>
+                            )}
+                            {selectedService.max_price && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Preu màxim:</span>
+                                    <span className="w-2/3">{selectedService.max_price} €</span>
+                                </div>
+                            )}
+                            {selectedService.type && (
+                                <div className="py-2 flex">
+                                    <span className="w-1/3 text-gray-500">Tipus:</span>
+                                    <span className="w-2/3">{selectedService.type}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="mt-6 text-center">
                             <button
@@ -410,7 +507,7 @@ export default function CompanyProfileAdmin() {
                             <button
                                 onClick={async () => {
                                     try {
-                                        await axios.put('/company/change-plan', { plan_id: planToChange.id })
+                                        await axios.put("/company/change-plan", { plan_id: planToChange.id })
                                         setPlanToChange(null)
                                         addNotification("Subscripció canviada correctament", "success")
                                         window.location.reload()
@@ -427,8 +524,6 @@ export default function CompanyProfileAdmin() {
                     </div>
                 </div>
             )}
-
-
 
             <style jsx>{`
                 @keyframes fadeIn {

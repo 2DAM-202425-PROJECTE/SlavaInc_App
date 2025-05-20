@@ -136,7 +136,6 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
     Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
-    Route::get('/worker/list', [WorkerController::class, 'list'])->name('worker.list');
 
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
     Route::get('/company/services/create', [CompanyServiceController::class, 'create'])->name('company.services.create');
@@ -160,7 +159,10 @@ Route::middleware(['auth:web,company'])->group(function () {
         ->middleware('auth:company');
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-    Route::middleware('auth:company')->put('/company/profile', [CompanyController::class, 'updateProfile'])->name('company.updateProfile');
+    Route::match(['post', 'put'], '/company/profile', [CompanyController::class, 'updateProfile'])
+        ->middleware('auth:company,worker')
+        ->name('company.profile.update');
+
     Route::middleware('auth:company')->put('/company/change-plan', [CompanyController::class, 'changePlan'])->name('company.changePlan');
 
     Route::get('/company/preview-client', [CompanyController::class, 'previewClient'])->name('company.previewClient');

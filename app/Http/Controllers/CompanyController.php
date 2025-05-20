@@ -93,17 +93,16 @@ class CompanyController extends Controller
 
     public function updateProfile(Request $request)
     {
-        // Determinar si el usuario es una empresa o un trabajador administrador
         if (Auth::guard('company')->check()) {
             $company = Auth::guard('company')->user();
         } elseif (Auth::guard('worker')->check()) {
             $worker = Auth::guard('worker')->user();
             if (!$worker->is_admin) {
-                abort(403, 'No tienes permisos para realizar esta acción');
+                abort(403, 'No tens permisos per actualitzar el perfil');
             }
             $company = Company::findOrFail($worker->company_id);
         } else {
-            abort(403, 'No tienes permisos para realizar esta acción');
+            abort(403, 'No tens permisos per actualitzar el perfil');
         }
 
         $validated = $request->validate([
@@ -112,7 +111,6 @@ class CompanyController extends Controller
             'founded_year' => 'nullable|integer',
             'company_type' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
@@ -120,16 +118,25 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'required|email|max:255',
             'website' => 'nullable|string|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
+        // Si s'ha pujat una imatge nova
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('logos', 'public');
+            $validated['logo'] = $logoPath;
+        }
+
 
         $company->update($validated);
-        $this->createSystemNotification($company, 'profile_updated', [], "S'ha actualitzat el perfil de l'empresa.");
 
         return response()->json([
             'message' => 'Perfil actualitzat correctament.',
             'company' => $company,
         ]);
     }
+
+
+
 
     public function changePlan(Request $request)
     {

@@ -12,11 +12,13 @@ import {
     ClockIcon,
     EnvelopeIcon,
 } from "@heroicons/react/24/outline"
+import { Link } from "@inertiajs/react"
 
 export default function WorkersSection({ company, onViewWorkerInfo, onDeleteWorker, showDeleteModal }) {
     const [isLoaded, setIsLoaded] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
-    const workers = company.workers || []
+    const workers = company.workers?.data || []
+    const paginationLinks = company.workers?.links || []
 
     useEffect(() => {
         setIsLoaded(true)
@@ -29,6 +31,13 @@ export default function WorkersSection({ company, onViewWorkerInfo, onDeleteWork
     const handleEditWorker = (workerId) => {
         router.get(route("worker.edit", workerId))
     }
+
+    const filteredWorkers = workers.filter(
+        (worker) =>
+            worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            worker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (worker.phone && worker.phone.includes(searchTerm)),
+    )
 
     return (
         <div
@@ -76,15 +85,9 @@ export default function WorkersSection({ company, onViewWorkerInfo, onDeleteWork
             </div>
 
             {workers.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {workers
-                        .filter(
-                            (worker) =>
-                                worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                worker.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                (worker.phone && worker.phone.includes(searchTerm)),
-                        )
-                        .map((worker, index) => (
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredWorkers.map((worker, index) => (
                             <div
                                 key={worker.id}
                                 className={`bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 transform hover:-translate-y-2 hover:scale-[1.02] ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
@@ -145,7 +148,37 @@ export default function WorkersSection({ company, onViewWorkerInfo, onDeleteWork
                                 </div>
                             </div>
                         ))}
-                </div>
+                    </div>
+
+                    {/* Pagination section - moved outside the flex container */}
+                    {paginationLinks.length > 0 && (
+                        <div className="mt-12 flex justify-center w-full">
+                            <div className="inline-flex flex-wrap gap-2 justify-center">
+                                {paginationLinks.map((link, index) =>
+                                    link.url ? (
+                                        <Link
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                            className={`px-4 py-2 border rounded ${
+                                                link.active ? "bg-[#9e2a2f] text-white" : "bg-white text-gray-800"
+                                            } hover:bg-[#9e2a2f]/90 hover:text-white transition-all`}
+                                        >
+                                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                        </Link>
+                                    ) : (
+                                        <span
+                                            key={index}
+                                            className="px-4 py-2 border rounded text-gray-400 bg-gray-100 cursor-not-allowed"
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ),
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </>
             ) : (
                 <div className="text-center py-20 bg-white rounded-xl shadow-md border border-gray-100 transition-all duration-500 hover:shadow-lg">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6 animate-pulse">

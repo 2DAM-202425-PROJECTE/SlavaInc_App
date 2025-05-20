@@ -9,10 +9,12 @@ import {
     CheckCircleIcon,
     XCircleIcon,
 } from "@heroicons/react/24/outline"
+import { Link } from "@inertiajs/react"
 
 export default function OngoingServicesSection({ company, onConfirmComplete, onConfirmCancel, onConfirmAccept  }) {
     const [isLoaded, setIsLoaded] = useState(false)
-    const appointments = company.appointments || []
+    const appointments = company.appointments?.data || []
+    const paginationLinks = company.appointments?.links || []
 
     useEffect(() => {
         setIsLoaded(true)
@@ -25,10 +27,19 @@ export default function OngoingServicesSection({ company, onConfirmComplete, onC
                     <ClipboardDocumentListIcon className="h-8 w-8 mr-3 text-[#9e2a2f]" />
                     Serveis en Curs
                 </h2>
-                <div className="text-sm font-medium text-gray-500">
-                    Total: {appointments.length} serveis actius
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+                    <div className="text-sm font-medium text-gray-500">
+                        Total: {appointments.length} serveis actius
+                    </div>
+                    <Link
+                        href="/quotes"
+                        className="mt-2 md:mt-0 inline-flex items-center px-4 py-2 rounded-lg bg-[#9e2a2f] text-white font-medium transition-all duration-300 hover:bg-[#8a2329] shadow-md hover:shadow-lg"
+                    >
+                        Veure Pressupostos
+                    </Link>
                 </div>
             </div>
+
 
             {appointments.length > 0 ? (
                 <div className="space-y-6">
@@ -115,6 +126,34 @@ export default function OngoingServicesSection({ company, onConfirmComplete, onC
 
                         </div>
                     ))}
+                    {paginationLinks.length > 0 && (
+                        <div className="mt-8 flex justify-center w-full">
+                            <div className="inline-flex flex-wrap gap-2 justify-center">
+                                {paginationLinks.map((link, index) =>
+                                    link.url ? (
+                                        <Link
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                            className={`px-4 py-2 border rounded ${
+                                                link.active ? "bg-[#9e2a2f] text-white" : "bg-white text-gray-800"
+                                            } hover:bg-[#9e2a2f]/90 hover:text-white transition-all`}
+                                        >
+                                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                        </Link>
+                                    ) : (
+                                        <span
+                                            key={index}
+                                            className="px-4 py-2 border rounded text-gray-400 bg-gray-100 cursor-not-allowed"
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    )
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             ) : (
                 <div
