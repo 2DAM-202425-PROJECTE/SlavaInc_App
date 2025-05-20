@@ -33,7 +33,8 @@ const Dashboard = () => {
     useEffect(() => {
         // Filtrar appointments para este worker y solo pending/confirmed
         const workerAppointments = appointments.filter(app =>
-            app.workers?.some(worker => worker.id === userId)
+            app.workers?.some(worker => worker.id === userId) &&
+            ['pending', 'confirmed'].includes(app.status)
         );
         setFilteredAppointments(workerAppointments);
 
