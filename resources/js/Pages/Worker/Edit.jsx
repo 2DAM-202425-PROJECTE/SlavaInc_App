@@ -10,6 +10,7 @@ export default function Edit({ worker }) {
         phone: worker.phone || '',
         address: worker.address || '',
         schedule: worker.schedule || '',
+        is_admin: worker.is_admin || false, // Initialize is_admin from worker data
     });
 
     // Validación del formato de schedule (HH:mm-HH:mm)
@@ -27,11 +28,18 @@ export default function Edit({ worker }) {
             setError('schedule', 'El format de l\'horari ha de ser HH:mm-HH:mm (ex. 08:00-16:00)');
             return;
         } else {
-            clearErrors('schedule'); // Limpiar el error si el formato es válido o el campo está vacío
+            clearErrors('schedule');
         }
 
-        // Enviar el formulario solo si no hay errores
-        put(route('worker.update', worker.id));
+        console.log('Form data:', data); // Debug: Log the form data
+        put(route('worker.update', worker.id), {
+            onSuccess: () => {
+                console.log('Update successful');
+            },
+            onError: (errors) => {
+                console.log('Update failed with errors:', errors);
+            },
+        });
     };
 
     // Validar schedule en cada cambio para mostrar el error inmediatamente
@@ -122,6 +130,22 @@ export default function Edit({ worker }) {
                                     className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
                                 />
                                 {errors.schedule && <p className="text-red-600 text-sm mt-1">{errors.schedule}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Administrador
+                                </label>
+                                <input
+                                    type="checkbox"
+                                    checked={data.is_admin}
+                                    onChange={(e) => setData('is_admin', e.target.checked)}
+                                    className="h-5 w-5 text-[#9e2a2f] focus:ring-[#9e2a2f] border-gray-300 rounded"
+                                />
+                                <span className="ml-2 text-sm text-gray-600">
+                                    Marca si aquest treballador és administrador
+                                </span>
+                                {errors.is_admin && <p className="text-red-600 text-sm mt-1">{errors.is_admin}</p>}
                             </div>
 
                             <div className="pt-4">

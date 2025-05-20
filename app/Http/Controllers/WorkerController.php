@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules\In;
-use Inertia\Inertia;
-use App\Models\Worker;
+use App\Http\Requests\UpdateWorkerRequest;
 use App\Models\Appointment;
-
+use App\Models\Company;
+use App\Models\Worker;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class WorkerController extends Controller
 {
@@ -51,11 +50,10 @@ class WorkerController extends Controller
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
             'password' => 'required|string|min:8',
-            'status' => 'required|in:active,inactive', // ✅ validació del camp status
+            'status' => 'required|in:active,inactive',
         ]);
 
         $company = Auth::guard('company')->user();
-
         if (!$company) {
             return redirect()->route('login')->withErrors([
                 'error' => 'No tens permisos per crear treballadors.'
@@ -84,12 +82,11 @@ class WorkerController extends Controller
             'phone' => $request->phone,
             'password' => bcrypt($request->password),
             'is_admin' => false,
-            'status' => $request->status, // ✅ assignació real
+            'status' => $request->status,
         ]);
         $this->createSystemNotification($company, 'worker_added', [
             'workerName' => $request->name,
         ]);
-
 
         return redirect()->route('dashboard')->with('success', 'Treballador creat correctament!');
     }
@@ -105,30 +102,29 @@ class WorkerController extends Controller
         ]);
     }
 
-    public function update(Request $request, $workerId)
+    public function update(UpdateWorkerRequest $request, Worker $worker) // Use Worker model directly
     {
-        // Validació de la petició
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:workers,email,' . $workerId,
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:255',
-        ]);
-
-        // Trobar el treballador pel seu ID
-        $worker = Worker::findOrFail($workerId);
-
-        // Actualitzar el treballador
-        $worker->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-        ]);
-
+        // Authorization check
         $company = Auth::guard('company')->user();
+        $workerAuth = Auth::guard('worker')->user();
+        if (!$company && (!$workerAuth || !$workerAuth->is_admin || $workerAuth->company_id !== $worker->company_id)) {
+            \Log::warning('Unauthorized update attempt', ['worker_id' => $worker->id]);
+            abort(403, 'No tens permisos per actualitzar aquest treballador.');
+        }
+
+        // Log validated data for debugging
+        $validated = $request->validated();
+        \Log::info('Validated data for worker update:', $validated);
+
+        // Update worker with all validated fields
+        $updated = $worker->update($validated);
+        \Log::info('Worker update result:', ['updated' => $updated, 'worker' => $worker->fresh()->toArray()]);
+
+        // Use the company from auth or worker's company
+        $company = $company ?? Company::findOrFail($worker->company_id);
         $this->createSystemNotification($company, 'worker_updated', [
-            'workerId' => $workerId,
+            'workerId' => $worker->id,
+            'workerName' => $request->name,
         ], "S'ha actualitzat el treballador {$request->name}");
 
         return redirect()->route('dashboard')->with('success', 'Treballador actualitzat correctament!');

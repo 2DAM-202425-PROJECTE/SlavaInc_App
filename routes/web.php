@@ -135,7 +135,9 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
     Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
-    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])
+        ->name('worker.update')
+        ->where('worker', '[0-9]+');
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
 
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
