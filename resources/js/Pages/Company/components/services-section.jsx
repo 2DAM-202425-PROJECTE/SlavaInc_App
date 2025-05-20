@@ -118,7 +118,7 @@ export default function ServicesSection({ company, onViewServiceInfo, onDeleteSe
 
                                 <div className="flex justify-between pt-4 border-t border-gray-100">
                                     <button
-                                        onClick={() => handleEditService(service.service_id)}
+                                        onClick={() => handleEditService(service.id)}
                                         className="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-medium transition-all duration-300 hover:bg-indigo-100 hover:shadow-md"
                                     >
                                         <PencilSquareIcon className="h-4 w-4 mr-2" />

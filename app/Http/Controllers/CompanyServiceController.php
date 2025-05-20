@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\CompanyService;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -104,28 +105,26 @@ class CompanyServiceController extends Controller
 
 
 
-    public function edit($serviceId)
+
+    public function edit($companyServiceId)
     {
         $company = Auth::guard('company')->user();
 
-        $pivot = $company->services()
-            ->where('service_id', $serviceId)
-            ->first();
-
-        if (!$pivot) {
-            abort(404, 'Servei no trobat.');
-        }
-
-        $service = Service::findOrFail($serviceId);
+        // Cerquem el servei que pertany a aquesta empresa i que té la ID passada
+        $companyService = CompanyService::where('company_id', $company->id)
+            ->where('id', $companyServiceId)
+            ->with('service') // carrega el servei base
+            ->firstOrFail();
 
         return Inertia::render('Service/Edit', [
-            'service' => $service,
-            'pivot' => $pivot->pivot, // accés a les dades personalitzades
+            'service' => $companyService->service,
+            'companyService' => $companyService,
             'company' => $company,
         ]);
     }
 
-    public function update(Request $request, $serviceId)
+
+    public function update(Request $request, $companyServiceId)
     {
         $company = Auth::guard('company')->user();
 
@@ -135,15 +134,28 @@ class CompanyServiceController extends Controller
             'min_price' => 'nullable|numeric',
             'max_price' => 'nullable|numeric',
             'logo' => 'nullable|string',
+            'custom_name' => 'nullable|string|max:255',
+            'custom_description' => 'nullable|string',
         ]);
 
-        if (!$company->services()->where('service_id', $serviceId)->exists()) {
-            return redirect()->back()->withErrors(['general' => 'Servei no trobat.']);
-        }
+        // Troba el servei de l'empresa
+        $companyService = CompanyService::where('id', $companyServiceId)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
 
-        $company->services()->updateExistingPivot($serviceId, $validated);
+        // Actualitza els valors
+        $companyService->update([
+            'price_per_unit' => $validated['price_per_unit'],
+            'unit' => $validated['unit'],
+            'min_price' => $validated['min_price'],
+            'max_price' => $validated['max_price'],
+            'logo' => $validated['logo'],
+            'custom_name' => $validated['custom_name'],
+            'description' => $validated['custom_description'] ?? null,
+            ]);
+
         $this->createSystemNotification($company, 'service_updated', [
-            'serviceId' => $serviceId,
+            'companyServiceId' => $companyServiceId,
         ], 'S\'ha actualitzat un servei.');
 
         return redirect()->route('dashboard')->with('success', 'Servei actualitzat correctament.');

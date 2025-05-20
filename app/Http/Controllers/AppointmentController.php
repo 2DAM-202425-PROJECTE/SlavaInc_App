@@ -7,6 +7,24 @@ use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
+    public function markAsConfirmed($id){
+        $company = Auth::guard('company')->user();
+
+        $appointment = Appointment::where('company_id', $company->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $appointment->status = 'confirmed';
+        $appointment->save();
+        $this->createSystemNotification($company, 'appointment_confirmed', [
+            'appointmentId' => $appointment->id,
+            'date' => $appointment->date,
+        ], 'Una cita ha estat acceptada.');
+
+        return redirect()->back()->with('success', 'Cita marcada com a acceptada.');
+
+
+}
     public function markAsCompleted($id)
     {
         $company = Auth::guard('company')->user();

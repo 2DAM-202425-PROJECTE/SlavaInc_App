@@ -113,7 +113,13 @@ export default function CompanyProfileAdmin() {
                     onConfirmCancel={(id) => {
                         setAppointmentToAction(id)
                         setActionType("cancel")
-                    }} />
+                    }}
+                    onConfirmAccept={(id) => {
+                        setAppointmentToAction(id)
+                        setActionType("confirmed")
+                    }}
+                />
+
 
             case "ratings":
                 return <RatingsSection company={company} />
@@ -130,11 +136,22 @@ export default function CompanyProfileAdmin() {
     }
     const confirmAppointmentAction = () => {
         if (!appointmentToAction || !actionType) return
-        const routeName = actionType === "complete" ? "appointments.complete" : "appointments.cancel"
-        router.patch(route(routeName, appointmentToAction))
+
+        let routeName
+        if (actionType === "complete") routeName = "appointments.complete"
+        else if (actionType === "cancel") routeName = "appointments.cancel"
+        else if (actionType === "confirmed") routeName = "appointments.confirmed"
+
+        router.patch(route(routeName, appointmentToAction), {}, {
+            preserveScroll: true,
+            onSuccess: () => addNotification(`Cita ${actionType === "complete" ? 'completada' : actionType === "cancel" ? 'cancel·lada' : 'acceptada'} correctament`, "success"),
+            onError: () => addNotification(`Error al ${actionType === "complete" ? 'completar' : actionType === "cancel" ? 'cancel·lar' : 'acceptar'} la cita`, "error"),
+        })
+
         setAppointmentToAction(null)
         setActionType(null)
     }
+
 
     return (
         <div className="min-h-screen bg-gray-50 overflow-x-hidden">
@@ -210,17 +227,24 @@ export default function CompanyProfileAdmin() {
 
 
             {/* Modal Confirmació Cita */}
+            {/* Modal Confirmació Cita */}
             {appointmentToAction && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn text-center">
                         <div className="w-16 h-16 mx-auto rounded-full bg-yellow-100 flex items-center justify-center mb-4">
-                            {actionType === "complete" ? <CheckCircleIcon className="h-8 w-8 text-green-600" /> : <XCircleIcon className="h-8 w-8 text-red-600" />}
+                            {actionType === "complete" && <CheckCircleIcon className="h-8 w-8 text-green-600" />}
+                            {actionType === "cancel" && <XCircleIcon className="h-8 w-8 text-red-600" />}
+                            {actionType === "confirmed" && <CheckCircleIcon className="h-8 w-8 text-blue-600" />}
                         </div>
                         <h3 className="text-xl font-bold mb-2">
-                            {actionType === "complete" ? "Completar cita" : "Cancel·lar cita"}
+                            {actionType === "complete" && "Completar cita"}
+                            {actionType === "cancel" && "Cancel·lar cita"}
+                            {actionType === "confirmed" && "Acceptar cita"}
                         </h3>
                         <p className="text-gray-600 mb-6">
-                            Estàs segur que vols {actionType === "complete" ? "marcar com a completada" : "cancel·lar"} aquesta cita?
+                            {actionType === "complete" && "Estàs segur que vols marcar com a completada aquesta cita?"}
+                            {actionType === "cancel" && "Estàs segur que vols cancel·lar aquesta cita?"}
+                            {actionType === "confirmed" && "Estàs segur que vols acceptar aquesta cita?"}
                         </p>
                         <div className="flex justify-center gap-4">
                             <button
@@ -234,7 +258,13 @@ export default function CompanyProfileAdmin() {
                             </button>
                             <button
                                 onClick={confirmAppointmentAction}
-                                className={`px-5 py-2 rounded-lg ${actionType === "complete" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"} text-white`}
+                                className={`px-5 py-2 rounded-lg ${
+                                    actionType === "complete"
+                                        ? "bg-green-600 hover:bg-green-700"
+                                        : actionType === "cancel"
+                                            ? "bg-red-600 hover:bg-red-700"
+                                            : "bg-blue-600 hover:bg-blue-700"
+                                } text-white`}
                             >
                                 Confirmar
                             </button>
@@ -242,6 +272,7 @@ export default function CompanyProfileAdmin() {
                     </div>
                 </div>
             )}
+
             {/* Worker Info Modal */}
             {selectedWorker && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
