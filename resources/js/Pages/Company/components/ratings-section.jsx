@@ -3,10 +3,12 @@
 import {useState, useEffect} from "react"
 import {StarIcon, ChatBubbleLeftIcon, CalendarIcon, WrenchScrewdriverIcon} from "@heroicons/react/24/outline"
 import {StarIcon as StarIconSolid} from "@heroicons/react/24/solid"
+import { Link } from "@inertiajs/react"
 
 export default function RatingsSection({company}) {
     const [isLoaded, setIsLoaded] = useState(false)
-    const clientReviews = company.clientReviews || []
+    const clientReviews = company.clientReviews?.data || []
+    const paginationLinks = company.clientReviews?.links || []
 
     useEffect(() => {
         setIsLoaded(true)
@@ -122,6 +124,34 @@ export default function RatingsSection({company}) {
                             </div>
                         </div>
                     ))}
+                    {paginationLinks.length > 0 && (
+                        <div className="mt-8 flex justify-center w-full">
+                            <div className="inline-flex flex-wrap gap-2 justify-center">
+                                {paginationLinks.map((link, index) =>
+                                    link.url ? (
+                                        <Link
+                                            key={index}
+                                            href={link.url}
+                                            preserveScroll
+                                            preserveState
+                                            className={`px-4 py-2 border rounded ${
+                                                link.active ? "bg-[#9e2a2f] text-white" : "bg-white text-gray-800"
+                                            } hover:bg-[#9e2a2f]/90 hover:text-white transition-all`}
+                                        >
+                                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                        </Link>
+                                    ) : (
+                                        <span
+                                            key={index}
+                                            className="px-4 py-2 border rounded text-gray-400 bg-gray-100 cursor-not-allowed"
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    )
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             ) : (
                 <div

@@ -37,6 +37,7 @@ class Company extends Authenticatable
         'notifications_system',
         'notifications_appointments',
         'notifications_reviews',
+        'logo',
     ];
 
     protected $hidden = [
