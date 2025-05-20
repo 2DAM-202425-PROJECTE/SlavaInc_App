@@ -13,7 +13,7 @@ export default function Edit() {
         max_price: companyService.max_price || "",
         logo: companyService.logo || "",
         custom_name: companyService.custom_name || "",
-        custom_description: companyService.description || "", 
+        custom_description: companyService.description || "",
     });
 
 
