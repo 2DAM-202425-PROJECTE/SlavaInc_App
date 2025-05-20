@@ -174,7 +174,8 @@ Route::get('/companies/{company}', [CompanyController::class, 'show'])
 Route::middleware(['auth:web'])->group(function () {
     Route::get('/services', [ClientController::class, 'indexServices'])->name('client.services.index');
     Route::get('/services/{service}/company/{company}', [ClientController::class, 'showAppointment'])->name('client.cita.show');
-
+    Route::get('/services/{service}', [ClientController::class, 'show'])
+        ->name('client.services.show');
 
     // Cites
     Route::get('/appointments', [ClientController::class, 'indexAppointments'])->name('client.appointments.index');

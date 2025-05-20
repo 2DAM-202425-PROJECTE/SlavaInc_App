@@ -4,16 +4,44 @@ import Header from '@/Components/Header.jsx';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function Edit({ worker }) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, setError, clearErrors } = useForm({
         name: worker.name,
         email: worker.email,
-        phone: worker.phone,
-        address: worker.address,
+        phone: worker.phone || '',
+        address: worker.address || '',
+        schedule: worker.schedule || '',
     });
+
+    // Validación del formato de schedule (HH:mm-HH:mm)
+    const validateScheduleFormat = (value) => {
+        if (!value) return true; // Campo vacío es válido
+        const regex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]-([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+        return regex.test(value);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validar el formato de schedule
+        if (!validateScheduleFormat(data.schedule)) {
+            setError('schedule', 'El format de l\'horari ha de ser HH:mm-HH:mm (ex. 08:00-16:00)');
+            return;
+        } else {
+            clearErrors('schedule'); // Limpiar el error si el formato es válido o el campo está vacío
+        }
+
+        // Enviar el formulario solo si no hay errores
         put(route('worker.update', worker.id));
+    };
+
+    // Validar schedule en cada cambio para mostrar el error inmediatamente
+    const handleScheduleChange = (value) => {
+        setData('schedule', value);
+        if (value && !validateScheduleFormat(value)) {
+            setError('schedule', 'El format de l\'horari ha de ser HH:mm-HH:mm (ex. 08:00-16:00)');
+        } else {
+            clearErrors('schedule');
+        }
     };
 
     return (
@@ -69,7 +97,6 @@ export default function Edit({ worker }) {
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
                                     className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
-                                    required
                                 />
                                 {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
                             </div>
@@ -81,16 +108,27 @@ export default function Edit({ worker }) {
                                     value={data.address}
                                     onChange={(e) => setData('address', e.target.value)}
                                     className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
-                                    required
                                 />
                                 {errors.address && <p className="text-red-600 text-sm mt-1">{errors.address}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Horari</label>
+                                <input
+                                    type="text"
+                                    value={data.schedule}
+                                    onChange={(e) => handleScheduleChange(e.target.value)}
+                                    placeholder="HH:mm-HH:mm (ex. 08:00-16:00)"
+                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
+                                />
+                                {errors.schedule && <p className="text-red-600 text-sm mt-1">{errors.schedule}</p>}
                             </div>
 
                             <div className="pt-4">
                                 <button
                                     type="submit"
                                     className="w-full py-3 px-6 rounded-lg bg-[#9e2a2f] text-white font-semibold hover:bg-[#8a1e25] transition-all shadow-md hover:shadow-lg"
-                                    disabled={processing}
+                                    disabled={processing || Object.keys(errors).length > 0}
                                 >
                                     {processing ? 'Actualitzant...' : 'Actualitzar Treballador'}
                                 </button>

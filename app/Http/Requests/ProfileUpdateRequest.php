@@ -23,6 +23,21 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'city' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:9'],
+
+            'schedule' => [
+                'nullable',
+                'string',
+                'regex:/^([0-1][0-9]|2[0-3]):[0-5][0-9]-([0-1][0-9]|2[0-3]):[0-5][0-9]$/',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        [$start, $end] = explode('-', $value);
+                        if (strtotime($start) >= strtotime($end)) {
+                            $fail('L\'hora de fi ha de ser posterior a l\'hora d\'inici.');
+                        }
+                    }
+                },
+            ],
         ];
     }
 }

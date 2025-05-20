@@ -173,7 +173,7 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                     {isProfileOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 text-gray-800">
                             <Link href="/profile" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
-                            <FontAwesomeIcon icon={faUser} />
+                                <FontAwesomeIcon icon={faUser} />
                                 <span>Perfil</span>
                             </Link>
                             <button
@@ -256,7 +256,7 @@ const Header = ({ theme = 'bg-black text-white' }) => {
                             {/* Perfil i logout */}
                             <div className="border-t pt-4 mt-4 space-y-2">
                                 <Link
-                                    href={route('profile.edit')}
+                                    href={route('profile')}
                                     className="block px-2 py-2 rounded hover:bg-gray-100"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
