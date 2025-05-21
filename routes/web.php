@@ -25,9 +25,12 @@ use Inertia\Inertia;
 
 // RUTA INICIAL
 Route::get('/', function () {
-    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check() || Auth::guard('admin')->check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
+    if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
+        return redirect()->route('dashboard');
+    } elseif (Auth::guard('admin')->check()) {
+        return redirect()->route('administrator.dashboard');
+    }
+    return redirect()->route('login');
 });
 
 // RUTES D’ADMINISTRADOR
@@ -45,16 +48,6 @@ Route::prefix('admin')
         Route::resource('plans', AdminPlanController::class);
         Route::put('profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
-
-// RUTA INICIAL
-Route::get('/', function () {
-    if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
-        return redirect()->route('dashboard');
-    } elseif (Auth::guard('admin')->check()) {
-        return redirect()->route('administrator.dashboard');
-    }
-    return redirect()->route('login');
-});
 
 // DASHBOARD segons el tipus d’usuari
 Route::get('/dashboard', function () {
