@@ -6,12 +6,10 @@ use App\Models\Company;
 use App\Models\Worker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class WorkersSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         // Obtenir totes les empreses existents
@@ -19,90 +17,25 @@ class WorkersSeeder extends Seeder
 
         foreach ($companies as $company) {
 
-            // Treballador 1
-            Worker::create([
-                'company_id' => $company->id,
-                'name' => 'Treballador 1 de ' . $company->name,
-                'email' => 'treballador1@' . $company->name . '.com',
-                'password' => Hash::make('password'),
-                'phone' => '600111222',
-                'address' => $company->address,
-                'is_admin' => false,
-                'schedule' => '08:00-16:00',
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'logo' => 'https://via.placeholder.com/150',
-            ]);
+            // Convertir el nom de la companyia en un format vàlid per correu
+            $companySlug = Str::slug($company->name); // Ej: "LA MEVA EMPRESA" → "la-meva-empresa"
 
-            // Treballador 2
-            Worker::create([
-                'company_id' => $company->id,
-                'name' => 'Treballador 2 de ' . $company->name,
-                'email' => 'treballador2@' . $company->name . '.com',
-                'password' => Hash::make('password'),
-                'phone' => '600222333',
-                'address' => $company->address,
-                'is_admin' => false,
-                'schedule' => '08:00-16:00',
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'logo' => 'https://via.placeholder.com/150',
-
-            ]);
-
-            // Treballador 3
-            Worker::create([
-                'company_id' => $company->id,
-                'name' => 'Treballador 3 de ' . $company->name,
-                'email' => 'treballador3@' . $company->name . '.com',
-                'password' => Hash::make('password'),
-                'phone' => '600333444',
-                'address' => $company->address,
-                'is_admin' => false,
-                'schedule' => '08:00-16:00',
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'logo' => 'https://via.placeholder.com/150',
-
-            ]);
-
-            // Treballador 4
-            Worker::create([
-                'company_id' => $company->id,
-                'name' => 'Treballador 4 de ' . $company->name,
-                'email' => 'treballador4@' . $company->name . '.com',
-                'password' => Hash::make('password'),
-                'phone' => '600444555',
-                'address' => $company->address,
-                'is_admin' => false,
-                'schedule' => '08:00-16:00',
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'logo' => 'https://via.placeholder.com/150',
-
-            ]);
-
-            // Treballador 5
-            Worker::create([
-                'company_id' => $company->id,
-                'name' => 'Treballador 5 de ' . $company->name,
-                'email' => 'treballador5@' . $company->name . '.com',
-                'password' => Hash::make('password'),
-                'phone' => '600555666',
-                'address' => $company->address,
-                'is_admin' => false,
-                'schedule' => '08:00-16:00',
-                'city' => $company->city,
-                'state' => $company->state,
-                'zip_code' => $company->zip_code,
-                'logo' => 'https://via.placeholder.com/150',
-
-
-            ]);
+            for ($i = 1; $i <= 5; $i++) {
+                Worker::create([
+                    'company_id' => $company->id,
+                    'name' => "Treballador $i de " . $company->name,
+                    'email' => "treballador{$i}@{$companySlug}.com",
+                    'password' => Hash::make('password'),
+                    'phone' => '600' . str_pad($i . $i . $i, 6, $i, STR_PAD_LEFT),
+                    'address' => $company->address,
+                    'is_admin' => false,
+                    'schedule' => '08:00-16:00',
+                    'city' => $company->city,
+                    'state' => $company->state,
+                    'zip_code' => $company->zip_code,
+                    'logo' => 'https://via.placeholder.com/150',
+                ]);
+            }
         }
     }
 }
