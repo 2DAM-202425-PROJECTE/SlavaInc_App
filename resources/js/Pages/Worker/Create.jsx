@@ -15,14 +15,13 @@ export default function CreateWorker() {
         zip_code: '',
         phone: '',
         password: '',
-        company_id: '',
+        password_confirmation: '',
         is_admin: false,
         status: 'active',
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setData('company_id', window.CompanyId);
         post(route('worker.store'), {
             onSuccess: () => {
                 console.log('Worker creat correctament!');
@@ -57,7 +56,6 @@ export default function CreateWorker() {
                             </div>
                         )}
 
-
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
@@ -90,7 +88,7 @@ export default function CreateWorker() {
                                     value={data.schedule}
                                     onChange={(e) => setData('schedule', e.target.value)}
                                     className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
-                                    required
+                                    placeholder="Ex: 08:00-16:00"
                                 />
                                 {errors.schedule && <p className="text-red-600 text-sm mt-1">{errors.schedule}</p>}
                             </div>
@@ -170,6 +168,18 @@ export default function CreateWorker() {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Contrasenya</label>
+                                <input
+                                    type="password"
+                                    value={data.password_confirmation}
+                                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#9e2a2f] focus:border-[#9e2a2f]"
+                                    required
+                                />
+                                {errors.password_confirmation && <p className="text-red-600 text-sm mt-1">{errors.password_confirmation}</p>}
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Estat</label>
                                 <select
                                     value={data.status}
@@ -180,6 +190,19 @@ export default function CreateWorker() {
                                     <option value="inactive">Inactiu</option>
                                 </select>
                                 {errors.status && <p className="text-red-600 text-sm mt-1">{errors.status}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.is_admin}
+                                        onChange={(e) => setData('is_admin', e.target.checked)}
+                                        className="mr-2 rounded border-gray-300 text-[#9e2a2f] focus:ring-[#9e2a2f]"
+                                    />
+                                    Administrador
+                                </label>
+                                {errors.is_admin && <p className="text-red-600 text-sm mt-1">{errors.is_admin}</p>}
                             </div>
 
                             <div className="pt-4">

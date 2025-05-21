@@ -189,50 +189,6 @@ const ServicesShow = ({ service }) => {
 
                     {/* Informació lateral */}
                     <div className="space-y-6">
-                        {/* Detalls del servei */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                            <h2 className="text-lg font-semibold text-gray-800 mb-4">Detalls del servei</h2>
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <DollarSign size={18} className="text-gray-500 mt-0.5" />
-                                    <div>
-                                        <h3 className="text-sm font-medium text-gray-700">Preu</h3>
-                                        <p className="text-gray-600">
-                                            {service.price ? `${service.price}€` : "Preu no especificat"}
-                                            {service.price_type && ` (${service.price_type})`}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-3">
-                                    <Clock size={18} className="text-gray-500 mt-0.5" />
-                                    <div>
-                                        <h3 className="text-sm font-medium text-gray-700">Duració</h3>
-                                        <p className="text-gray-600">{service.duration || "No especificada"}</p>
-                                    </div>
-                                </div>
-
-                                {service.location && (
-                                    <div className="flex items-start gap-3">
-                                        <MapPin size={18} className="text-gray-500 mt-0.5" />
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-700">Ubicació</h3>
-                                            <p className="text-gray-600">{service.location}</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {service.provider && (
-                                    <div className="flex items-start gap-3">
-                                        <User size={18} className="text-gray-500 mt-0.5" />
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-700">Proveïdor</h3>
-                                            <p className="text-gray-600">{service.provider}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
                         {/* Informació temporal */}
                         <div className="bg-white rounded-xl shadow-sm p-6">

@@ -25,9 +25,12 @@ use Inertia\Inertia;
 
 // RUTA INICIAL
 Route::get('/', function () {
-    return Auth::guard('web')->check() || Auth::guard('worker')->check() || Auth::guard('company')->check() || Auth::guard('admin')->check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
+    if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
+        return redirect()->route('dashboard');
+    } elseif (Auth::guard('admin')->check()) {
+        return redirect()->route('administrator.dashboard');
+    }
+    return redirect()->route('login');
 });
 
 // RUTES D’ADMINISTRADOR
@@ -45,16 +48,6 @@ Route::prefix('admin')
         Route::resource('plans', AdminPlanController::class);
         Route::put('profile', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
     });
-
-// RUTA INICIAL
-Route::get('/', function () {
-    if (Auth::guard('web')->check() || Auth::guard('company')->check() || Auth::guard('worker')->check()) {
-        return redirect()->route('dashboard');
-    } elseif (Auth::guard('admin')->check()) {
-        return redirect()->route('administrator.dashboard');
-    }
-    return redirect()->route('login');
-});
 
 // DASHBOARD segons el tipus d’usuari
 Route::get('/dashboard', function () {
@@ -135,7 +128,9 @@ Route::middleware([CompanyOrWorkerAdmin::class])->group(function () {
     Route::get('/worker/create', [WorkerController::class, 'create'])->name('worker.create');
     Route::post('/worker', [WorkerController::class, 'store'])->name('worker.store');
     Route::get('/worker/{worker}/edit', [WorkerController::class, 'edit'])->name('worker.edit');
-    Route::put('/worker/{worker}', [WorkerController::class, 'update'])->name('worker.update');
+    Route::put('/worker/{worker}', [WorkerController::class, 'update'])
+        ->name('worker.update')
+        ->where('worker', '[0-9]+');
     Route::delete('/worker/{worker}', [WorkerController::class, 'destroy'])->name('worker.destroy');
 
     Route::get('/company/services', [CompanyServiceController::class, 'index'])->name('company.services.index');
