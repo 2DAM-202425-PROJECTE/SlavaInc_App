@@ -45,6 +45,7 @@ class WorkerController extends Controller
 
     public function store(StoreWorkerRequest $request)
     {
+
         $company = Auth::guard('company')->user();
         if (!$company) {
             return redirect()->route('login')->withErrors([
@@ -62,6 +63,7 @@ class WorkerController extends Controller
             ]);
         }
 
+
         $validated = $request->validated();
         \Log::info('Validated data for worker store:', $validated);
 
@@ -78,6 +80,7 @@ class WorkerController extends Controller
             'password' => bcrypt($validated['password']),
             'is_admin' => $validated['is_admin'] ?? false,
             'status' => $validated['status'],
+
         ]);
 
         $this->createSystemNotification($company, 'worker_added', [

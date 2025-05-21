@@ -66,17 +66,16 @@ class CompanyController extends Controller
 
     public function updateNotifications(Request $request)
     {
-        // Determinar si el usuario es una empresa o un trabajador administrador
         if (Auth::guard('company')->check()) {
             $company = Auth::guard('company')->user();
         } elseif (Auth::guard('worker')->check()) {
             $worker = Auth::guard('worker')->user();
             if (!$worker->is_admin) {
-                abort(403, 'No tienes permisos para realizar esta acción');
+                abort(403, 'No tens permisos per realitzar aquesta acció');
             }
             $company = Company::findOrFail($worker->company_id);
         } else {
-            abort(403, 'No tienes permisos para realizar esta acción');
+            abort(403, 'No tens permisos per realitzar aquesta acció');
         }
 
         $validated = $request->validate([
@@ -120,12 +119,10 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
-        // Si s'ha pujat una imatge nova
         if ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('logos', 'public');
             $validated['logo'] = $logoPath;
         }
-
 
         $company->update($validated);
 
@@ -140,7 +137,6 @@ class CompanyController extends Controller
 
     public function changePlan(Request $request)
     {
-        // Determinar si el usuario es una empresa o un trabajador administrador
         if (Auth::guard('company')->check()) {
             $company = Auth::guard('company')->user();
         } elseif (Auth::guard('worker')->check()) {

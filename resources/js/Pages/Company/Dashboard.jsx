@@ -278,7 +278,6 @@ export default function CompanyProfileAdmin() {
             />
 
             {/* Modal Confirmació Cita */}
-            {/* Modal Confirmació Cita */}
             {appointmentToAction && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn text-center">

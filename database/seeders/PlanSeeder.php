@@ -11,7 +11,7 @@ class PlanSeeder extends Seeder
     {
         Plan::create([
             'name' => 'Bàsic',
-            'price' => 49.99,
+            'price' => 00.00,
             'features' => [
                 'Fins a 5 treballadors',
                 'Fins a 3 serveis',

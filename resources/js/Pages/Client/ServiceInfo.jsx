@@ -419,8 +419,9 @@ const ServiceInfo = ({ service, companies, priceEstimate, impersonating_client =
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
-            <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
-            <main
+            {!impersonating_client && (
+                <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
+            )}            <main
                 className="flex-grow"
                 style={{
                     backgroundImage: `url(${backgroundImage})`,
