@@ -94,35 +94,36 @@ export default function OngoingServicesSection({ company, onConfirmComplete, onC
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div
+                                className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4 border-t border-gray-100">
                                 <span className="text-gray-700 font-medium">Preu: {appt.price} €</span>
-                                <div className="flex space-x-2">
+                                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                                     {appt.status !== "confirmed" && (
                                         <button
                                             onClick={() => onConfirmAccept(appt.id)}
-                                            className="inline-flex items-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium transition hover:bg-blue-100 hover:shadow-md"
+                                            className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium transition hover:bg-blue-100 hover:shadow-md"
                                         >
                                             <CheckCircleIcon className="h-4 w-4 mr-2"/>
                                             Acceptar
                                         </button>
-
                                     )}
                                     <button
                                         onClick={() => onConfirmComplete(appt.id)}
-                                        className="inline-flex items-center px-3 py-2 rounded-lg bg-green-50 text-green-700 font-medium transition hover:bg-green-100 hover:shadow-md"
+                                        className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-green-50 text-green-700 font-medium transition hover:bg-green-100 hover:shadow-md"
                                     >
                                         <CheckCircleIcon className="h-4 w-4 mr-2"/>
                                         Completar
                                     </button>
                                     <button
                                         onClick={() => onConfirmCancel(appt.id)}
-                                        className="inline-flex items-center px-3 py-2 rounded-lg bg-red-50 text-red-700 font-medium transition hover:bg-red-100 hover:shadow-md"
+                                        className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-50 text-red-700 font-medium transition hover:bg-red-100 hover:shadow-md"
                                     >
                                         <XCircleIcon className="h-4 w-4 mr-2"/>
                                         Cancel·lar
                                     </button>
                                 </div>
                             </div>
+
 
                         </div>
                     ))}
@@ -140,7 +141,7 @@ export default function OngoingServicesSection({ company, onConfirmComplete, onC
                                                 link.active ? "bg-[#9e2a2f] text-white" : "bg-white text-gray-800"
                                             } hover:bg-[#9e2a2f]/90 hover:text-white transition-all`}
                                         >
-                                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                            <span dangerouslySetInnerHTML={{__html: link.label}}/>
                                         </Link>
                                     ) : (
                                         <span

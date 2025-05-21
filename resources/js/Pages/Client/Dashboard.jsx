@@ -43,8 +43,9 @@ const Dashboard = ({ services, impersonating_client = false }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
-            <div className="flex-1">
+            {!impersonating_client && (
+                <Header theme="bg-gradient-to-r from-[#1f7275] to-[#01a0a6] text-white" />
+            )}            <div className="flex-1">
                 {/* Capçalera millorada */}
                 <section className="w-full bg-gradient-to-r from-[#1f7275] to-[#01a0a6] py-8 px-6">
                     <div className="max-w-6xl mx-auto text-center">

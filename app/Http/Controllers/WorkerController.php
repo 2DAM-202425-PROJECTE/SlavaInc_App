@@ -51,7 +51,7 @@ class WorkerController extends Controller
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
             'password' => 'required|string|min:8',
-            'status' => 'required|in:active,inactive', // ✅ validació del camp status
+            'status' => 'required|in:active,inactive',
         ]);
 
         $company = Auth::guard('company')->user();
@@ -84,7 +84,7 @@ class WorkerController extends Controller
             'phone' => $request->phone,
             'password' => bcrypt($request->password),
             'is_admin' => false,
-            'status' => $request->status, // ✅ assignació real
+            'status' => $request->status,
         ]);
         $this->createSystemNotification($company, 'worker_added', [
             'workerName' => $request->name,

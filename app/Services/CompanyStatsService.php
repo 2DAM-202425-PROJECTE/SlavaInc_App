@@ -63,21 +63,11 @@ class CompanyStatsService
     private function prepareServices(): LengthAwarePaginator
     {
         $perPage = 6;
-        $currentPage = request('services_page', 1);
-        $search = request('search');
 
-        $query = $this->company->services();
+        $services = $this->company->services()
+            ->paginate($perPage, ['*'], 'services_page')
+            ->withQueryString();
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                    ->orWhere('services.description', 'like', "%$search%");
-            });
-        }
-
-        $services = $query->paginate($perPage, ['*'], 'services_page')->withQueryString();
-
-        // Ara afegim els atributs del pivot
         $services->getCollection()->transform(function ($item) {
             return [
                 'id' => $item->pivot->id ?? null,
@@ -96,13 +86,12 @@ class CompanyStatsService
                 'completedProjects' => Appointment::where('company_id', $this->companyId)
                     ->where('status', 'completed')
                     ->count(),
-                'averageRating' => round(mt_rand(40, 50) / 10, 1),
-                'totalRevenue' => rand(20000, 120000),
             ];
         });
 
         return $services;
     }
+
 
 
     private function getStats(): array
